@@ -237,6 +237,22 @@
 </main>
 
 <script>
+// ===== NAVIGATION PANNEAUX =====
+document.querySelectorAll('[data-panel]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const panelName = this.dataset.panel;
+    // Cacher tous les panneaux
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    // Afficher le panneau cible
+    const target = document.getElementById('pn-' + panelName);
+    if (target) target.classList.add('active');
+    // Mettre à jour les boutons actifs
+    document.querySelectorAll('[data-panel]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+
 // NAV
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));

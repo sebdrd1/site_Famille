@@ -163,6 +163,22 @@
 </div>
 </main>
 <script>
+// ===== NAVIGATION PANNEAUX =====
+document.querySelectorAll('[data-panel]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const panelName = this.dataset.panel;
+    // Cacher tous les panneaux
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    // Afficher le panneau cible
+    const target = document.getElementById('pn-' + panelName);
+    if (target) target.classList.add('active');
+    // Mettre à jour les boutons actifs
+    document.querySelectorAll('[data-panel]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('pn-'+b.dataset.panel).classList.add('active')}));
 document.getElementById('focusBtn').addEventListener('click',function(){document.body.classList.toggle('focus-mode');this.classList.toggle('active')});
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;if(SR){rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false}
