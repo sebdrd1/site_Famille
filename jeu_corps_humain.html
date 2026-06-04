@@ -2,30 +2,36 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
 <title>Il était une fois le Corps — Jeu Éducatif</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;overflow:hidden}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;overflow:hidden;touch-action:manipulation}
 #game-container{position:relative;max-width:100vw;max-height:100vh}
-canvas{display:block;max-width:100%;max-height:100vh}
-#loading{position:fixed;top:0;left:0;right:0;bottom:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;z-index:999}
+#loading{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ffdd44;font-size:24px;z-index:9999}
+#loading .spinner{width:40px;height:40px;border:4px solid #333;border-top-color:#ffdd44;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div id="loading">Chargement...</div>
+<div id="loading"><div class="spinner"></div>Chargement du jeu...</div>
 <div id="game-container"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// Attendre que Phaser soit chargé
-function initGame() {
+// ===== JEU IL ETAIT UNE FOIS LE CORPS — ES5 PUR, MOBILE-FIRST =====
+(function() {
+  "use strict";
+
+  // Vérifier Phaser
   if (typeof Phaser === 'undefined') {
-    setTimeout(initGame, 100);
+    document.getElementById('loading').innerHTML = 'Erreur: Phaser non chargé.<br><small>Vérifie ta connexion internet</small>';
     return;
   }
 
   document.getElementById('loading').style.display = 'none';
 
+  // ===== CONFIGURATION =====
   var CONFIG = {
     type: Phaser.AUTO,
     width: 800,
@@ -37,259 +43,543 @@ function initGame() {
       autoCenter: Phaser.Scale.CENTER_BOTH,
       min: { width: 320, height: 240 },
       max: { width: 1200, height: 900 }
+    },
+    input: {
+      activePointers: 3
     }
   };
 
+  // ===== DONNÉES DU JEU =====
+  var ZONES = [
+    { key: 'cerveau',    name: 'Le Cerveau',      color: 0xff6b9d, emoji: '🧠', questions: [
+      { q: "Combien de milliards de neurones dans le cerveau?", a: "86", options: ["86", "10", "1000", "5"] },
+      { q: "Quelle partie du cerveau gère l'équilibre?", a: "Cervelet", options: ["Cervelet", "Frontal", "Occipital", "Temporal"] },
+      { q: "Le cerveau pèse environ combien?", a: "1,4 kg", options: ["1,4 kg", "5 kg", "500 g", "3 kg"] }
+    ]},
+    { key: 'coeur',      name: 'Le Cœur',          color: 0xe74c3c, emoji: '❤️', questions: [
+      { q: "Combien de battements par jour?", a: "100 000", options: ["100 000", "10 000", "1 000", "500 000"] },
+      { q: "Combien de cavités dans le cœur?", a: "4", options: ["4", "2", "3", "6"] },
+      { q: "Quel côté du cœur envoie le sang dans le corps?", a: "Gauche", options: ["Gauche", "Droit", "Les deux", "Aucun"] }
+    ]},
+    { key: 'poumons',    name: 'Les Poumons',      color: 0x5dade2, emoji: '🫁', questions: [
+      { q: "Combien de poumons avons-nous?", a: "2", options: ["2", "1", "3", "4"] },
+      { q: "Comment s'appelle le geste de respirer?", a: "Inspirer", options: ["Inspirer", "Expirer", "Tousser", "Souffler"] },
+      { q: "Quel gaz inspire-t-on?", a: "Oxygène", options: ["Oxygène", "Azote", "CO2", "Hélium"] }
+    ]},
+    { key: 'estomac',    name: "L'Estomac",        color: 0xf39c12, emoji: '🫃', questions: [
+      { q: "Que fait l'estomac avec la nourriture?", a: "Digère", options: ["Digère", "Respire", "Pense", "Court"] },
+      { q: "Quel liquide dans l'estomac?", a: "Acide", options: ["Acide", "Eau", "Lait", "Huile"] },
+      { q: "Combien de temps la digestion?", a: "4h", options: ["4h", "10min", "1h", "24h"] }
+    ]},
+    { key: 'os',         name: 'Les Os',           color: 0xf5f5dc, emoji: '🦴', questions: [
+      { q: "Combien d'os chez l'adulte?", a: "206", options: ["206", "100", "500", "50"] },
+      { q: "Quel est l'os le plus long?", a: "Fémur", options: ["Fémur", "Radius", "Tibia", "Humérus"] },
+      { q: "De quoi sont faits les os?", a: "Calcium", options: ["Calcium", "Fer", "Plastique", "Bois"] }
+    ]},
+    { key: 'muscles',    name: 'Les Muscles',      color: 0x8e44ad, emoji: '💪', questions: [
+      { q: "Combien de muscles dans le corps?", a: "600", options: ["600", "100", "1000", "50"] },
+      { q: "Quel est le plus grand muscle?", a: "Fessier", options: ["Fessier", "Biceps", "Mollet", "Dos"] },
+      { q: "Que font les muscles?", a: "Bouger", options: ["Bouger", "Penser", "Digérer", "Respirer"] }
+    ]},
+    { key: 'yeux',       name: 'Les Yeux',         color: 0x2ecc71, emoji: '👁️', questions: [
+      { q: "Quelle partie de l'œil voit les couleurs?", a: "Rétine", options: ["Rétine", "Pupille", "Iris", "Cornée"] },
+      { q: "De quelle couleur est l'iris?", a: "Variable", options: ["Variable", "Toujours bleu", "Toujours noir", "Rouge"] },
+      { q: "Combien d'yeux avons-nous?", a: "2", options: ["2", "1", "3", "4"] }
+    ]},
+    { key: 'peau',       name: 'La Peau',          color: 0xe67e22, emoji: '🤚', questions: [
+      { q: "Quel est le plus grand organe?", a: "La peau", options: ["La peau", "Le foie", "Le cœur", "Le cerveau"] },
+      { q: "Que protège la peau?", a: "Le corps", options: ["Le corps", "Les pensées", "Les rêves", "La voix"] },
+      { q: "Comment s'appelle le sens de la peau?", a: "Toucher", options: ["Toucher", "Goût", "Odorat", "Ouïe"] }
+    ]},
+    { key: 'sang',       name: 'Le Sang',          color: 0xc0392b, emoji: '🩸', questions: [
+      { q: "De quelle couleur est le sang?", a: "Rouge", options: ["Rouge", "Bleu", "Vert", "Jaune"] },
+      { q: "Que transporte le sang?", a: "Oxygène", options: ["Oxygène", "Nourriture", "Pensées", "Musique"] },
+      { q: "Quel organe pompe le sang?", a: "Cœur", options: ["Cœur", "Poumons", "Foie", "Reins"] }
+    ]}
+  ];
+
   // ===== SCENE: BOOT =====
-  class BootScene extends Phaser.Scene {
-    constructor() { super({ key: 'BootScene' }); }
-    create() {
-      // Générer les textures procéduralement
-      var g = this.make.graphics({ x: 0, y: 0, add: false });
-      
-      // Player
-      g.clear();
-      g.fillStyle(0x4488ff); g.fillRect(8, 8, 16, 20);
-      g.fillStyle(0xffcc99); g.fillRect(10, 2, 12, 10);
-      g.fillStyle(0x000000); g.fillRect(12, 5, 2, 2); g.fillRect(18, 5, 2, 2);
-      g.fillStyle(0x336699); g.fillRect(10, 28, 5, 8); g.fillRect(17, 28, 5, 8);
-      g.generateTexture('player', 32, 36);
-      
-      // Star
-      g.clear();
-      g.fillStyle(0xffdd44);
-      var cx=16, cy=16, pts=[];
-      for(var i=0;i<5;i++){
-        var a=(i*72-90)*Math.PI/180;
-        pts.push({x:cx+14*Math.cos(a),y:cy+14*Math.sin(a)});
-        var a2=((i*72+36)-90)*Math.PI/180;
-        pts.push({x:cx+6*Math.cos(a2),y:cy+6*Math.sin(a2)});
-      }
-      g.fillPoints(pts,true);
-      g.generateTexture('star', 32, 32);
-      
-      // Particle
-      g.clear();
-      g.fillStyle(0xffffff); g.fillRect(0, 0, 4, 4);
-      g.generateTexture('particle', 4, 4);
-      
-      g.destroy();
-      
-      this.scene.start('MenuScene');
+  function BootScene() { Phaser.Scene.call(this, { key: 'BootScene' }); }
+  BootScene.prototype = Object.create(Phaser.Scene.prototype);
+  BootScene.prototype.constructor = BootScene;
+  BootScene.prototype.create = function() {
+    var g = this.make.graphics({ x: 0, y: 0, add: false });
+
+    // Player sprite
+    g.clear();
+    g.fillStyle(0x4488ff); g.fillRect(8, 8, 16, 20);
+    g.fillStyle(0xffcc99); g.fillRect(10, 2, 12, 10);
+    g.fillStyle(0x000000); g.fillRect(12, 5, 2, 2); g.fillRect(18, 5, 2, 2);
+    g.fillStyle(0x336699); g.fillRect(10, 28, 5, 8); g.fillRect(17, 28, 5, 8);
+    g.generateTexture('player', 32, 36);
+
+    // Star
+    g.clear();
+    g.fillStyle(0xffdd44);
+    var cx = 16, cy = 16, pts = [];
+    for (var i = 0; i < 5; i++) {
+      var a = (i * 72 - 90) * Math.PI / 180;
+      pts.push({ x: cx + 14 * Math.cos(a), y: cy + 14 * Math.sin(a) });
+      var a2 = ((i * 72 + 36) - 90) * Math.PI / 180;
+      pts.push({ x: cx + 6 * Math.cos(a2), y: cy + 6 * Math.sin(a2) });
     }
-  }
+    g.fillPoints(pts, true);
+    g.generateTexture('star', 32, 32);
+
+    // Particle
+    g.clear();
+    g.fillStyle(0xffffff); g.fillRect(0, 0, 4, 4);
+    g.generateTexture('particle', 4, 4);
+
+    // Checkmark
+    g.clear();
+    g.fillStyle(0x2ecc71); g.fillCircle(16, 16, 14);
+    g.fillStyle(0xffffff); g.fillRect(6, 14, 4, 12);
+    g.fillStyle(0xffffff); g.fillRect(10, 10, 16, 4);
+    g.generateTexture('check', 32, 32);
+
+    // Cross
+    g.clear();
+    g.fillStyle(0xe74c3c); g.fillCircle(16, 16, 14);
+    g.fillStyle(0xffffff); g.fillRect(6, 14, 20, 4);
+    g.fillStyle(0xffffff); g.fillRect(14, 6, 4, 20);
+    g.generateTexture('cross', 32, 32);
+
+    g.destroy();
+    this.scene.start('MenuScene');
+  };
 
   // ===== SCENE: MENU =====
-  class MenuScene extends Phaser.Scene {
-    constructor() { super({ key: 'MenuScene' }); }
-    create() {
-      var w = this.scale.width;
-      var h = this.scale.height;
-      
-      // Background
-      var bg = this.add.graphics();
-      bg.fillGradientStyle(0x1a1a2e, 0x1a1a2e, 0x16213e, 0x0f3460, 1);
-      bg.fillRect(0, 0, w, h);
-      
-      // Particules flottantes
-      for(var i=0;i<20;i++){
-        var p = this.add.image(
-          Phaser.Math.Between(0, w),
-          Phaser.Math.Between(0, h),
-          'particle'
-        ).setAlpha(0.3);
-        this.tweens.add({
-          targets: p, y: p.y - 50, alpha: 0,
-          duration: Phaser.Math.Between(3000, 6000),
-          repeat: -1, yoyo: true
-        });
-      }
-      
-      // Titre
-      this.add.text(w/2, 100, 'Il était une fois', {
-        fontSize: '36px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffdd44', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      
-      this.add.text(w/2, 150, 'LE CORPS', {
-        fontSize: '48px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#4488ff', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      
-      this.add.text(w/2, 200, 'Jeu Éducatif — Version Test', {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#8888aa'
-      }).setOrigin(0.5);
-      
-      // Bouton Léana
-      this.createButton(w/2 - 120, 300, 'Léana\nGrande Section', 0xee82ee, function() {
-        this.scene.start('ZoneSelectScene');
-      }.bind(this));
-      
-      // Bouton Mathias
-      this.createButton(w/2 + 120, 300, 'Mathias\nCE2 ULIS', 0xd62828, function() {
-        this.scene.start('ZoneSelectScene');
-      }.bind(this));
-      
-      // Footer
-      this.add.text(w/2, h - 30, 'Version test — Plus de contenu bientôt !', {
-        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#666688'
-      }).setOrigin(0.5);
+  function MenuScene() { Phaser.Scene.call(this, { key: 'MenuScene' }); }
+  MenuScene.prototype = Object.create(Phaser.Scene.prototype);
+  MenuScene.prototype.constructor = MenuScene;
+  MenuScene.prototype.create = function() {
+    var w = this.scale.width;
+    var h = this.scale.height;
+    var self = this;
+
+    // Background
+    var bg = this.add.graphics();
+    bg.fillGradientStyle(0x1a1a2e, 0x1a1a2e, 0x16213e, 0x0f3460, 1);
+    bg.fillRect(0, 0, w, h);
+
+    // Particules
+    for (var i = 0; i < 20; i++) {
+      var p = this.add.image(
+        Phaser.Math.Between(0, w),
+        Phaser.Math.Between(0, h),
+        'particle'
+      ).setAlpha(0.3);
+      this.tweens.add({
+        targets: p, y: p.y - 50, alpha: 0,
+        duration: Phaser.Math.Between(3000, 6000),
+        repeat: -1, yoyo: true
+      });
     }
-    
-    createButton(x, y, text, color, callback) {
-      var container = this.add.container(x, y);
-      var bg = this.add.graphics();
-      bg.fillStyle(color); bg.fillRoundedRect(-90, -35, 180, 70, 14);
-      bg.fillStyle(0xffffff, 0.15); bg.fillRoundedRect(-88, -33, 176, 33, 12);
-      var label = this.add.text(0, 0, text, {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', fontStyle: 'bold', align: 'center'
-      }).setOrigin(0.5);
-      container.add([bg, label]);
-      container.setSize(180, 70);
-      container.setInteractive({ useHandCursor: true });
-      container.on('pointerdown', callback);
-      return container;
-    }
-  }
+
+    // Titre
+    this.add.text(w / 2, 80, 'Il était une fois', {
+      fontSize: '36px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffdd44', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    this.add.text(w / 2, 130, 'LE CORPS', {
+      fontSize: '52px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#4488ff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    this.add.text(w / 2, 180, 'Jeu Éducatif — Version Test', {
+      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#8888aa'
+    }).setOrigin(0.5);
+
+    // Boutons profil
+    this.createButton(w / 2 - 120, 280, 'Léana\nGrande Section', 0xee82ee, function() {
+      self.scene.start('ZoneSelectScene', { profile: 'leana' });
+    });
+
+    this.createButton(w / 2 + 120, 280, 'Mathias\nCE2 ULIS', 0xd62828, function() {
+      self.scene.start('ZoneSelectScene', { profile: 'mathias' });
+    });
+
+    // Footer
+    this.add.text(w / 2, h - 30, 'Version test — Plus de contenu bientôt !', {
+      fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#666688'
+    }).setOrigin(0.5);
+  };
+
+  MenuScene.prototype.createButton = function(x, y, text, color, callback) {
+    var container = this.add.container(x, y);
+    var bg = this.add.graphics();
+    bg.fillStyle(color); bg.fillRoundedRect(-90, -35, 180, 70, 14);
+    bg.fillStyle(0xffffff, 0.15); bg.fillRoundedRect(-88, -33, 176, 33, 12);
+    var label = this.add.text(0, 0, text, {
+      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', fontStyle: 'bold', align: 'center'
+    }).setOrigin(0.5);
+    container.add([bg, label]);
+    container.setSize(180, 70);
+    container.setInteractive({ useHandCursor: true });
+    container.on('pointerdown', callback);
+    container.on('pointerover', function() { container.setScale(1.05); });
+    container.on('pointerout', function() { container.setScale(1.0); });
+    return container;
+  };
 
   // ===== SCENE: ZONE SELECT =====
-  class ZoneSelectScene extends Phaser.Scene {
-    constructor() { super({ key: 'ZoneSelectScene' }); }
-    create() {
-      var w = this.scale.width;
-      var h = this.scale.height;
-      
-      this.add.text(w/2, 40, 'Choisis une zone du corps', {
-        fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff'
-      }).setOrigin(0.5);
-      
-      var zones = [
-        {name: 'Cerveau', icon: '🧠', color: 0xff9999},
-        {name: 'Cœur', icon: '❤️', color: 0xff4444},
-        {name: 'Poumons', icon: '🫁', color: 0xffaacc},
-        {name: 'Estomac', icon: '🫃', color: 0xffcc44},
-        {name: 'Os', icon: '🦴', color: 0xeeeeee},
-        {name: 'Muscles', icon: '💪', color: 0xcc4444}
-      ];
-      
-      var cols = 3;
-      var rows = 2;
-      var btnW = 180;
-      var btnH = 100;
-      var startX = w/2 - (cols-1) * (btnW + 20) / 2;
-      var startY = 150;
-      
-      for(var i = 0; i < zones.length; i++){
-        var col = i % cols;
-        var row = Math.floor(i / cols);
-        var zx = startX + col * (btnW + 20);
-        var zy = startY + row * (btnH + 20);
-        var zone = zones[i];
-        
-        var btn = this.add.graphics();
-        btn.fillStyle(zone.color); btn.fillRoundedRect(zx, zy, btnW, btnH, 12);
-        btn.fillStyle(0xffffff, 0.2); btn.fillRoundedRect(zx+2, zy+2, btnW-4, btnH/2, 10);
-        
-        this.add.text(zx + btnW/2, zy + 30, zone.icon, {fontSize: '32px'}).setOrigin(0.5);
-        this.add.text(zx + btnW/2, zy + 65, zone.name, {
-          fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-          color: '#ffffff', fontStyle: 'bold'
-        }).setOrigin(0.5);
-        
-        var zoneBtn = this.add.zone(zx + btnW/2, zy + btnH/2, btnW, btnH).setInteractive({useHandCursor: true});
-        zoneBtn.on('pointerdown', function(z) {
-          return function() {
-            this.scene.start('GameScene', {zone: z.name});
-          };
-        }(zone.name));
+  function ZoneSelectScene() { Phaser.Scene.call(this, { key: 'ZoneSelectScene' }); }
+  ZoneSelectScene.prototype = Object.create(Phaser.Scene.prototype);
+  ZoneSelectScene.prototype.constructor = ZoneSelectScene;
+  ZoneSelectScene.prototype.init = function(data) {
+    this.profile = data && data.profile ? data.profile : 'leana';
+  };
+  ZoneSelectScene.prototype.create = function() {
+    var w = this.scale.width;
+    var h = this.scale.height;
+    var self = this;
+
+    // Background
+    var bg = this.add.graphics();
+    bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x1a1a2e, 1);
+    bg.fillRect(0, 0, w, h);
+
+    // Titre
+    var profName = this.profile === 'leana' ? 'Léana' : 'Mathias';
+    this.add.text(w / 2, 30, 'Choisis une zone, ' + profName + ' !', {
+      fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffdd44', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Grille de zones (3x3)
+    var cols = 3;
+    var rows = 3;
+    var btnW = 180, btnH = 100;
+    var gapX = 20, gapY = 20;
+    var totalW = cols * btnW + (cols - 1) * gapX;
+    var startX = (w - totalW) / 2 + btnW / 2;
+    var startY = 100;
+
+    for (var i = 0; i < ZONES.length; i++) {
+      var zone = ZONES[i];
+      var col = i % cols;
+      var row = Math.floor(i / cols);
+      var bx = startX + col * (btnW + gapX);
+      var by = startY + row * (btnH + gapY);
+
+      this.createZoneButton(bx, by, zone, function(z) {
+        self.scene.start('GameScene', { zone: z.key, profile: self.profile });
+      });
+    }
+
+    // Bouton retour
+    this.createSmallButton(w / 2, h - 50, '← Retour au menu', 0x444488, function() {
+      self.scene.start('MenuScene');
+    });
+  };
+
+  ZoneSelectScene.prototype.createZoneButton = function(x, y, zone, callback) {
+    var self = this;
+    var container = this.add.container(x, y);
+    var bg = this.add.graphics();
+    bg.fillStyle(zone.color); bg.fillRoundedRect(-85, -45, 170, 90, 12);
+    bg.fillStyle(0xffffff, 0.12); bg.fillRoundedRect(-83, -43, 166, 45, 10);
+
+    var emoji = this.add.text(0, -12, zone.emoji, {
+      fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui'
+    }).setOrigin(0.5);
+
+    var name = this.add.text(0, 22, zone.name, {
+      fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    container.add([bg, emoji, name]);
+    container.setSize(170, 90);
+    container.setInteractive({ useHandCursor: true });
+    container.on('pointerdown', function() { callback(zone); });
+    container.on('pointerover', function() { container.setScale(1.05); });
+    container.on('pointerout', function() { container.setScale(1.0); });
+    return container;
+  };
+
+  ZoneSelectScene.prototype.createSmallButton = function(x, y, text, color, callback) {
+    var container = this.add.container(x, y);
+    var bg = this.add.graphics();
+    bg.fillStyle(color); bg.fillRoundedRect(-80, -20, 160, 40, 10);
+    var label = this.add.text(0, 0, text, {
+      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    container.add([bg, label]);
+    container.setSize(160, 40);
+    container.setInteractive({ useHandCursor: true });
+    container.on('pointerdown', callback);
+    container.on('pointerover', function() { container.setScale(1.05); });
+    container.on('pointerout', function() { container.setScale(1.0); });
+    return container;
+  };
+
+  // ===== SCENE: GAME (QUIZ) =====
+  function GameScene() { Phaser.Scene.call(this, { key: 'GameScene' }); }
+  GameScene.prototype = Object.create(Phaser.Scene.prototype);
+  GameScene.prototype.constructor = GameScene;
+  GameScene.prototype.init = function(data) {
+    this.zoneKey = data && data.zone ? data.zone : 'cerveau';
+    this.profile = data && data.profile ? data.profile : 'leana';
+    this.score = 0;
+    this.currentQ = 0;
+    this.answered = false;
+  };
+  GameScene.prototype.create = function() {
+    var w = this.scale.width;
+    var h = this.scale.height;
+    var self = this;
+
+    // Trouver la zone
+    this.zoneData = null;
+    for (var i = 0; i < ZONES.length; i++) {
+      if (ZONES[i].key === this.zoneKey) { this.zoneData = ZONES[i]; break; }
+    }
+    if (!this.zoneData) this.zoneData = ZONES[0];
+
+    // Background
+    var bg = this.add.graphics();
+    bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x1a1a2e, 1);
+    bg.fillRect(0, 0, w, h);
+
+    // Header
+    this.add.text(w / 2, 25, this.zoneData.emoji + ' ' + this.zoneData.name, {
+      fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffdd44', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Score
+    this.scoreText = this.add.text(w - 20, 25, '⭐ 0', {
+      fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffdd44'
+    }).setOrigin(1, 0);
+
+    // Zone de question
+    this.questionBg = this.add.graphics();
+    this.questionBg.fillStyle(0x222244, 0.8);
+    this.questionBg.fillRoundedRect(20, 60, w - 40, 120, 12);
+
+    this.questionText = this.add.text(w / 2, 120, '', {
+      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', align: 'center', wordWrap: { width: w - 80 }
+    }).setOrigin(0.5);
+
+    // Feedback
+    this.feedbackText = this.add.text(w / 2, 200, '', {
+      fontSize: '24px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#2ecc71', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Boutons réponse
+    this.answerBtns = [];
+    var qData = this.zoneData.questions;
+    var btnW = 340, btnH = 50;
+    var gapY = 15;
+    var startY = 250;
+
+    for (var qi = 0; qi < qData.length; qi++) {
+      var q = qData[qi];
+      this.showQuestion(q, qi, w, h, btnW, btnH, startY, gapY);
+      break; // Une question à la fois
+    }
+
+    // Bouton retour
+    this.createSmallButton(w / 2, h - 40, '← Retour aux zones', 0x444488, function() {
+      self.scene.start('ZoneSelectScene', { profile: self.profile });
+    });
+
+    // Stocker pour question suivante
+    this.totalQuestions = qData.length;
+  };
+
+  GameScene.prototype.showQuestion = function(q, qIndex, w, h, btnW, btnH, startY, gapY) {
+    var self = this;
+    this.currentQIndex = qIndex;
+    this.answered = false;
+
+    // Mélanger les options
+    var opts = q.options.slice();
+    for (var i = opts.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+    }
+
+    // Afficher question
+    this.questionText.setText(q.q);
+    this.feedbackText.setText('');
+
+    // Supprimer anciens boutons
+    for (var b = 0; b < this.answerBtns.length; b++) {
+      this.answerBtns[b].destroy();
+    }
+    this.answerBtns = [];
+
+    // Créer boutons réponse
+    for (var o = 0; o < opts.length; o++) {
+      var oy = startY + o * (btnH + gapY);
+      var isCorrect = opts[o] === q.a;
+      var btn = this.createAnswerButton(w / 2, oy, btnW, btnH, opts[o], isCorrect);
+      this.answerBtns.push(btn);
+    }
+  };
+
+  GameScene.prototype.createAnswerButton = function(x, y, bw, bh, text, isCorrect) {
+    var self = this;
+    var container = this.add.container(x, y);
+    var bg = this.add.graphics();
+    bg.fillStyle(0x334488); bg.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 10);
+    bg.fillStyle(0xffffff, 0.08); bg.fillRoundedRect(-bw / 2 + 2, -bh / 2 + 2, bw - 4, bh / 2 - 2, 8);
+    var label = this.add.text(0, 0, text, {
+      fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    container.add([bg, label]);
+    container.setSize(bw, bh);
+    container.setInteractive({ useHandCursor: true });
+
+    container.on('pointerdown', function() {
+      if (self.answered) return;
+      self.answered = true;
+
+      if (isCorrect) {
+        self.score++;
+        self.scoreText.setText('⭐ ' + self.score);
+        bg.clear();
+        bg.fillStyle(0x2ecc71); bg.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 10);
+        container.add(bg);
+        self.feedbackText.setText('✅ Bravo !');
+        self.feedbackText.setColor('#2ecc71');
+
+        // Son de réussite
+        self.playTone(523.25, 0.15);
+        setTimeout(function() { self.playTone(659.25, 0.15); }, 150);
+        setTimeout(function() { self.playTone(783.99, 0.3); }, 300);
+      } else {
+        bg.clear();
+        bg.fillStyle(0xe74c3c); bg.fillRoundedRect(-bw / 2, -bh / 2, bw, bh, 10);
+        container.add(bg);
+        self.feedbackText.setText('❌ Essaie encore !');
+        self.feedbackText.setColor('#e74c3c');
+        self.playTone(200, 0.3);
       }
-      
-      // Bouton retour
-      this.createButton(w/2, h - 50, '← Retour', 0x444488, function() {
-        this.scene.start('MenuScene');
-      }.bind(this));
+
+      // Question suivante ou fin
+      setTimeout(function() {
+        var nextQ = self.currentQIndex + 1;
+        if (nextQ < self.totalQuestions) {
+          self.showQuestion(self.zoneData.questions[nextQ], nextQ,
+            self.scale.width, self.scale.height, 340, 50, 250, 15);
+        } else {
+          self.showResult();
+        }
+      }, 1500);
+    });
+
+    container.on('pointerover', function() { container.setScale(1.03); });
+    container.on('pointerout', function() { container.setScale(1.0); });
+
+    return container;
+  };
+
+  GameScene.prototype.showResult = function() {
+    var w = this.scale.width;
+    var h = this.scale.height;
+    var self = this;
+
+    // Overlay
+    var overlay = this.add.graphics();
+    overlay.fillStyle(0x000000, 0.7);
+    overlay.fillRect(0, 0, w, h);
+
+    var pct = Math.round((this.score / this.totalQuestions) * 100);
+    var emoji = pct >= 70 ? '🏆' : pct >= 40 ? '⭐' : '💪';
+    var msg = pct >= 70 ? 'Excellent !' : pct >= 40 ? 'Bien joué !' : 'Continue !';
+
+    this.add.text(w / 2, h / 2 - 60, emoji, {
+      fontSize: '64px', fontFamily: 'Atkinson Hyperlegible, system-ui'
+    }).setOrigin(0.5);
+
+    this.add.text(w / 2, h / 2, msg, {
+      fontSize: '32px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffdd44', fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    this.add.text(w / 2, h / 2 + 50, 'Score: ' + this.score + '/' + this.totalQuestions, {
+      fontSize: '24px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+
+    // Rejouer
+    this.createSmallButton(w / 2 - 100, h / 2 + 110, '🔄 Rejouer', 0x2ecc71, function() {
+      self.scene.start('GameScene', { zone: self.zoneKey, profile: self.profile });
+    });
+
+    // Retour zones
+    this.createSmallButton(w / 2 + 100, h / 2 + 110, '🗺️ Zones', 0x444488, function() {
+      self.scene.start('ZoneSelectScene', { profile: self.profile });
+    });
+  };
+
+  GameScene.prototype.createSmallButton = function(x, y, text, color, callback) {
+    var container = this.add.container(x, y);
+    var bg = this.add.graphics();
+    bg.fillStyle(color); bg.fillRoundedRect(-75, -20, 150, 40, 10);
+    var label = this.add.text(0, 0, text, {
+      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      color: '#ffffff', fontStyle: 'bold'
+    }).setOrigin(0.5);
+    container.add([bg, label]);
+    container.setSize(150, 40);
+    container.setInteractive({ useHandCursor: true });
+    container.on('pointerdown', callback);
+    container.on('pointerover', function() { container.setScale(1.05); });
+    container.on('pointerout', function() { container.setScale(1.0); });
+    return container;
+  };
+
+  // ===== AUDIO =====
+  var _audioCtx = null;
+  function getAudioCtx() {
+    if (!_audioCtx) {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
-    
-    createButton(x, y, text, color, callback) {
-      var container = this.add.container(x, y);
-      var bg = this.add.graphics();
-      bg.fillStyle(color); bg.fillRoundedRect(-80, -20, 160, 40, 10);
-      var label = this.add.text(0, 0, text, {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      container.add([bg, label]);
-      container.setSize(160, 40);
-      container.setInteractive({ useHandCursor: true });
-      container.on('pointerdown', callback);
-      return container;
+    if (_audioCtx.state === 'suspended') {
+      _audioCtx.resume();
     }
+    return _audioCtx;
   }
 
-  // ===== SCENE: GAME =====
-  class GameScene extends Phaser.Scene {
-    constructor() { super({ key: 'GameScene' }); }
-    init(data) {
-      this.zoneName = data.zone || 'Cerveau';
-    }
-    create() {
-      var w = this.scale.width;
-      var h = this.scale.height;
-      
-      // Background
-      var bg = this.add.graphics();
-      bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x1a1a2e, 1);
-      bg.fillRect(0, 0, w, h);
-      
-      // Titre zone
-      this.add.text(w/2, 30, this.zoneName, {
-        fontSize: '32px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffdd44', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      
-      // Zone de jeu
-      this.add.text(w/2, h/2, '🎮 Zone de jeu: ' + this.zoneName + '\n\n(En construction...)', {
-        fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', align: 'center'
-      }).setOrigin(0.5);
-      
-      // Bouton retour
-      this.createButton(w/2, h - 50, '← Retour aux zones', 0x444488, function() {
-        this.scene.start('ZoneSelectScene');
-      }.bind(this));
-    }
-    
-    createButton(x, y, text, color, callback) {
-      var container = this.add.container(x, y);
-      var bg = this.add.graphics();
-      bg.fillStyle(color); bg.fillRoundedRect(-100, -20, 200, 40, 10);
-      var label = this.add.text(0, 0, text, {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      container.add([bg, label]);
-      container.setSize(200, 40);
-      container.setInteractive({ useHandCursor: true });
-      container.on('pointerdown', callback);
-      return container;
-    }
-  }
+  GameScene.prototype.playTone = function(freq, duration) {
+    try {
+      var ctx = getAudioCtx();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration);
+    } catch(e) {}
+  };
 
-  // ===== DÉMARRER LE JEU =====
+  // ===== DÉMARRER =====
   var game = new Phaser.Game(CONFIG);
   game.scene.add('BootScene', BootScene);
   game.scene.add('MenuScene', MenuScene);
   game.scene.add('ZoneSelectScene', ZoneSelectScene);
   game.scene.add('GameScene', GameScene);
   game.scene.start('BootScene');
-}
 
-// Démarrer
-initGame();
+})();
 </script>
 </body>
 </html>

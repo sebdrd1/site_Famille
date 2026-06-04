@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Karaoké — Léana</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --pink:#ff69b4;--violet:#9b59b6;--bg:#1a0a2e;--card:rgba(255,255,255,0.08);
+  --text:#f0e6ff;--accent:#ffd700;
+}
+body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;touch-action:manipulation}
+header{background:linear-gradient(135deg,var(--pink),var(--violet));padding:16px;text-align:center;position:sticky;top:0;z-index:100}
+header h1{font-size:22px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
+header p{font-size:12px;opacity:0.8;margin-top:4px}
+.back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
+.container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:100px}
+.comptine-card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:2px solid rgba(255,105,180,0.3);cursor:pointer;transition:all 0.2s}
+.comptine-card:hover,.comptine-card:active{border-color:var(--pink);transform:scale(1.02)}
+.comptine-card.active{border-color:var(--accent);background:rgba(255,215,0,0.1)}
+.comptine-title{font-size:20px;font-weight:bold;color:var(--accent);margin-bottom:4px}
+.comptine-emoji{font-size:32px;margin-bottom:8px}
+.comptine-preview{font-size:14px;opacity:0.7;font-style:italic}
+.lyrics{display:none;padding:20px;background:rgba(0,0,0,0.3);border-radius:12px;margin-top:12px;font-size:22px;line-height:2;text-align:center}
+.lyrics.show{display:block}
+.lyrics .line{padding:4px 0;transition:all 0.3s}
+.lyrics .line.active{color:var(--accent);font-size:28px;font-weight:bold;text-shadow:0 0 10px var(--accent)}
+.controls{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.ctrl-btn{padding:14px 28px;border:none;border-radius:25px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.2s;min-width:60px}
+.ctrl-btn:active{transform:scale(0.95)}
+.btn-play{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
+.btn-stop{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff}
+.btn-sing{background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff}
+.btn-back{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff}
+.status-bar{text-align:center;padding:10px;font-size:16px;color:var(--accent);min-height:40px}
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="window.location.href='dashboard_leana.html'">← Retour</button>
+  <h1>🎤 Karaoké</h1>
+  <p>Chante avec Léana !</p>
+</header>
+<div class="container" id="comptine-list"></div>
+<div class="status-bar" id="status">Choisis une comptine !</div>
+<div class="controls" id="controls" style="display:none">
+  <button class="ctrl-btn btn-play" onclick="startKaraoke()">▶ Jouer</button>
+  <button class="ctrl-btn btn-sing" onclick="singAlong()">🎤 Chanter</button>
+  <button class="ctrl-btn btn-stop" onclick="stopKaraoke()">⏹ Stop</button>
+  <button class="ctrl-btn btn-back" onclick="backToMenu()">← Comptines</button>
+</div>
+
+<script>
+var comptines=[
+  {title:"Ah les crocodiles",emoji:"🐊",
+   lyrics:["Ah les cro cro cro, les cro cro cro, les crocodiles","Sur les bords du Nil, ils sont partis, n'en parlant plus","Ah les cro cro cro, les cro cro cro, les crocodiles"]},
+  {title:"Alouette",emoji:"🐦",
+   lyrics:["Alouette, gentille alouette","Alouette, je te plumerai","Je te plumerai la tête","Je te plumerai la tête","Et la tête, et la tête","Alouette, alouette"]},
+  {title:"Frère Jacques",emoji:"🔔",
+   lyrics:["Frère Jacques, frère Jacques","Dormez-vous, dormez-vous","Sonnez les matines, sonnez les matines","Ding ding dong, ding ding dong"]},
+  {title:"Petit escargot",emoji:"🐌",
+   lyrics:["Petit escargot, porte sur son dos sa maisonnette","Aussitôt qu'il pleut, il est tout heureux, il sort sa petite tête"]},
+  {title:"Une souris verte",emoji:"🐭",
+   lyrics:["Une souris verte, qui courait dans l'herbe","Je l'attrape par la queue, je la montre à ces messieurs","Ces messieurs me disent, trempez-la dans l'huile"]},
+  {title:"Au clair de la lune",emoji:"🌙",
+   lyrics:["Au clair de la lune, mon ami Pierrot","Prête-moi ta plume, pour écrire un mot","Ma chandelle est morte, je n'ai plus de feu","Ouvre-moi ta porte, pour l'amour de Dieu"]},
+  {title:"Il pleut bergère",emoji:"🌧️",
+   lyrics:["Il pleut, il pleut bergère, rentre tes blancs moutons","Allons sous ma chaurette, il y fait chaud","Il pleut, il pleut bergère, rentre tes blancs moutons"]},
+  {title:"Meunier tu dors",emoji:"🌾",
+   lyrics:["Meunier, tu dors, ton moulin, ton moulin va trop fort","Meunier, tu dors, ton moulin, ton moulin va trop vite"]},
+  {title:"Sur le pont d'Avignon",emoji:"🌉",
+   lyrics:["Sur le pont d'Avignon, on y danse, on y danse","Sur le pont d'Avignon, on y danse tous en rond","Les beaux messieurs font comme ça, et puis encore comme ça"]},
+  {title:"Promenons-nous dans les bois",emoji:"🐺",
+   lyrics:["Promenons-nous dans les bois, pendant que le loup n'y est pas","Si le loup y était, il nous mangerait","Mais comme il n'y est pas, il nous mangera pas","Loup, y es-tu, que fais-tu, m'entends-tu"]}
+];
+
+var currentComptine=null;
+var currentLine=0;
+var karaokeTimer=null;
+var isPlaying=false;
+
+// Audio context partagé
+var _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==='suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+// Synthèse vocale avec file d'attente
+var speechQueue=[];
+var isSpeaking=false;
+function speak(text,callback){
+  if(!('speechSynthesis'in window)){if(callback)callback();return}
+  speechQueue.push({text:text,callback:callback});
+  if(!isSpeaking) processSpeechQueue();
+}
+function processSpeechQueue(){
+  if(speechQueue.length===0){isSpeaking=false;return}
+  isSpeaking=true;
+  var item=speechQueue.shift();
+  var u=new SpeechSynthesisUtterance(item.text);
+  u.lang='fr-FR';
+  u.rate=0.85;
+  u.pitch=1.2;
+  u.onend=function(){
+    if(item.callback)item.callback();
+    processSpeechQueue();
+  };
+  u.onerror=function(){processSpeechQueue()};
+  speechSynthesis.speak(u);
+}
+function stopSpeech(){
+  speechQueue=[];
+  isSpeaking=false;
+  speechSynthesis.cancel();
+}
+
+// Afficher la liste
+function renderList(){
+  var list=document.getElementById('comptine-list');
+  list.innerHTML='';
+  for(var i=0;i<comptines.length;i++){
+    var c=comptines[i];
+    var card=document.createElement('div');
+    card.className='comptine-card';
+    card.innerHTML='<div class="comptine-emoji">'+c.emoji+'</div><div class="comptine-title">'+c.title+'</div><div class="comptine-preview">'+c.lyrics[0]+'...</div>';
+    (function(idx){
+      card.onclick=function(){selectComptine(idx);};
+    })(i);
+    list.appendChild(card);
+  }
+}
+
+function selectComptine(idx){
+  currentComptine=comptines[idx];
+  currentLine=0;
+  isPlaying=false;
+  if(karaokeTimer){clearInterval(karaokeTimer);karaokeTimer=null;}
+  
+  var list=document.getElementById('comptine-list');
+  list.innerHTML='';
+  
+  var card=document.createElement('div');
+  card.className='comptine-card active';
+  card.innerHTML='<div class="comptine-emoji">'+currentComptine.emoji+'</div><div class="comptine-title">'+currentComptine.title+'</div>';
+  list.appendChild(card);
+  
+  var lyricsDiv=document.createElement('div');
+  lyricsDiv.className='lyrics show';
+  lyricsDiv.id='lyrics';
+  var html='';
+  for(var i=0;i<currentComptine.lyrics.length;i++){
+    html+='<div class="line" id="line'+i+'">'+currentComptine.lyrics[i]+'</div>';
+  }
+  lyricsDiv.innerHTML=html;
+  list.appendChild(lyricsDiv);
+  
+  document.getElementById('controls').style.display='flex';
+  document.getElementById('status').textContent='Appuie sur ▶ pour écouter !';
+  
+  // Dire le titre
+  speak("C'est la comptine "+currentComptine.title+". Appuie sur jouer pour écouter !");
+}
+
+function startKaraoke(){
+  if(!currentComptine)return;
+  stopKaraoke();
+  isPlaying=true;
+  currentLine=0;
+  document.getElementById('status').textContent='🎵 Écoute...';
+  
+  // Dire chaque ligne avec pause
+  function sayLine(){
+    if(!isPlaying||currentLine>=currentComptine.lyrics.length){
+      isPlaying=false;
+      document.getElementById('status').textContent='✅ Terminé ! Tu veux recommencer ?';
+      speak("C'est fini ! Tu veux recommencer ?");
+      return;
+    }
+    // Highlight
+    for(var i=0;i<currentComptine.lyrics.length;i++){
+      var el=document.getElementById('line'+i);
+      if(el)el.className='line';
+    }
+    var cur=document.getElementById('line'+currentLine);
+    if(cur){cur.className='line active';cur.scrollIntoView({behavior:'smooth',block:'center'});}
+    
+    speak(currentComptine.lyrics[currentLine],function(){
+      currentLine++;
+      if(isPlaying)setTimeout(sayLine,500);
+    });
+  }
+  sayLine();
+}
+
+function singAlong(){
+  if(!currentComptine)return;
+  stopKaraoke();
+  isPlaying=true;
+  currentLine=0;
+  document.getElementById('status').textContent='🎤 À toi de chanter !';
+  
+  function showLine(){
+    if(!isPlaying||currentLine>=currentComptine.lyrics.length){
+      isPlaying=false;
+      document.getElementById('status').textContent='🎉 Bravo ! Tu veux recommencer ?';
+      speak("Bravo ! Tu veux recommencer ?");
+      return;
+    }
+    for(var i=0;i<currentComptine.lyrics.length;i++){
+      var el=document.getElementById('line'+i);
+      if(el)el.className='line';
+    }
+    var cur=document.getElementById('line'+currentLine);
+    if(cur){cur.className='line active';cur.scrollIntoView({behavior:'smooth',block:'center'});}
+    
+    // Attendre que l'utilisateur "chante" — juste montrer la ligne pendant 4 sec
+    currentLine++;
+    karaokeTimer=setTimeout(showLine,4000);
+  }
+  showLine();
+}
+
+function stopKaraoke(){
+  isPlaying=false;
+  stopSpeech();
+  if(karaokeTimer){clearInterval(karaokeTimer);karaokeTimer=null;}
+  document.getElementById('status').textContent='⏹ Arrêté';
+}
+
+function backToMenu(){
+  stopKaraoke();
+  renderList();
+  document.getElementById('controls').style.display='none';
+  document.getElementById('status').textContent='Choisis une comptine !';
+}
+
+// Init
+renderList();
+</script>
+</body>
+</html>

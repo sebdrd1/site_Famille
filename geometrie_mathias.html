@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Géométrie — Mathias</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --red:#e74c3c;--orange:#e67e22;--bg:#1a0a1e;--card:rgba(255,255,255,0.08);
+  --text:#f0e6ff;--accent:#ffd700;--green:#2ecc71;--blue:#3498db;
+}
+body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;touch-action:manipulation}
+header{background:linear-gradient(135deg,var(--red),var(--orange));padding:16px;text-align:center;position:sticky;top:0;z-index:100}
+header h1{font-size:22px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
+header p{font-size:12px;opacity:0.8;margin-top:4px}
+.back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
+.container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:100px}
+.mode-select{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.mode-btn{padding:20px;border:none;border-radius:16px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s;text-align:center}
+.mode-btn:active{transform:scale(0.95)}
+.mode-btn.formes{background:linear-gradient(135deg,#9b59b6,#8e44ad)}
+.mode-btn.solides{background:linear-gradient(135deg,#3498db,#2980b9)}
+.mode-btn.mesures{background:linear-gradient(135deg,#e67e22,#d35400)}
+.mode-btn.sym{background:linear-gradient(135deg,#2ecc71,#27ae60)}
+.mode-btn .emoji{font-size:32px;display:block;margin-bottom:8px}
+.canvas-area{background:var(--card);border-radius:16px;padding:16px;margin-bottom:16px;text-align:center;min-height:200px;position:relative;overflow:hidden}
+.geo-canvas{display:block;margin:0 auto;background:#111;border-radius:8px;touch-action:none}
+.shape-info{text-align:center;padding:16px;background:var(--card);border-radius:12px;margin-bottom:16px}
+.shape-name{font-size:28px;font-weight:bold;color:var(--accent)}
+.shape-desc{font-size:16px;opacity:0.8;margin-top:4px}
+.shape-props{font-size:14px;color:var(--green);margin-top:8px}
+.qa-area{text-align:center;padding:20px;background:var(--card);border-radius:16px;margin-bottom:16px}
+.qa-question{font-size:22px;font-weight:bold;color:#fff;margin-bottom:16px}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt-btn{padding:16px;border:3px solid rgba(255,255,255,0.2);border-radius:12px;background:rgba(255,255,255,0.05);color:#fff;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.2s}
+.opt-btn:active{transform:scale(0.95)}
+.opt-btn.correct{border-color:var(--green);background:rgba(46,204,113,0.2)}
+.opt-btn.wrong{border-color:var(--red);background:rgba(231,76,60,0.2)}
+.score-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-radius:12px;margin-bottom:16px;font-size:18px}
+.feedback{text-align:center;padding:12px;font-size:20px;font-weight:bold;min-height:50px}
+.feedback.ok{color:var(--green)}
+.feedback.no{color:var(--red)}
+.tutorial-box{background:rgba(255,215,0,0.1);border:2px solid var(--accent);border-radius:16px;padding:20px;margin-bottom:20px;display:none}
+.tutorial-box.show{display:block}
+.tutorial-box h3{color:var(--accent);margin-bottom:12px}
+.tutorial-box p{font-size:16px;line-height:1.6;margin-bottom:8px}
+.nav-btns{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.nav-btn{padding:12px 20px;border:none;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s}
+.nav-btn:active{transform:scale(0.95)}
+.btn-next{background:linear-gradient(135deg,#3498db,#2980b9)}
+.btn-sound{background:linear-gradient(135deg,var(--orange),var(--red))}
+.btn-home{background:linear-gradient(135deg,#444,#666)}
+.measurement-display{font-size:36px;font-weight:bold;color:var(--accent);padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="window.location.href='dashboard_mathias.html'">← Retour</button>
+  <h1>📐 Géométrie</h1>
+  <p>Explore les formes avec Mathias !</p>
+</header>
+<div class="container" id="app"></div>
+
+<script>
+// ===== DONNÉES GÉOMÉTRIE =====
+var FORMES=[
+  {name:"CERCLEx",displayName:"Cercle",emoji:"⭕",color:0xff6b6b,
+   props:"0 côté, 0 sommet, 1 face courbe",
+   draw:function(ctx,x,y,s){ctx.beginPath();ctx.arc(x,y,s/2,0,Math.PI*2);ctx.stroke();},
+   quiz:[
+     {q:"Combien de côtés a un cercle?",opts:["0","1","3","4"],a:0},
+     {q:"Un cercle est-il rond?",opts:["Oui","Non","Peut-être","Parfois"],a:0},
+     {q:"Quelle forme a une roue?",opts:["Carré","Cercle","Triangle","Losange"],a:1}
+   ]},
+  {name:"TRIANGLEX",displayName:"Triangle",emoji:"🔺",color:0x4ecdc4,
+   props:"3 côtés, 3 sommets, 3 angles",
+   draw:function(ctx,x,y,s){ctx.beginPath();ctx.moveTo(x,y-s/2);ctx.lineTo(x-s/2,y+s/2);ctx.lineTo(x+s/2,y+s/2);ctx.closePath();ctx.stroke();},
+   quiz:[
+     {q:"Combien de côtés a un triangle?",opts:["2","3","4","5"],a:1},
+     {q:"Combien de sommets?",opts:["2","3","4","6"],a:1},
+     {q:"Quelle forme a le moins de côtés?",opts:["Carré","Triangle","Pentagone","Rond"],a:1}
+   ]},
+  {name:"CARREX",displayName:"Carré",emoji:"🟦",color:0x45b7d1,
+   props:"4 côtés égaux, 4 sommets, 4 angles droits",
+   draw:function(ctx,x,y,s){ctx.strokeRect(x-s/2,y-s/2,s,s);},
+   quiz:[
+     {q:"Combien de côtés égaux?",opts:["2","3","4","5"],a:2},
+     {q:"Combien d'angles droits?",opts:["1","2","4","0"],a:2},
+     {q:"Un carré est-il un rectangle?",opts:["Oui","Non","Parfois","Jamais"],a:0}
+   ]},
+  {name:"RECTANGLEX",displayName:"Rectangle",emoji:"🟩",color:0x2ecc71,
+   props:"4 côtés, 4 angles droits, 2 paires égales",
+   draw:function(ctx,x,y,s){ctx.strokeRect(x-s*0.75,y-s/2,s*1.5,s);},
+   quiz:[
+     {q:"Combien d'angles droits?",opts:["2","3","4","1"],a:2},
+     {q:"Les côtés opposés sont-ils égaux?",opts:["Oui","Non","Parfois","Jamais"],a:0},
+     {q:"Un rectangle a-t-il 4 côtés?",opts:["Oui","Non","3","6"],a:0}
+   ]},
+  {name:"LOSANGEX",displayName:"Losange",emoji:"🔷",color:0x9b59b6,
+   props:"4 côtés égaux, 2 angles aigus, 2 angles obtus",
+   draw:function(ctx,x,y,s){ctx.beginPath();ctx.moveTo(x,y-s/2);ctx.lineTo(x+s/2,y);ctx.lineTo(x,y+s/2);ctx.lineTo(x-s/2,y);ctx.closePath();ctx.stroke();},
+   quiz:[
+     {q:"Combien de côtés égaux?",opts:["2","3","4","0"],a:2},
+     {q:"Un losange est-il un carré?",opts:["Toujours","Jamais","Parfois","Souvent"],a:2}
+   ]},
+  {name:"PENTAGONEX",displayName:"Pentagone",emoji:"⬟",color:0xf39c12,
+   props:"5 côtés, 5 sommets, 5 angles",
+   draw:function(ctx,x,y,s){ctx.beginPath();for(var i=0;i<5;i++){var a=(i*72-90)*Math.PI/180;var px=x+s/2*Math.cos(a);var py=y+s/2*Math.sin(a);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.stroke();},
+   quiz:[
+     {q:"Combien de côtés?",opts:["4","5","6","3"],a:1},
+     {q:"Combien de sommets?",opts:["4","5","6","8"],a:1}
+   ]},
+  {name:"HEXAGONEX",displayName:"Hexagone",emoji:"⬡",color:0xe67e22,
+   props:"6 côtés, 6 sommets, 6 angles",
+   draw:function(ctx,x,y,s){ctx.beginPath();for(var i=0;i<6;i++){var a=(i*60-90)*Math.PI/180;var px=x+s/2*Math.cos(a);var py=y+s/2*Math.sin(a);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.closePath();ctx.stroke();},
+   quiz:[
+     {q:"Combien de côtés?",opts:["5","6","7","8"],a:1},
+     {q:"Une alabeille fait des...",opts:["Carrés","Hexagones","Triangles","Ronds"],a:1}
+   ]}
+];
+
+var SOLIDES=[
+  {name:"CUBE",displayName:"Cube",emoji:"🧊",color:0x45b7d1,props:"6 faces, 12 arêtes, 8 sommets",quiz:[
+    {q:"Combien de faces a un cube?",opts:["4","6","8","12"],a:1},
+    {q:"Combien de sommets?",opts:["6","8","12","4"],a:1},
+    {q:"Un dé est un...",opts:["Cube","Sphère","Cylindre","Cône"],a:0}
+  ]},
+  {name:"SPHEREX",displayName:"Sphère",emoji:"🏀",color:0xff6b6b,props:"0 face plane, 0 arête, 0 sommet",quiz:[
+    {q:"Une balle est une...",opts:["Cube","Sphère","Cône","Pyramide"],a:1},
+    {q:"Combien de faces planes?",opts:["0","1","2","4"],a:0}
+  ]},
+  {name:"CYLINDRE",displayName:"Cylindre",emoji:"🥫",color:0x9b59b6,props:"3 faces, 2 arêtes, 0 sommet",quiz:[
+    {q:"Une boîte de conserve est un...",opts:["Cube","Cylindre","Sphère","Cône"],a:1},
+    {q:"Combien de faces?",opts:["2","3","4","1"],a:1}
+  ]},
+  {name:"CONEX",displayName:"Cône",emoji:"🎄",color:0x2ecc71,props:"2 faces, 1 arête, 1 sommet",quiz:[
+    {q:"Un sapin ressemble à un...",opts:["Cube","Cône","Sphère","Cylindre"],a:1},
+    {q:"La glace du marchand est un...",opts:["Cube","Sphère","Cône","Cylindre"],a:2}
+  ]},
+  {name:"PYRAMIDEX",displayName:"Pyramide",emoji:"🔺",color:0xf39c12,props:"5 faces, 8 arêtes, 5 sommets",quiz:[
+    {q:"Les pyramides d'Égypte ont combien de faces?",opts:["3","4","5","6"],a:2},
+    {q:"Combien de sommets?",opts:["4","5","6","8"],a:1}
+  ]}
+];
+
+// ===== ÉTAT =====
+var currentMode="menu";
+var currentShape=0;
+var score=0;
+var qIndex=0;
+
+// ===== AUDIO =====
+var speechQueue=[],isSpeaking=false;
+function speak(text,cb){
+  if(!('speechSynthesis'in window)){if(cb)cb();return}
+  speechQueue.push({text:text,cb:cb});
+  if(!isSpeaking) processQueue();
+}
+function processQueue(){
+  if(!speechQueue.length){isSpeaking=false;return}
+  isSpeaking=true;
+  var item=speechQueue.shift();
+  var u=new SpeechSynthesisUtterance(item.text);
+  u.lang='fr-FR';u.rate=0.9;u.pitch=1.0;
+  u.onend=function(){if(item.cb)item.cb();processQueue()};
+  u.onerror=function(){processQueue()};
+  speechSynthesis.speak(u);
+}
+function stopSpeech(){speechQueue=[];isSpeaking=false;speechSynthesis.cancel();}
+
+var _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==='suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function playTone(freq,dur){
+  try{
+    var ctx=getAudioCtx();
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(0.3,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+dur);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+// ===== RENDU =====
+function render(){
+  var app=document.getElementById('app');
+  if(currentMode==="menu")renderMenu(app);
+  else if(currentMode==="formes")renderFormes(app);
+  else if(currentMode==="formesQuiz")renderFormesQuiz(app);
+  else if(currentMode==="solides")renderSolides(app);
+  else if(currentMode==="solidesQuiz")renderSolidesQuiz(app);
+  else if(currentMode==="mesures")renderMesures(app);
+  else if(currentMode==="symetrie")renderSymetrie(app);
+}
+
+function renderMenu(app){
+  app.innerHTML='<div class="tutorial-box show">'
+    +'<h3>📐 Bienvenue en Géométrie !</h3>'
+    +'<p>Explore les formes, les solides et les mesures.</p>'
+    +'<div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center">'
+    +'<button class="nav-btn btn-sound" onclick="speak(\'Bienvenue en Géométrie ! Choisis un thème.\')">🔊 Écouter</button>'
+    +'</div></div>'
+    +'<div class="mode-select">'
+    +'<button class="mode-btn formes" onclick="startFormes()"><span class="emoji">🔷</span>Formes</button>'
+    +'<button class="mode-btn solides" onclick="startSolides()"><span class="emoji">🧊</span>Solides</button>'
+    +'<button class="mode-btn mesures" onclick="startMesures()"><span class="emoji">📏</span>Mesures</button>'
+    +'<button class="mode-btn sym" onclick="startSymetrie()"><span class="emoji">🪞</span>Symétrie</button>'
+    +'</div>';
+}
+
+// ===== FORMES =====
+function startFormes(){
+  currentMode="formes";
+  currentShape=0;
+  render();
+}
+
+function renderFormes(app){
+  var f=FORMES[currentShape];
+  app.innerHTML='<div class="score-bar"><span>Forme '+(currentShape+1)+'/'+FORMES.length+'</span><span class="score-val">'+f.emoji+'</span></div>'
+    +'<div class="canvas-area"><canvas id="geoCanvas" class="geo-canvas" width="300" height="200"></canvas></div>'
+    +'<div class="shape-info">'
+    +'<div class="shape-name">'+f.emoji+' '+f.displayName+'</div>'
+    +'<div class="shape-desc">'+f.props+'</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-sound" onclick="speakForme()">🔊 Écouter</button>'
+    +(currentShape>0?'<button class="nav-btn btn-next" onclick="prevForme()">← Précédent</button>':'')
+    +(currentShape<FORMES.length-1?'<button class="nav-btn btn-next" onclick="nextForme()">Suivant →</button>':'<button class="nav-btn btn-next" onclick="startFormesQuiz()">Quiz →</button>')
+    +'</div>'
+    +'<div class="nav-btns" style="margin-top:12px"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  
+  // Dessiner la forme
+  setTimeout(function(){
+    var canvas=document.getElementById('geoCanvas');
+    if(canvas){
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,300,200);
+      ctx.strokeStyle='#'+f.color.toString(16).padStart(6,'0');
+      ctx.lineWidth=3;
+      ctx.lineCap='round';
+      f.draw(ctx,150,100,120);
+    }
+  },100);
+  
+  speak(f.displayName+". "+f.props);
+}
+
+function speakForme(){
+  var f=FORMES[currentShape];
+  speak(f.displayName+". "+f.props);
+}
+function nextForme(){if(currentShape<FORMES.length-1){currentShape++;render();}}
+function prevForme(){if(currentShape>0){currentShape--;render();}}
+
+function startFormesQuiz(){
+  currentMode="formesQuiz";
+  currentShape=0;
+  qIndex=0;
+  score=0;
+  render();
+}
+
+function renderFormesQuiz(app){
+  var f=FORMES[currentShape];
+  var q=f.quiz[qIndex];
+  
+  app.innerHTML='<div class="score-bar"><span>Quiz Formes</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="canvas-area"><canvas id="geoCanvas" class="geo-canvas" width="300" height="200"></canvas></div>'
+    +'<div class="qa-area">'
+    +'<div class="qa-question">'+f.emoji+' '+q.q+'</div>'
+    +'<div class="options-grid" id="quizOpts">';
+  for(var i=0;i<q.opts.length;i++){
+    (function(idx){
+      app.innerHTML+='<button class="opt-btn" onclick="checkQuizAnswer(this,'+(idx===q.a)+')">'+q.opts[idx]+'</button>';
+    })(i);
+  }
+  app.innerHTML+='</div><div class="feedback" id="quizFb"></div></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  
+  setTimeout(function(){
+    var canvas=document.getElementById('geoCanvas');
+    if(canvas){
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,300,200);
+      ctx.strokeStyle='#'+f.color.toString(16).padStart(6,'0');
+      ctx.lineWidth=3;
+      f.draw(ctx,150,100,120);
+    }
+  },100);
+  
+  setTimeout(function(){speak(q.q);},500);
+}
+
+function checkQuizAnswer(btn,isOk){
+  var fb=document.getElementById('quizFb');
+  var allBtns=document.querySelectorAll('#quizOpts .opt-btn');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  
+  if(isOk){
+    btn.className='opt-btn correct';
+    fb.className='feedback ok';
+    fb.textContent='✅ Bravo !';
+    score++;
+    playTone(523,0.15);
+    setTimeout(function(){playTone(784,0.3);},150);
+    speak("Bravo !");
+  }else{
+    btn.className='opt-btn wrong';
+    fb.className='feedback no';
+    fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);
+    speak("Non, essaie encore !");
+  }
+  
+  setTimeout(function(){
+    qIndex++;
+    var f=FORMES[currentShape];
+    if(qIndex>=f.quiz.length){
+      qIndex=0;
+      currentShape++;
+    }
+    if(currentShape>=FORMES.length){
+      showResult("formes");
+    }else{
+      render();
+    }
+  },1500);
+}
+
+// ===== SOLIDES =====
+function startSolides(){
+  currentMode="solides";
+  currentShape=0;
+  render();
+}
+
+function renderSolides(app){
+  var s=SOLIDES[currentShape];
+  app.innerHTML='<div class="score-bar"><span>Solide '+(currentShape+1)+'/'+SOLIDES.length+'</span><span class="score-val">'+s.emoji+'</span></div>'
+    +'<div class="shape-info">'
+    +'<div class="shape-name" style="font-size:64px">'+s.emoji+'</div>'
+    +'<div class="shape-name">'+s.displayName+'</div>'
+    +'<div class="shape-desc">'+s.props+'</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-sound" onclick="speakSolide()">🔊 Écouter</button>'
+    +(currentShape>0?'<button class="nav-btn btn-next" onclick="prevSolide()">← Précédent</button>':'')
+    +(currentShape<SOLIDES.length-1?'<button class="nav-btn btn-next" onclick="nextSolide()">Suivant →</button>':'<button class="nav-btn btn-next" onclick="startSolidesQuiz()">Quiz →</button>')
+    +'</div>'
+    +'<div class="nav-btns" style="margin-top:12px"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  speak(s.displayName+". "+s.props);
+}
+
+function speakSolide(){var s=SOLIDES[currentShape];speak(s.displayName+". "+s.props);}
+function nextSolide(){if(currentShape<SOLIDES.length-1){currentShape++;render();}}
+function prevSolide(){if(currentShape>0){currentShape--;render();}}
+
+function startSolidesQuiz(){
+  currentMode="solidesQuiz";
+  currentShape=0;
+  qIndex=0;
+  score=0;
+  render();
+}
+
+function renderSolidesQuiz(app){
+  var s=SOLIDES[currentShape];
+  var q=s.quiz[qIndex];
+  app.innerHTML='<div class="score-bar"><span>Quiz Solides</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="qa-area">'
+    +'<div class="qa-question">'+s.emoji+' '+q.q+'</div>'
+    +'<div class="options-grid" id="quizOpts2">';
+  for(var i=0;i<q.opts.length;i++){
+    (function(idx){
+      app.innerHTML+='<button class="opt-btn" onclick="checkSolQuizAnswer(this,'+(idx===q.a)+')">'+q.opts[idx]+'</button>';
+    })(i);
+  }
+  app.innerHTML+='</div><div class="feedback" id="quizFb2"></div></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  setTimeout(function(){speak(q.q);},500);
+}
+
+function checkSolQuizAnswer(btn,isOk){
+  var fb=document.getElementById('quizFb2');
+  var allBtns=document.querySelectorAll('#quizOpts2 .opt-btn');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  if(isOk){
+    btn.className='opt-btn correct';fb.className='feedback ok';fb.textContent='✅ Bravo !';score++;
+    playTone(523,0.15);setTimeout(function(){playTone(784,0.3);},150);
+    speak("Bravo !");
+  }else{
+    btn.className='opt-btn wrong';fb.className='feedback no';fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);speak("Non, essaie encore !");
+  }
+  setTimeout(function(){
+    qIndex++;
+    var s=SOLIDES[currentShape];
+    if(qIndex>=s.quiz.length){qIndex=0;currentShape++;}
+    if(currentShape>=SOLIDES.length)showResult("solides");
+    else render();
+  },1500);
+}
+
+// ===== MESURES =====
+var mesureExercises=[
+  {q:"Combien de cm dans 1 mètre?",opts:["10","100","1000","50"],a:1},
+  {q:"Combien de mm dans 1 cm?",opts:["1","10","100","1000"],a:1},
+  {q:"Combien de g dans 1 kg?",opts:["10","100","1000","500"],a:2},
+  {q:"Combien de mL dans 1 litre?",opts:["10","100","1000","500"],a:2},
+  {q:"Combien de minutes dans 1 heure?",opts:["30","60","100","24"],a:1},
+  {q:"Combien de jours dans 1 semaine?",opts:["5","6","7","8"],a:2}
+];
+var currentMesEx=0;
+
+function startMesures(){
+  currentMode="mesures";
+  currentMesEx=0;
+  score=0;
+  render();
+}
+
+function renderMesures(app){
+  var ex=mesureExercises[currentMesEx];
+  app.innerHTML='<div class="score-bar"><span>Mesure '+(currentMesEx+1)+'/'+mesureExercises.length+'</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="qa-area">'
+    +'<div class="qa-question">📏 '+ex.q+'</div>'
+    +'<div class="options-grid" id="mesOpts">';
+  for(var i=0;i<ex.opts.length;i++){
+    (function(idx){
+      app.innerHTML+='<button class="opt-btn" onclick="checkMesAnswer(this,'+(idx===ex.a)+')">'+ex.opts[idx]+'</button>';
+    })(i);
+  }
+  app.innerHTML+='</div><div class="feedback" id="mesFb"></div></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  setTimeout(function(){speak(ex.q);},500);
+}
+
+function checkMesAnswer(btn,isOk){
+  var fb=document.getElementById('mesFb');
+  var allBtns=document.querySelectorAll('#mesOpts .opt-btn');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  if(isOk){
+    btn.className='opt-btn correct';fb.className='feedback ok';fb.textContent='✅ Bravo !';score++;
+    playTone(523,0.15);setTimeout(function(){playTone(784,0.3);},150);
+    speak("Bravo !");
+  }else{
+    btn.className='opt-btn wrong';fb.className='feedback no';fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);speak("Non, essaie encore !");
+  }
+  setTimeout(function(){
+    currentMesEx++;
+    if(currentMesEx>=mesureExercises.length)showResult("mesures");
+    else render();
+  },1500);
+}
+
+// ===== SYMÉTRIE =====
+var symShapes=["CERCLEX","CARREX","TRIANGLEX","RECTANGLEX"];
+var symCurrent=0;
+
+function startSymetrie(){
+  currentMode="symetrie";
+  symCurrent=0;
+  render();
+}
+
+function renderSymetrie(app){
+  var shapeName=symShapes[symCurrent];
+  var f=null;
+  for(var i=0;i<FORMES.length;i++){if(FORMES[i].name===shapeName){f=FORMES[i];break;}}
+  if(!f)f=FORMES[0];
+  
+  app.innerHTML='<div class="score-bar"><span>Symétrie '+(symCurrent+1)+'/'+symShapes.length+'</span></div>'
+    +'<div class="canvas-area"><canvas id="symCanvas" class="geo-canvas" width="300" height="200"></canvas></div>'
+    +'<div class="shape-info">'
+    +'<div class="shape-name">'+f.emoji+' '+f.displayName+'</div>'
+    +'<div class="shape-desc">🪞 Dessine la partie manquante !</div>'
+    +'<div class="shape-props">La ligne rouge est l\'axe de symétrie</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-sound" onclick="speak(\'Dessine la partie symétrique de la forme par rapport à la ligne rouge.\')">🔊 Consigne</button>'
+    +(symCurrent>0?'<button class="nav-btn btn-next" onclick="prevSym()">← Précédent</button>':'')
+    +(symCurrent<symShapes.length-1?'<button class="nav-btn btn-next" onclick="nextSym()">Suivant →</button>':'<button class="nav-btn btn-next" onclick="goMenu()">🏠 Menu</button>')
+    +'</div>'
+    +'<div class="nav-btns" style="margin-top:12px"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  
+  setTimeout(function(){
+    var canvas=document.getElementById('symCanvas');
+    if(canvas){
+      var ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,300,200);
+      // Axe de symétrie (rouge)
+      ctx.strokeStyle='#e74c3c';
+      ctx.lineWidth=2;
+      ctx.setLineDash([5,5]);
+      ctx.beginPath();
+      ctx.moveTo(150,10);
+      ctx.lineTo(150,190);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Dessiner la moitié de la forme
+      ctx.strokeStyle='#'+f.color.toString(16).padStart(6,'0');
+      ctx.lineWidth=3;
+      drawHalfShape(ctx,f,150,100,120);
+    }
+  },100);
+}
+
+function drawHalfShape(ctx,f,x,y,s){
+  // Dessiner seulement la moitié gauche
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0,0,x,200);
+  ctx.clip();
+  f.draw(ctx,x,y,s);
+  ctx.restore();
+}
+
+function nextSym(){if(symCurrent<symShapes.length-1){symCurrent++;render();}}
+function prevSym(){if(symCurrent>0){symCurrent--;render();}}
+
+// ===== RÉSULTATS =====
+function showResult(type){
+  var app=document.getElementById('app');
+  var total=0;
+  if(type==="formes")total=0;
+  else if(type==="solides")total=0;
+  else if(type==="mesures")total=mesureExercises.length;
+  
+  // Compter les questions totales
+  if(type==="formes"){
+    for(var i=0;i<FORMES.length;i++)total+=FORMES[i].quiz.length;
+  }else if(type==="solides"){
+    for(var i=0;i<SOLIDES.length;i++)total+=SOLIDES[i].quiz.length;
+  }
+  
+  var pct=total>0?Math.round((score/total)*100):0;
+  app.innerHTML='<div class="shape-info">'
+    +'<div style="font-size:64px">'+(pct>=70?'🏆':pct>=40?'⭐':'💪')+'</div>'
+    +'<div class="shape-name">'+(pct>=70?'Excellent !':pct>=40?'Bien joué !':'Continue !')+'</div>'
+    +'<div class="shape-desc">Score : '+score+'/'+total+' ('+pct+'%)</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-next" onclick="goMenu()">🏠 Menu</button>'
+    +'</div>';
+  speak("C'est fini ! "+score+" sur "+total+" bonnes réponses. "+(pct>=70?"Excellent !":pct>=40?"Bien joué !":"Continue comme ça !"));
+}
+
+function goMenu(){currentMode="menu";score=0;render();}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>

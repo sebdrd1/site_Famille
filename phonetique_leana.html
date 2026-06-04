@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Phonétique — Léana</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --pink:#ff69b4;--violet:#9b59b6;--bg:#1a0a2e;--card:rgba(255,255,255,0.08);
+  --text:#f0e6ff;--accent:#ffd700;--green:#2ecc71;--red:#e74c3c;
+}
+body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;touch-action:manipulation}
+header{background:linear-gradient(135deg,var(--violet),#3498db);padding:16px;text-align:center;position:sticky;top:0;z-index:100}
+header h1{font-size:22px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
+header p{font-size:12px;opacity:0.8;margin-top:4px}
+.back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
+.container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:100px}
+.mode-select{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.mode-btn{padding:20px;border:none;border-radius:16px;font-size:18px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s;text-align:center}
+.mode-btn:active{transform:scale(0.95)}
+.mode-btn.eco{background:linear-gradient(135deg,#2ecc71,#27ae60)}
+.mode-btn.jeu{background:linear-gradient(135deg,#e67e22,#d35400)}
+.mode-btn.dic{background:linear-gradient(135deg,#9b59b6,#8e44ad)}
+.mode-btn.cor{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+.mode-btn .emoji{font-size:32px;display:block;margin-bottom:8px}
+.letter-display{text-align:center;padding:30px;background:var(--card);border-radius:20px;margin-bottom:20px}
+.letter-big{font-size:120px;font-weight:bold;color:var(--accent);text-shadow:0 0 20px rgba(255,215,0,0.5);line-height:1}
+.letter-sound{font-size:28px;color:#fff;margin-top:10px}
+.letter-word{font-size:24px;color:var(--green);margin-top:8px}
+.options-grid{display:grid;grid-template-columns:2fr 2fr;gap:12px;margin-bottom:20px}
+.opt-btn{padding:18px;border:3px solid rgba(255,255,255,0.2);border-radius:16px;background:var(--card);color:#fff;font-size:20px;font-weight:bold;cursor:pointer;transition:all 0.2s;text-align:center}
+.opt-btn:active{transform:scale(0.95)}
+.opt-btn.correct{border-color:var(--green);background:rgba(46,204,113,0.2)}
+.opt-btn.wrong{border-color:var(--red);background:rgba(231,76,60,0.2)}
+.opt-btn .opt-emoji{font-size:36px;display:block;margin-bottom:4px}
+.score-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-radius:12px;margin-bottom:16px;font-size:18px}
+.score-val{color:var(--accent);font-weight:bold}
+.feedback{text-align:center;padding:16px;font-size:24px;font-weight:bold;min-height:60px}
+.feedback.ok{color:var(--green)}
+.feedback.no{color:var(--red)}
+.tutorial-box{background:rgba(255,215,0,0.1);border:2px solid var(--accent);border-radius:16px;padding:20px;margin-bottom:20px;display:none}
+.tutorial-box.show{display:block}
+.tutorial-box h3{color:var(--accent);margin-bottom:12px;font-size:20px}
+.tutorial-box p{font-size:16px;line-height:1.6;margin-bottom:8px}
+.tutorial-box .step{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px}
+.tut-btn{padding:10px 20px;border:none;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;margin-top:8px;background:var(--accent);color:#1a0a2e}
+.nav-btns{display:flex;gap:12px;justify-content:center;margin-top:16px}
+.nav-btn{padding:14px 24px;border:none;border-radius:25px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s}
+.nav-btn:active{transform:scale(0.95)}
+.btn-next{background:linear-gradient(135deg,#3498db,#2980b9)}
+.btn-sound{background:linear-gradient(135deg,var(--pink),var(--violet))}
+.btn-home{background:linear-gradient(135deg,#444,#666)}
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="window.location.href='dashboard_leana.html'">← Retour</button>
+  <h1>🔤 Phonétique</h1>
+  <p>Apprends les sons avec Léana !</p>
+</header>
+<div class="container" id="app"></div>
+
+<script>
+// ===== DONNÉES PHONÉTIQUE =====
+var PHONETICS=[
+  {letter:"A",sound:"a",word:"Avion",emoji:"✈️",options:[{text:"Avion",emoji:"✈️",ok:true},{text:"Bateau",emoji:"⛵",ok:false},{text:"Chat",emoji:"🐱",ok:false},{text:"Éléphant",emoji:"🐘",ok:false}]},
+  {letter:"B",sound:"bé",word:"Bateau",emoji:"⛵",options:[{text:"Avion",emoji:"✈️",ok:false},{text:"Bateau",emoji:"⛵",ok:true},{text:"Chien",emoji:"🐶",ok:false},{text:"Dauphin",emoji:"🐬",ok:false}]},
+  {letter:"C",sound:"cé",word:"Chat",emoji:"🐱",options:[{text:"Chat",emoji:"🐱",ok:true},{text:"Étoile",emoji:"⭐",ok:false},{text:"Fleur",emoji:"🌸",ok:false},{text:"Girafe",emoji:"🦒",ok:false}]},
+  {letter:"D",sound:"dé",word:"Dauphin",emoji:"🐬",options:[{text:"Dauphin",emoji:"🐬",ok:true},{text:"Éléphant",emoji:"🐘",ok:false},{text:"Fraise",emoji:"🍓",ok:false},{text:"Gâteau",emoji:"🎂",ok:false}]},
+  {letter:"E",sound:"e",word:"Éléphant",emoji:"🐘",options:[{text:"Éléphant",emoji:"🐘",ok:true},{text:"Hibou",emoji:"🦉",ok:false},{text:"Iris",emoji:"🌸",ok:false},{text:"Jungle",emoji:"🌴",ok:false}]},
+  {letter:"F",sound:"effe",word:"Fleur",emoji:"🌸",options:[{text:"Fleur",emoji:"🌸",ok:true},{text:"Girafe",emoji:"🦒",ok:false},{text:"Hibou",emoji:"🦉",ok:false},{text:"Igloo",emoji:"🏠",ok:false}]},
+  {letter:"G",sound:"gé",word:"Girafe",emoji:"🦒",options:[{text:"Girafe",emoji:"🦒",ok:true},{text:"Hibou",emoji:"🦉",ok:false},{text:"Iris",emoji:"🌸",ok:false},{text:"Jardin",emoji:"🌻",ok:false}]},
+  {letter:"H",sound:"ache",word:"Hibou",emoji:"🦉",options:[{text:"Hibou",emoji:"🦉",ok:true},{text:"Igloo",emoji:"🏠",ok:false},{text:"Jungle",emoji:"🌴",ok:false},{text:"Koala",emoji:"🐨",ok:false}]},
+  {letter:"I",sound:"i",word:"Iris",emoji:"🌸",options:[{text:"Iris",emoji:"🌸",ok:true},{text:"Jardin",emoji:"🌻",ok:false},{text:"Koala",emoji:"🐨",ok:false},{text:"Lion",emoji:"🦁",ok:false}]},
+  {letter:"J",sound:"ji",word:"Jardin",emoji:"🌻",options:[{text:"Jardin",emoji:"🌻",ok:true},{text:"Koala",emoji:"🐨",ok:false},{text:"Lune",emoji:"🌙",ok:false},{text:"Maison",emoji:"🏠",ok:false}]},
+  {letter:"K",sound:"ka",word:"Koala",emoji:"🐨",options:[{text:"Koala",emoji:"🐨",ok:true},{text:"Lion",emoji:"🦁",ok:false},{text:"Lune",emoji:"🌙",ok:false},{text:"Montagne",emoji:"⛰️",ok:false}]},
+  {letter:"L",sound:"elle",word:"Lion",emoji:"🦁",options:[{text:"Lion",emoji:"🦁",ok:true},{text:"Lune",emoji:"🌙",ok:false},{text:"Maison",emoji:"🏠",ok:false},{text:"Nounours",emoji:"🧸",ok:false}]},
+  {letter:"M",sound:"emme",word:"Maison",emoji:"🏠",options:[{text:"Maison",emoji:"🏠",ok:true},{text:"Nounours",emoji:"🧸",ok:false},{text:"Ours",emoji:"🐻",ok:false},{text:"Pomme",emoji:"🍎",ok:false}]},
+  {letter:"N",sound:"enne",word:"Nounours",emoji:"🧸",options:[{text:"Nounours",emoji:"🧸",ok:true},{text:"Ours",emoji:"🐻",ok:false},{text:"Pomme",emoji:"🍎",ok:false},{text:"Quille",emoji:"🎳",ok:false}]},
+  {letter:"O",sound:"o",word:"Ours",emoji:"🐻",options:[{text:"Ours",emoji:"🐻",ok:true},{text:"Pomme",emoji:"🍎",ok:false},{text:"Quille",emoji:"🎳",ok:false},{text:"Raton",emoji:"🦝",ok:false}]},
+  {letter:"P",sound:"pé",word:"Pomme",emoji:"🍎",options:[{text:"Pomme",emoji:"🍎",ok:true},{text:"Quille",emoji:"🎳",ok:false},{text:"Raton",emoji:"🦝",ok:false},{text:"Soleil",emoji:"☀️",ok:false}]},
+  {letter:"Q",sound:"ku",word:"Quille",emoji:"🎳",options:[{text:"Quille",emoji:"🎳",ok:true},{text:"Raton",emoji:"🦝",ok:false},{text:"Soleil",emoji:"☀️",ok:false},{text:"Tortue",emoji:"🐢",ok:false}]},
+  {letter:"R",sound:"erre",word:"Raton",emoji:"🦝",options:[{text:"Raton",emoji:"🦝",ok:true},{text:"Soleil",emoji:"☀️",ok:false},{text:"Tortue",emoji:"🐢",ok:false},{text:"Univers",emoji:"🌌",ok:false}]},
+  {letter:"S",sound:"esse",word:"Soleil",emoji:"☀️",options:[{text:"Soleil",emoji:"☀️",ok:true},{text:"Tortue",emoji:"🐢",ok:false},{text:"Univers",emoji:"🌌",ok:false},{text:"Vache",emoji:"🐄",ok:false}]},
+  {letter:"T",sound:"té",word:"Tortue",emoji:"🐢",options:[{text:"Tortue",emoji:"🐢",ok:true},{text:"Univers",emoji:"🌌",ok:false},{text:"Vache",emoji:"🐄",ok:false},{text:"Wagon",emoji:"🚂",ok:false}]},
+  {letter:"U",sound:"u",word:"Univers",emoji:"🌌",options:[{text:"Univers",emoji:"🌌",ok:true},{text:"Vache",emoji:"🐄",ok:false},{text:"Wagon",emoji:"🚂",ok:false},{text:"Xylophone",emoji:"🎵",ok:false}]},
+  {letter:"V",sound:"vé",word:"Vache",emoji:"🐄",options:[{text:"Vache",emoji:"🐄",ok:true},{text:"Wagon",emoji:"🚂",ok:false},{text:"Xylophone",emoji:"🎵",ok:false},{text:"Yacht",emoji:"🛥️",ok:false}]},
+  {letter:"W",sound:"double vé",word:"Wagon",emoji:"🚂",options:[{text:"Wagon",emoji:"🚂",ok:true},{text:"Xylophone",emoji:"🎵",ok:false},{text:"Yacht",emoji:"🛥️",ok:false},{text:"Zèbre",emoji:"🦓",ok:false}]},
+  {letter:"X",sound:"ixe",word:"Xylophone",emoji:"🎵",options:[{text:"Xylophone",emoji:"🎵",ok:true},{text:"Yacht",emoji:"🛥️",ok:false},{text:"Zèbre",emoji:"🦓",ok:false},{text:"Avion",emoji:"✈️",ok:false}]},
+  {letter:"Y",sound:"i grec",word:"Yacht",emoji:"🛥️",options:[{text:"Yacht",emoji:"🛥️",ok:true},{text:"Zèbre",emoji:"🦓",ok:false},{text:"Avion",emoji:"✈️",ok:false},{text:"Bateau",emoji:"⛵",ok:false}]},
+  {letter:"Z",sound:"zède",word:"Zèbre",emoji:"🦓",options:[{text:"Zèbre",emoji:"🦓",ok:true},{text:"Avion",emoji:"✈️",ok:false},{text:"Bateau",emoji:"⛵",ok:false},{text:"Chat",emoji:"🐱",ok:false}]}
+];
+
+// ===== ÉTAT =====
+var currentMode="menu"; // menu, learn, quiz, tutorial
+var currentIndex=0;
+var score=0;
+var totalAnswered=0;
+var tutorialStep=0;
+
+// ===== AUDIO =====
+var _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==='suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+var speechQueue=[],isSpeaking=false;
+function speak(text,cb){
+  if(!('speechSynthesis'in window)){if(cb)cb();return}
+  speechQueue.push({text:text,cb:cb});
+  if(!isSpeaking) processQueue();
+}
+function processQueue(){
+  if(!speechQueue.length){isSpeaking=false;return}
+  isSpeaking=true;
+  var item=speechQueue.shift();
+  var u=new SpeechSynthesisUtterance(item.text);
+  u.lang='fr-FR';u.rate=0.85;u.pitch=1.2;
+  u.onend=function(){if(item.cb)item.cb();processQueue()};
+  u.onerror=function(){processQueue()};
+  speechSynthesis.speak(u);
+}
+function stopSpeech(){speechQueue=[];isSpeaking=false;speechSynthesis.cancel();}
+
+function playTone(freq,dur){
+  try{
+    var ctx=getAudioCtx();
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(0.3,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+dur);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+// ===== RENDU =====
+function render(){
+  var app=document.getElementById('app');
+  if(currentMode==="menu")renderMenu(app);
+  else if(currentMode==="tutorial")renderTutorial(app);
+  else if(currentMode==="learn")renderLearn(app);
+  else if(currentMode==="quiz")renderQuiz(app);
+}
+
+function renderMenu(app){
+  app.innerHTML='<div class="tutorial-box show">'
+    +'<h3>🎓 Bienvenue dans la Phonétique !</h3>'
+    +'<p>Tu vas apprendre les sons de l\'alphabet.</p>'
+    +'<div class="step">📖 <strong>Apprendre</strong> — Écoute chaque lettre et son mot</div>'
+    +'<div class="step">🎮 <strong>Jeu</strong> — Trouve le mot qui commence par la bonne lettre</div>'
+    +'<div class="step">🎤 <strong>Dictée</strong> — Écris ce que tu entends</div>'
+    +'<div class="step">🔧 <strong>Correction</strong> — Exercices de prononciation</div>'
+    +'<button class="tut-btn" onclick="startTutorial()">▶ Commencer le didacticiel</button>'
+    +'</div>'
+    +'<div class="mode-select">'
+    +'<button class="mode-btn eco" onclick="startLearn()"><span class="emoji">📖</span>Apprendre</button>'
+    +'<button class="mode-btn jeu" onclick="startQuiz()"><span class="emoji">🎮</span>Jeu</button>'
+    +'<button class="mode-btn dic" onclick="startDictation()"><span class="emoji">🎤</span>Dictée</button>'
+    +'<button class="mode-btn cor" onclick="startCorrection()"><span class="emoji">🔧</span>Correction</button>'
+    +'</div>';
+  speak("Bienvenue dans la Phonétique ! Choisis un mode pour commencer.");
+}
+
+function startTutorial(){
+  currentMode="tutorial";
+  tutorialStep=0;
+  render();
+}
+
+function renderTutorial(app){
+  var steps=[
+    {title:"Étape 1 : Les voyelles",text:"Les voyelles sont A, E, I, O, U, Y. Ce sont les sons les plus importants !",demo:"A comme Avion"},
+    {title:"Étape 2 : Les consonnes",text:"Les autres lettres sont les consonnes. Elles accompagnent les voyelles.",demo:"B comme Bateau"},
+    {title:"Étape 3 : Les syllabes",text:"On combine les lettres pour faire des syllabes : BA-BE-BI-BO-BU",demo:"BA comme dans Bateau"},
+    {title:"Étape 4 : C'est à toi !",text:"Maintenant, essaie le mode Apprendre pour découvrir chaque lettre !",demo:""}
+  ];
+  var s=steps[tutorialStep];
+  app.innerHTML='<div class="tutorial-box show">'
+    +'<h3>'+s.title+'</h3>'
+    +'<p>'+s.text+'</p>'
+    +(s.demo?'<p style="color:var(--accent);font-size:20px">🔊 '+s.demo+'</p>':'')
+    +'<div style="display:flex;gap:12px;margin-top:16px;justify-content:center">'
+    +(tutorialStep>0?'<button class="tut-btn" onclick="tutPrev()">← Précédent</button>':'')
+    +(tutorialStep<steps.length-1?'<button class="tut-btn" onclick="tutNext()">Suivant →</button>':'<button class="tut-btn" onclick="startLearn()">Commencer !</button>')
+    +'</div>'
+    +'<p style="text-align:center;margin-top:12px;opacity:0.6">Étape '+(tutorialStep+1)+'/'+steps.length+'</p>'
+    +'</div>';
+  speak(s.title+". "+s.text+(s.demo?" Exemple : "+s.demo:""));
+}
+
+function tutNext(){tutorialStep++;render();}
+function tutPrev(){tutorialStep--;render();}
+
+function startLearn(){
+  currentMode="learn";
+  currentIndex=0;
+  render();
+}
+
+function renderLearn(app){
+  var p=PHONETICS[currentIndex];
+  app.innerHTML='<div class="score-bar"><span>Lettre '+(currentIndex+1)+'/'+PHONETICS.length+'</span><span class="score-val">'+p.letter+'</span></div>'
+    +'<div class="letter-display">'
+    +'<div class="letter-big">'+p.letter+'</div>'
+    +'<div class="letter-sound">Son : "'+p.sound+'"</div>'
+    +'<div class="letter-word">'+p.emoji+' '+p.word+'</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-sound" onclick="speakLetter()">🔊 Écouter</button>'
+    +(currentIndex>0?'<button class="nav-btn btn-next" onclick="prevLetter()">← Précédent</button>':'')
+    +(currentIndex<PHONETICS.length-1?'<button class="nav-btn btn-next" onclick="nextLetter()">Suivant →</button>':'<button class="nav-btn btn-next" onclick="startQuiz()">Jeu →</button>')
+    +'</div>'
+    +'<div class="nav-btns" style="margin-top:12px"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  speak("La lettre "+p.letter+". Elle fait le son "+p.sound+". "+p.letter+" comme "+p.word+".");
+}
+
+function speakLetter(){
+  var p=PHONETICS[currentIndex];
+  speak(p.letter+" fait le son "+p.sound+". Comme dans "+p.word+".");
+}
+
+function nextLetter(){if(currentIndex<PHONETICS.length-1){currentIndex++;render();}}
+function prevLetter(){if(currentIndex>0){currentIndex--;render();}}
+
+function startQuiz(){
+  currentMode="quiz";
+  currentIndex=0;
+  score=0;
+  totalAnswered=0;
+  render();
+}
+
+function renderQuiz(app){
+  var p=PHONETICS[currentIndex];
+  // Mélanger options
+  var opts=p.options.slice();
+  for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=opts[i];opts[i]=opts[j];opts[j]=t;}
+  
+  app.innerHTML='<div class="score-bar"><span>Question '+(currentIndex+1)+'/'+PHONETICS.length+'</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="letter-display">'
+    +'<div class="letter-big">'+p.letter+'</div>'
+    +'<div class="letter-sound">Quel mot commence par "'+p.letter+'" ?</div>'
+    +'</div>'
+    +'<div class="options-grid" id="opts">';
+  for(var o=0;o<opts.length;o++){
+    (function(opt){
+      app.innerHTML+='<button class="opt-btn" onclick="checkAnswer(this,'+opt.ok+')"><span class="opt-emoji">'+opt.emoji+'</span>'+opt.text+'</button>';
+    })(opts[o]);
+  }
+  app.innerHTML+='</div>'
+    +'<div class="feedback" id="fb"></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  
+  // Dire la question après un délai
+  setTimeout(function(){
+    speak("Quel mot commence par la lettre "+p.letter+" ?");
+  },500);
+}
+
+function checkAnswer(btn,isOk){
+  totalAnswered++;
+  var fb=document.getElementById('fb');
+  var allBtns=document.querySelectorAll('.opt-btn');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  
+  if(isOk){
+    btn.className='opt-btn correct';
+    fb.className='feedback ok';
+    fb.textContent='✅ Bravo !';
+    score++;
+    playTone(523,0.15);
+    setTimeout(function(){playTone(659,0.15);},150);
+    setTimeout(function(){playTone(784,0.3);},300);
+    speak("Bravo ! C'est bien ça !");
+  }else{
+    btn.className='opt-btn wrong';
+    fb.className='feedback no';
+    fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);
+    speak("Non, essaie encore !");
+  }
+  
+  setTimeout(function(){
+    currentIndex++;
+    if(currentIndex>=PHONETICS.length){
+      showQuizResult();
+    }else{
+      render();
+    }
+  },1500);
+}
+
+function showQuizResult(){
+  var app=document.getElementById('app');
+  var pct=Math.round((score/PHONETICS.length)*100);
+  var emoji=pct>=70?'🏆':pct>=40?'⭐':'💪';
+  var msg=pct>=70?'Excellent !':pct>=40?'Bien joué !':'Continue !';
+  app.innerHTML='<div class="letter-display">'
+    +'<div style="font-size:64px">'+emoji+'</div>'
+    +'<div class="letter-big" style="font-size:48px">'+msg+'</div>'
+    +'<div class="letter-word">Score : '+score+'/'+PHONETICS.length+' ('+pct+'%)</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-next" onclick="startQuiz()">🔄 Rejouer</button>'
+    +'<button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button>'
+    +'</div>';
+  speak("C'est fini ! Tu as "+score+" sur "+PHONETICS.length+" bonnes réponses. "+msg);
+}
+
+// ===== DICTÉE =====
+var dictationWords=["chat","maison","pomme","fleur","soleil","lune","arbre","oiseau","lapin","étoile"];
+var currentDictWord=0;
+
+function startDictation(){
+  currentMode="dictation";
+  currentDictWord=0;
+  renderDictation();
+}
+
+function renderDictation(){
+  var app=document.getElementById('app');
+  app.innerHTML='<div class="score-bar"><span>Dictée '+(currentDictWord+1)+'/'+dictationWords.length+'</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="letter-display">'
+    +'<div style="font-size:48px">🎤</div>'
+    +'<div class="letter-sound">Écoute le mot et répète-le !</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-sound" onclick="speakDictWord()">🔊 Écouter</button>'
+    +'<button class="nav-btn btn-next" onclick="nextDictWord()">Suivant →</button>'
+    +'</div>'
+    +'<div class="nav-btns" style="margin-top:12px"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  speak("Dictée ! Écoute le mot et répète-le. Appuie sur écouter.");
+}
+
+function speakDictWord(){
+  var w=dictationWords[currentDictWord];
+  speak(w);
+}
+
+function nextDictWord(){
+  currentDictWord++;
+  if(currentDictWord>=dictationWords.length){
+    goMenu();
+  }else{
+    renderDictation();
+  }
+}
+
+// ===== CORRECTION PHONÉTIQUE =====
+var correctionExercises=[
+  {target:"CHAT",options:["chat","sa","cha","kat"],correct:0},
+  {target:"MAISON",options:["méson","maison","mézon","maizon"],correct:1},
+  {target:"POMME",options:["ponme","pomme","pome","pom"],correct:1},
+  {target:"FLEUR",options:["fleur","fleure","fler","flur"],correct:0},
+  {target:"SOLEIL",options:["soleil","solèy","solay","solé"],correct:0},
+  {target:"OISEAU",options:["oisau","wazo","oiseau","oizo"],correct:2},
+  {target:"ÉTOILE",options:["étoile","étwal","étoil","étol"],correct:0},
+  {target:"JARDIN",options:["jardin","jardan","jardèn","jardint"],correct:0}
+];
+var currentCorEx=0;
+
+function startCorrection(){
+  currentMode="correction";
+  currentCorEx=0;
+  renderCorrection();
+}
+
+function renderCorrection(){
+  var app=document.getElementById('app');
+  var ex=correctionExercises[currentCorEx];
+  app.innerHTML='<div class="score-bar"><span>Exercice '+(currentCorEx+1)+'/'+correctionExercises.length+'</span><span class="score-val">⭐ '+score+'</span></div>'
+    +'<div class="letter-display">'
+    +'<div class="letter-sound">Quelle est la bonne écriture ?</div>'
+    +'<div class="letter-big" style="font-size:36px">'+ex.target+'</div>'
+    +'</div>'
+    +'<div class="options-grid" id="corOpts">';
+  for(var i=0;i<ex.options.length;i++){
+    (function(idx){
+      app.innerHTML+='<button class="opt-btn" onclick="checkCorAnswer(this,'+(idx===ex.correct)+')">'+ex.options[idx]+'</button>';
+    })(i);
+  }
+  app.innerHTML+='</div>'
+    +'<div class="feedback" id="corFb"></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button></div>';
+  
+  setTimeout(function(){
+    speak("Quelle est la bonne écriture du mot "+ex.target+" ?");
+  },500);
+}
+
+function checkCorAnswer(btn,isOk){
+  var fb=document.getElementById('corFb');
+  var allBtns=document.querySelectorAll('#corOpts .opt-btn');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  
+  if(isOk){
+    btn.className='opt-btn correct';
+    fb.className='feedback ok';
+    fb.textContent='✅ Bravo !';
+    score++;
+    playTone(523,0.15);
+    setTimeout(function(){playTone(784,0.3);},150);
+    speak("Bravo ! C'est la bonne écriture !");
+  }else{
+    btn.className='opt-btn wrong';
+    fb.className='feedback no';
+    fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);
+    speak("Non, essaie encore !");
+  }
+  
+  setTimeout(function(){
+    currentCorEx++;
+    if(currentCorEx>=correctionExercises.length){
+      showCorResult();
+    }else{
+      renderCorrection();
+    }
+  },1500);
+}
+
+function showCorResult(){
+  var app=document.getElementById('app');
+  var pct=Math.round((score/correctionExercises.length)*100);
+  app.innerHTML='<div class="letter-display">'
+    +'<div style="font-size:64px">'+(pct>=70?'🏆':'⭐')+'</div>'
+    +'<div class="letter-big" style="font-size:36px">Score : '+score+'/'+correctionExercises.length+'</div>'
+    +'</div>'
+    +'<div class="nav-btns">'
+    +'<button class="nav-btn btn-next" onclick="startCorrection()">🔄 Rejouer</button>'
+    +'<button class="nav-btn btn-home" onclick="goMenu()">🏠 Menu</button>'
+    +'</div>';
+  speak("Correction terminée ! "+score+" sur "+correctionExercises.length+".");
+}
+
+function goMenu(){
+  currentMode="menu";
+  score=0;
+  render();
+}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>

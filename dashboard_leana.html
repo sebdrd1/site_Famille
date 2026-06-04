@@ -156,6 +156,9 @@
     <span class="sub">Il était une fois...</span>
   </button>
 <button class="nav-btn" data-panel="jeux"><span class="icon">🧩</span><span class="label">Jeux</span><span class="sub">Memory, Quiz</span></button>
+
+  <button class="nav-btn" data-panel="karaoke"><span class="icon">🎤</span><span class="label">Karaoké</span><span class="sub">Chante avec moi !</span></button>
+  <button class="nav-btn" data-panel="phonetique"><span class="icon">🔊</span><span class="label">Phonétique</span><span class="sub">Sons & Lettres</span></button>
 </div>
 
 <main>
@@ -233,6 +236,16 @@
   <div class="panel" id="pn-jeux">
     <div class="card"><h3>🧩 Memory</h3><p style="color:var(--light);margin-bottom:12px">Trouve les paires !</p><div id="memoryGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:400px;margin:0 auto"></div><div style="text-align:center;margin-top:12px"><button class="tbtn tbtn-reset" onclick="initMemory()">🔄 Recommencer</button></div></div>
     <div class="card"><h3>🎯 Quiz Facile</h3><div class="quiz-q" id="quizQ"></div><div class="quiz-opts" id="quizO"></div><div class="score" id="quizS"></div><div class="stars" id="quizStars"></div><div style="text-align:center;margin-top:12px"><button class="draw-btn" onclick="nextQuiz()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Suivant</button></div></div>
+  </div>
+
+  <!-- KARAOKE -->
+  <div class="panel" id="pn-karaoke">
+    <iframe src="karaoke_leana.html" style="width:100%;height:80vh;border:none;border-radius:12px" title="Karaoké"></iframe>
+  </div>
+
+  <!-- PHONETIQUE -->
+  <div class="panel" id="pn-phonetique">
+    <iframe src="phonetique_leana.html" style="width:100%;height:80vh;border:none;border-radius:12px" title="Phonétique"></iframe>
   </div>
 </main>
 

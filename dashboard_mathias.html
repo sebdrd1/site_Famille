@@ -106,6 +106,9 @@
 <button class="nav-btn" data-panel="musique"><span class="icon">🎵</span><span class="label">Musique</span><span class="sub">Piano</span></button>
   <button class="nav-btn" data-panel="dessin"><span class="icon">🎨</span><span class="label">Dessin</span><span class="sub">Libre & Coloriage</span></button>
   <button class="nav-btn" data-panel="motricite"><span class="icon">✋</span><span class="label">Motricité</span><span class="sub">Tracer</span></button>
+
+  <button class="nav-btn" data-panel="phonetique"><span class="icon">🔊</span><span class="label">Phonétique</span><span class="sub">Sons & Prononciation</span></button>
+  <button class="nav-btn" data-panel="geometrie"><span class="icon">📐</span><span class="label">Géométrie</span><span class="sub">Formes & Solides</span></button>
 </div>
 <main>
 <div class="panel active" id="pn-devoirs">
@@ -161,6 +164,16 @@
   <div class="card"><h3>✋ Motricité Fine</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px"><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('trace')"><div style="font-size:2rem">✏️</div><div style="font-weight:600">Tracer</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('dots')"><div style="font-size:2rem">🔵</div><div style="font-weight:600">Relier</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('maze')"><div style="font-size:2rem">🌀</div><div style="font-weight:600">Labyrinthe</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('letters')"><div style="font-size:2rem">🔤</div><div style="font-weight:600">Lettres</div></div></div></div>
   <div class="card" id="motorArea" style="display:none"><h3 id="motorTitle">Exercice</h3><canvas id="motorCanvas" class="draw-canvas" width="400" height="350"></canvas><div style="text-align:center;margin-top:12px"><button class="bbtn bb-reset" onclick="document.getElementById('motorArea').style.display='none'">✕ Fermer</button></div></div>
 </div>
+
+  <!-- PHONETIQUE -->
+  <div class="panel" id="pn-phonetique">
+    <iframe src="phonetique_leana.html" style="width:100%;height:80vh;border:none;border-radius:12px" title="Phonétique"></iframe>
+  </div>
+
+  <!-- GEOMETRIE -->
+  <div class="panel" id="pn-geometrie">
+    <iframe src="geometrie_mathias.html" style="width:100%;height:80vh;border:none;border-radius:12px" title="Géométrie"></iframe>
+  </div>
 </main>
 
 <script>// NAVIGATION - Ultra simple
