@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Mathias — CE2 ULIS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fff5f0;--card:#fff;--text:#2b2d42;--light:#8d99ae;--primary:#d62828;--secondary:#f77f00;--accent:#003049;--success:#38b000;--radius:18px;--shadow:0 6px 16px rgba(214,40,40,0.12);--font:'Atkinson Hyperlegible',system-ui,sans-serif;--transition:0.3s ease}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+    header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .header-left{display:flex;align-items:center;gap:12px}
+    .avatar{width:48px;height:48px;border-radius:50%;border:3px solid #fff;object-fit:cover}
+    header h1{font-size:1.2rem}
+    .h-btns{display:flex;gap:8px}
+    .h-btn{background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);color:#fff;padding:8px 14px;border-radius:20px;font-family:var(--font);font-size:0.85rem;cursor:pointer}
+    .h-btn.active{background:var(--accent);border-color:var(--accent)}
+    .nav-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;padding:16px;max-width:900px;margin:0 auto}
+    .nav-btn{padding:16px 12px;border:3px solid #f0d0d0;border-radius:var(--radius);background:var(--card);cursor:pointer;transition:var(--transition);text-align:center;font-family:var(--font)}
+    .nav-btn:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:var(--shadow)}
+    .nav-btn.active{border-color:var(--primary);background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff}
+    .nav-btn .icon{font-size:2rem;display:block;margin-bottom:6px}
+    .nav-btn .label{font-weight:700;font-size:0.9rem}
+    .nav-btn .sub{font-size:0.7rem;color:var(--light);margin-top:2px}
+    .nav-btn.active .sub{color:rgba(255,255,255,0.8)}
+    main{max-width:900px;margin:0 auto;padding:0 16px 40px}
+    .panel{display:none}.panel.active{display:block}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:16px}
+    .card h3{color:var(--primary);margin-bottom:14px;font-size:1.2rem}
+    .voice-bar{display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,var(--primary),var(--secondary));border-radius:var(--radius);color:#fff;margin-bottom:16px}
+    .voice-mic{width:56px;height:56px;background:rgba(255,255,255,0.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;cursor:pointer;border:3px solid rgba(255,255,255,0.5)}
+    .voice-mic.listening{background:var(--success);border-color:var(--success);animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+    .voice-text{flex:1}.voice-text .label{font-size:0.78rem;opacity:0.85}.voice-text .transcript{font-weight:700;font-size:1.05rem;margin-top:4px;min-height:26px}
+    .quiz-q{font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:14px}
+    .quiz-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+    .quiz-opt{padding:14px;border:3px solid #f0d0d0;border-radius:12px;background:var(--card);cursor:pointer;transition:var(--transition);text-align:center;font-family:var(--font);font-size:0.95rem;font-weight:600}
+    .quiz-opt:hover{border-color:var(--primary);transform:translateY(-2px)}
+    .quiz-opt.correct{border-color:var(--success);background:rgba(56,176,0,0.1)}
+    .quiz-opt.wrong{border-color:#d62828;background:rgba(214,40,40,0.1)}
+    .score{text-align:center;font-size:1.2rem;font-weight:700;color:var(--primary);margin-top:12px}
+    .karaoke-text{font-size:1.4rem;line-height:2.4;text-align:center;padding:18px;background:var(--bg);border-radius:14px;margin:12px 0}
+    .word{display:inline-block;padding:3px 7px;margin:2px;border-radius:8px;cursor:pointer;transition:0.15s}
+    .word:hover{background:rgba(214,40,40,0.15)}
+    .word.active{background:var(--primary);color:#fff;transform:scale(1.1)}
+    .word.done{background:rgba(56,176,0,0.15)}
+    .karaoke-controls{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+    .kbtn{padding:10px 18px;border:none;border-radius:12px;font-family:var(--font);font-weight:700;cursor:pointer}
+    .kbtn-play{background:var(--primary);color:#fff}.kbtn-stop{background:var(--light);color:#fff}
+    .math-input{font-size:2rem;text-align:center;padding:10px;border:3px solid var(--primary);border-radius:14px;width:110px;font-family:var(--font)}
+    .bbtn{padding:10px 20px;border:none;border-radius:14px;font-family:var(--font);font-size:0.95rem;font-weight:700;cursor:pointer}
+    .bb-start{background:var(--success);color:#fff}.bb-check{background:var(--secondary);color:#fff}.bb-reset{background:var(--light);color:#fff}
+    .timer{text-align:center}.timer-display{font-size:3.5rem;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+    .timer-label{color:var(--light);margin-bottom:12px}
+    .task-row{display:flex;gap:8px;margin-bottom:12px}
+    .task-row input{flex:1;padding:10px 14px;border:3px solid #f0d0d0;border-radius:12px;font-family:var(--font);font-size:1rem}
+    .task-row input:focus{outline:none;border-color:var(--primary)}
+    .task-row button{width:44px;border:none;border-radius:50%;background:var(--primary);color:#fff;font-size:1.4rem;cursor:pointer}
+    .task-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .task-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border-radius:12px;border-left:5px solid var(--primary)}
+    .task-item.done{opacity:0.5;text-decoration:line-through}
+    .task-item input[type="checkbox"]{width:20px;height:20px;accent-color:var(--primary)}
+    .task-del{margin-left:auto;background:none;border:none;color:var(--primary);cursor:pointer;font-size:1.1rem}
+    .draw-canvas{border:3px solid var(--primary);border-radius:14px;cursor:crosshair;touch-action:none;display:block;margin:0 auto;max-width:100%;height:auto;background:#fff}
+    .tools{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;align-items:center}
+    .tbtn{padding:8px 12px;border:3px solid #f0d0d0;border-radius:12px;background:var(--card);cursor:pointer;font-family:var(--font);font-weight:600;font-size:0.85rem}
+    .tbtn.active{border-color:var(--primary);background:var(--primary);color:#fff}
+    .cbtn{width:36px;height:36px;border-radius:50%;border:3px solid #ddd;cursor:pointer}
+    .cbtn.active{border-color:var(--text);transform:scale(1.15)}
+    .body-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+    .body-part{padding:12px 8px;border-radius:12px;cursor:pointer;transition:var(--transition);font-weight:600;font-size:0.82rem;text-align:center;border:2px solid transparent}
+    .body-part:hover{transform:scale(1.06)}
+    .body-part .icon{font-size:1.8rem;display:block;margin-bottom:4px}
+    .bp-red{background:#ffe0e0;border-color:#ff6666}.bp-blue{background:#e0f0ff;border-color:#66ccff}
+    .bp-green{background:#e0ffe0;border-color:#66cc66}.bp-yellow{background:#ffffcc;border-color:#cccc66}
+    .stars{font-size:1.8rem;text-align:center;margin:10px 0}
+    @media(max-width:600px){.nav-grid{grid-template-columns:repeat(2,1fr)}.timer-display{font-size:2.8rem}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <img src="assets/images/avatar_mathias.webp" class="avatar" alt="Mathias" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.5em%22 font-size=%2280%22>🧑</text></svg>'">
+    <h1>🧑 Mathias — CE2 ULIS</h1>
+  </div>
+  <div class="h-btns"><button class="h-btn" id="focusBtn">🎯 Focus</button><button class="h-btn" onclick="window.location.href='index.html'">🏠</button></div>
+</header>
+<div class="nav-grid">
+  <button class="nav-btn active" data-panel="devoirs"><span class="icon">📋</span><span class="label">Devoirs</span><span class="sub">Tâches & Pomodoro</span></button>
+  <button class="nav-btn" data-panel="francais"><span class="icon">📖</span><span class="label">Français</span><span class="sub">Dictée, Vocab</span></button>
+  <button class="nav-btn" data-panel="lecture"><span class="icon">📚</span><span class="label">Lecture</span><span class="sub">Karaoké, Voix</span></button>
+  <button class="nav-btn" data-panel="maths"><span class="icon">🔢</span><span class="label">Maths</span><span class="sub">Calcul, Tables</span></button>
+  <button class="nav-btn" data-panel="anglais"><span class="icon">🇬🇧</span><span class="label">Anglais</span><span class="sub">Vocab, Voix</span></button>
+  <button class="nav-btn" data-panel="sciences"><span class="icon">🔬</span><span class="label">Sciences</span><span class="sub">Quiz</span></button>
+  <button class="nav-btn" data-panel="corps"><span class="icon">🫀</span><span class="label">Corps Humain</span><span class="sub">Il était une fois...</span></button>
+  <button class="nav-btn" data-panel="histoire"><span class="icon">🏛️</span><span class="label">Histoire</span><span class="sub">Quiz</span></button>
+  <button class="nav-btn" data-panel="geo"><span class="icon">🌍</span><span class="label">Géographie</span><span class="sub">Capitales</span></button>
+  <button class="nav-btn" data-panel="chimie"><span class="icon">⚗️</span><span class="label">Chimie</span><span class="sub">Éléments</span></button>
+  <button class="nav-btn" data-panel="poesie"><span class="icon">✨</span><span class="label">Poésie</span><span class="sub">Réciter</span></button>
+    <button class="nav-btn" onclick="window.location.href='jeu_corps_humain.html'" style="background:linear-gradient(135deg,#cc4444,#ff8844);border-color:#ff8844">
+    <span class="icon">🧬</span>
+    <span class="label">Jeu Corps Humain</span>
+    <span class="sub">Il était une fois...</span>
+  </button>
+<button class="nav-btn" data-panel="musique"><span class="icon">🎵</span><span class="label">Musique</span><span class="sub">Piano</span></button>
+  <button class="nav-btn" data-panel="dessin"><span class="icon">🎨</span><span class="label">Dessin</span><span class="sub">Libre & Coloriage</span></button>
+  <button class="nav-btn" data-panel="motricite"><span class="icon">✋</span><span class="label">Motricité</span><span class="sub">Tracer</span></button>
+</div>
+<main>
+<div class="panel active" id="pn-devoirs">
+  <div class="voice-bar"><div class="voice-mic" id="devoirsMic">🎤</div><div class="voice-text"><div class="label">Dicte ton devoir...</div><div class="transcript" id="devoirsTranscript">Appuie sur 🎤</div></div></div>
+  <div class="card"><h3>📋 Mes Devoirs</h3><div class="task-row"><input id="devoirsInput" placeholder="Ajouter..." onkeydown="if(event.key==='Enter')addTask()"><button onclick="addTask()">+</button></div><ul class="task-list" id="taskList"></ul></div>
+  <div class="card"><h3>⏱️ Pomodoro</h3><div class="timer"><div class="timer-display" id="pomoTime">25:00</div><div class="timer-label" id="pomoLabel">Travail — 25 min</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="bbtn bb-start" onclick="pomoStart()">▶</button><button class="bbtn bb-reset" onclick="pomoPause()">⏸</button><button class="bbtn bb-check" onclick="pomoReset()">↺</button></div><div id="pomoSessions" style="margin-top:10px;color:var(--light);text-align:center">Sessions : 0</div></div></div>
+</div>
+<div class="panel" id="pn-francais">
+  <div class="voice-bar"><div class="voice-mic" id="frMic">🎤</div><div class="voice-text"><div class="label">Dicte ou lis...</div><div class="transcript" id="frTranscript">Appuie sur 🎤</div></div></div>
+  <div class="card"><h3>📖 Dictée à Trou</h3><div class="karaoke-text" id="dicteeText"></div><div class="karaoke-controls"><button class="kbtn kbtn-play" onclick="startDictee()">🎤 Commencer</button><button class="kbtn kbtn-stop" onclick="nextDictee()">➡️ Suivant</button></div><div id="dicteeResult" class="score"></div></div>
+  <div class="card"><h3>📝 Conjugaison</h3><div class="quiz-q" id="conjQ"></div><div class="quiz-opts" id="conjO"></div><div class="score" id="conjS"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextConj()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Suivant</button></div></div>
+</div>
+<div class="panel" id="pn-lecture">
+  <div class="voice-bar"><div class="voice-mic" id="lecMic">🎤</div><div class="voice-text"><div class="label">Lis à voix haute...</div><div class="transcript" id="lecTranscript">Appuie sur 🎤</div></div></div>
+  <div class="card"><h3>📚 Lecture Karaoké</h3><select id="textSelect" onchange="loadText()" style="width:100%;padding:10px;border:3px solid var(--primary);border-radius:12px;font-family:var(--font);margin-bottom:12px"><option value="0">🐺 Le Petit Chaperon Rouge</option><option value="1">🦊 Le Corbeau et le Renard</option><option value="2">🐱 Le Chat Botté</option><option value="3">🌳 Le Chêne et le Roseau</option></select><div class="karaoke-text" id="lectureText" style="text-align:left;max-height:250px;overflow-y:auto">Sélectionne un texte...</div><div class="karaoke-controls"><button class="kbtn kbtn-play" onclick="playLecture()">▶ Lire</button><button class="kbtn kbtn-stop" onclick="stopLecture()">⏹ Stop</button></div></div>
+</div>
+<div class="panel" id="pn-maths">
+  <div class="voice-bar"><div class="voice-mic" id="mathsMic">🎤</div><div class="voice-text"><div class="label">Dis la réponse...</div><div class="transcript" id="mathsTranscript">Appuie sur 🎤</div></div></div>
+  <div class="card"><h3>🔢 Calcul Mental</h3><div class="quiz-q" id="calcQ">Clique "Nouveau" !</div><div style="text-align:center;margin:16px 0"><input type="number" id="calcAnswer" class="math-input" placeholder="?"></div><div style="text-align:center"><button class="bbtn bb-start" onclick="newCalc()">🎲 Nouveau</button><button class="bbtn bb-check" onclick="checkCalc()">✓ Vérifier</button></div><div id="calcResult" style="text-align:center;margin-top:12px;font-weight:700;font-size:1.2rem"></div><div id="calcScore" style="text-align:center;color:var(--light)"></div></div>
+  <div class="card"><h3>📊 Tables</h3><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:12px"><button class="tbtn" onclick="showTable(2)">×2</button><button class="tbtn" onclick="showTable(3)">×3</button><button class="tbtn" onclick="showTable(4)">×4</button><button class="tbtn" onclick="showTable(5)">×5</button><button class="tbtn" onclick="showTable(6)">×6</button><button class="tbtn" onclick="showTable(7)">×7</button><button class="tbtn" onclick="showTable(8)">×8</button><button class="tbtn" onclick="showTable(9)">×9</button><button class="tbtn" onclick="showTable(10)">×10</button></div><div id="tableDisplay" style="font-size:1.4rem;text-align:center;line-height:2.2;color:var(--primary);font-weight:700"></div></div>
+</div>
+<div class="panel" id="pn-anglais">
+  <div class="card"><h3>🇬🇧 Vocabulaire</h3><div class="quiz-q" id="enQ"></div><div class="quiz-opts" id="enO"></div><div class="score" id="enS"></div><div class="stars" id="enStars"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextEn()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Next</button></div></div>
+  <div class="card"><h3>🗣️ Prononciation</h3><div id="pronWord" style="font-size:2.5rem;font-weight:700;color:var(--primary);text-align:center;padding:16px">Hello</div><div style="text-align:center"><button class="bbtn bb-start" onclick="speakWord()">🔊 Écouter</button><button class="bbtn bb-check" onclick="listenWord()">🎤 Répéter</button><button class="bbtn bb-reset" onclick="nextPron()">➡️ Suivant</button></div></div>
+</div>
+<div class="panel" id="pn-sciences">
+  <div class="card"><h3>🔬 Quiz Sciences</h3><div class="quiz-q" id="sciQ"></div><div class="quiz-opts" id="sciO"></div><div class="score" id="sciS"></div><div class="stars" id="sciStars"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextSci()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Next</button></div></div>
+</div>
+<div class="panel" id="pn-corps">
+  <div class="card"><h3>🫀 Corps Humain</h3><p style="color:var(--light);margin-bottom:16px">Clique pour en savoir plus !</p><div class="body-grid"><div class="body-part bp-red" onclick="showBody('brain')"><span class="icon">🧠</span>Cerveau</div><div class="body-part bp-red" onclick="showBody('heart')"><span class="icon">❤️</span>Cœur</div><div class="body-part bp-green" onclick="showBody('lungs')"><span class="icon">🫁</span>Poumons</div><div class="body-part bp-green" onclick="showBody('stomach')"><span class="icon">🫃</span>Estomac</div><div class="body-part bp-green" onclick="showBody('liver')"><span class="icon">🟤</span>Foie</div><div class="body-part bp-green" onclick="showBody('kidneys')"><span class="icon">🫘</span>Reins</div><div class="body-part bp-blue" onclick="showBody('bones')"><span class="icon">🦴</span>Os</div><div class="body-part bp-yellow" onclick="showBody('muscles')"><span class="icon">💪</span>Muscles</div><div class="body-part bp-yellow" onclick="showBody('nerves')"><span class="icon">⚡</span>Nerfs</div><div class="body-part bp-red" onclick="showBody('blood')"><span class="icon">🩸</span>Sang</div><div class="body-part bp-blue" onclick="showBody('eyes')"><span class="icon">👁️</span>Yeux</div><div class="body-part bp-blue" onclick="showBody('ears')"><span class="icon">👂</span>Oreilles</div></div><div id="bodyInfo" style="margin-top:16px;padding:16px;background:var(--bg);border-radius:14px;display:none"><div id="bodyText"></div></div></div>
+</div>
+<div class="panel" id="pn-histoire">
+  <div class="card"><h3>🏛️ Quiz Histoire</h3><div class="quiz-q" id="histQ"></div><div class="quiz-opts" id="histO"></div><div class="score" id="histS"></div><div class="stars" id="histStars"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextHist()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Next</button></div></div>
+</div>
+<div class="panel" id="pn-geo">
+  <div class="card"><h3>🌍 Quiz Géographie</h3><div class="quiz-q" id="geoQ"></div><div class="quiz-opts" id="geoO"></div><div class="score" id="geoS"></div><div class="stars" id="geoStars"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextGeo()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Next</button></div></div>
+</div>
+<div class="panel" id="pn-chimie">
+  <div class="card"><h3>⚗️ Quiz Chimie</h3><div class="quiz-q" id="chimQ"></div><div class="quiz-opts" id="chimO"></div><div class="score" id="chimS"></div><div style="text-align:center;margin-top:12px"><button class="tbtn" onclick="nextChim()" style="background:var(--primary);color:#fff;border-color:var(--primary)">➡️ Next</button></div></div>
+  <div class="card"><h3>🧪 Tableau Périodique</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(75px,1fr));gap:4px"><div style="background:#ff6666;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('H')"><b>H</b><br><small>1</small><br><small style="font-size:0.6rem">Hydrogène</small></div><div style="background:#ff6666;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('He')"><b>He</b><br><small>2</small><br><small style="font-size:0.6rem">Hélium</small></div><div style="background:#ffcc66;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('C')"><b>C</b><br><small>6</small><br><small style="font-size:0.6rem">Carbone</small></div><div style="background:#ffcc66;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('O')"><b>O</b><br><small>8</small><br><small style="font-size:0.6rem">Oxygène</small></div><div style="background:#66cc66;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('Na')"><b>Na</b><br><small>11</small><br><small style="font-size:0.6rem">Sodium</small></div><div style="background:#66cc66;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('Fe')"><b>Fe</b><br><small>26</small><br><small style="font-size:0.6rem">Fer</small></div><div style="background:#66ccff;padding:8px;text-align:center;border-radius:8px;cursor:pointer" onclick="showEl('Au')"><b>Au</b><br><small>79</small><br><small style="font-size:0.6rem">Or</small></div></div><div id="elInfo" style="margin-top:12px;padding:12px;background:var(--bg);border-radius:10px;display:none"></div></div>
+</div>
+<div class="panel" id="pn-poesie">
+  <div class="voice-bar"><div class="voice-mic" id="poesieMic">🎤</div><div class="voice-text"><div class="label">Récite le poème...</div><div class="transcript" id="poesieTranscript">Appuie sur 🎤</div></div></div>
+  <div class="card"><h3>✨ Poésie</h3><select id="poemSelect" onchange="loadPoem()" style="width:100%;padding:10px;border:3px solid var(--primary);border-radius:12px;font-family:var(--font);margin-bottom:12px"><option value="0">🐱 Le Chat — Prévert</option><option value="1">🌙 La Lune — Verlaine</option><option value="2">🌧️ Il pleut — Baudelaire</option><option value="3">🦋 Le Papillon — Nerval</option><option value="4">🐺 Le Loup et l'Agneau</option><option value="5">🌳 Le Chêne et le Roseau</option></select><div class="karaoke-text" id="poemText" style="text-align:left">Sélectionne un poème...</div><div class="karaoke-controls"><button class="kbtn kbtn-play" onclick="playPoem()">▶ Lire</button><button class="kbtn kbtn-stop" onclick="stopPoem()">⏹ Stop</button><button class="kbtn kbtn-play" onclick="recordPoem()">🎤 Enregistrer</button></div></div>
+</div>
+<div class="panel" id="pn-musique">
+  <div class="card"><h3>🎹 Piano</h3><div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap"><button class="tbtn" onclick="playNote('C')" style="padding:14px 18px;font-weight:700">Do</button><button class="tbtn" onclick="playNote('D')" style="padding:14px 18px;font-weight:700">Ré</button><button class="tbtn" onclick="playNote('E')" style="padding:14px 18px;font-weight:700">Mi</button><button class="tbtn" onclick="playNote('F')" style="padding:14px 18px;font-weight:700">Fa</button><button class="tbtn" onclick="playNote('G')" style="padding:14px 18px;font-weight:700">Sol</button><button class="tbtn" onclick="playNote('A')" style="padding:14px 18px;font-weight:700">La</button><button class="tbtn" onclick="playNote('B')" style="padding:14px 18px;font-weight:700">Si</button><button class="tbtn" onclick="playNote('C5')" style="padding:14px 18px;font-weight:700">Do</button></div></div>
+</div>
+<div class="panel" id="pn-dessin">
+  <div class="card"><h3>🎨 Dessin Libre</h3><canvas id="drawCanvas" class="draw-canvas" width="400" height="300"></canvas><div class="tools"><div class="cbtn active" style="background:#000" onclick="setColor('#000')"></div><div class="cbtn" style="background:#d62828" onclick="setColor('#d62828')"></div><div class="cbtn" style="background:#f77f00" onclick="setColor('#f77f00')"></div><div class="cbtn" style="background:#38b000" onclick="setColor('#38b000')"></div><div class="cbtn" style="background:#0077b6" onclick="setColor('#0077b6')"></div><div class="cbtn" style="background:#ffbe0b" onclick="setColor('#ffbe0b')"></div><button class="tbtn" onclick="clearDraw()">🗑️</button><button class="tbtn" onclick="setBrush(3)">✏️</button><button class="tbtn" onclick="setBrush(8)">🖍️</button><button class="tbtn" onclick="setBrush(15)">🖌️</button></div></div>
+</div>
+<div class="panel" id="pn-motricite">
+  <div class="card"><h3>✋ Motricité Fine</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px"><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('trace')"><div style="font-size:2rem">✏️</div><div style="font-weight:600">Tracer</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('dots')"><div style="font-size:2rem">🔵</div><div style="font-weight:600">Relier</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('maze')"><div style="font-size:2rem">🌀</div><div style="font-weight:600">Labyrinthe</div></div><div style="padding:14px;background:var(--bg);border-radius:12px;text-align:center;cursor:pointer" onclick="startMotor('letters')"><div style="font-size:2rem">🔤</div><div style="font-weight:600">Lettres</div></div></div></div>
+  <div class="card" id="motorArea" style="display:none"><h3 id="motorTitle">Exercice</h3><canvas id="motorCanvas" class="draw-canvas" width="400" height="350"></canvas><div style="text-align:center;margin-top:12px"><button class="bbtn bb-reset" onclick="document.getElementById('motorArea').style.display='none'">✕ Fermer</button></div></div>
+</div>
+</main>
+<script>
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('pn-'+b.dataset.panel).classList.add('active')}));
+document.getElementById('focusBtn').addEventListener('click',function(){document.body.classList.toggle('focus-mode');this.classList.toggle('active')});
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;if(SR){rec=new SR();rec.lang='fr-FR';rec.interimResults=true;rec.continuous=false}
+function setupVoice(mid,tid,cb){const m=document.getElementById(mid),t=document.getElementById(tid);if(!m||!rec)return;m.addEventListener('click',()=>{m.classList.add('listening');t.textContent='Écoute...';rec.onresult=e=>{const txt=e.results[0][0].transcript;t.textContent=txt;if(e.results[0].isFinal&&cb)cb(txt)};rec.onend=()=>m.classList.remove('listening');rec.start()})}
+setupVoice('devoirsMic','devoirsTranscript',t=>{document.getElementById('devoirsInput').value=t;addTask()});
+setupVoice('mathsMic','mathsTranscript',t=>{const n=parseInt(t.replace(/\D/g,''));if(!isNaN(n)){document.getElementById('calcAnswer').value=n;checkCalc()}});
+setupVoice('poesieMic','poesieTranscript',t=>{});
+function speak(t){if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(t);u.lang='fr-FR';u.rate=0.85;speechSynthesis.speak(u)}}
+function playNote(n){const f={C:261.63,D:293.66,E:329.63,F:349.23,G:392,A:440,B:493.88,C5:523.25};try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f[n];g.gain.value=0.3;o.start();o.stop(c.currentTime+0.5)}catch(e){}}
+function getList(){return JSON.parse(localStorage.getItem('tasks_mathias')||'[]')}
+function saveList(t){localStorage.setItem('tasks_mathias',JSON.stringify(t))}
+function addTask(){const i=document.getElementById('devoirsInput');const t=i.value.trim();if(!t)return;const l=getList();l.push({text:t,done:false});saveList(l);i.value='';renderTasks()}
+function renderTasks(){const l=document.getElementById('taskList'),t=getList();l.innerHTML=t.map((x,i)=>`<li class="task-item ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleTask(${i})"><span>${x.text}</span><button class="task-del" onclick="delTask(${i})">✕</button></li>`).join('')}
+function toggleTask(i){const t=getList();t[i].done=!t[i].done;saveList(t);renderTasks()}
+function delTask(i){const t=getList();t.splice(i,1);saveList(t);renderTasks()}
+renderTasks();
+let pomoI,pomoS=1500,pomoR=false,pomoN=0,pomoW=true;
+function pomoD(){document.getElementById('pomoTime').textContent=`${Math.floor(pomoS/60).toString().padStart(2,'0')}:${(pomoS%60).toString().padStart(2,'0')}`;document.getElementById('pomoLabel').textContent=pomoW?'Travail — 25 min':'Pause — 5 min';document.getElementById('pomoSessions').textContent=`Sessions : ${pomoN}`}
+function pomoT(){if(pomoS<=0){pomoN++;pomoW=!pomoW;pomoS=pomoW?1500:300;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=pomoW?660:440;g.gain.value=0.3;o.start();o.stop(c.currentTime+0.3)}catch(e){}pomoD();return}pomoS--;pomoD()}
+function pomoStart(){if(pomoR)return;pomoR=true;pomoI=setInterval(pomoT,1000)}function pomoPause(){pomoR=false;clearInterval(pomoI)}function pomoReset(){pomoPause();pomoW=true;pomoS=1500;pomoN=0;pomoD()}pomoD();
+const dictees=['Le chat dort sur le tapis.','La petite fille mange une pomme.','Le soleil brille dans le ciel bleu.','Les oiseaux chantent dans les arbres.'];let dicteeIdx=0;
+function nextDictee(){dicteeIdx=(dicteeIdx+1)%dictees.length;const t=dictees[dicteeIdx],w=t.split(' '),m=Math.floor(Math.random()*w.length);document.getElementById('dicteeText').textContent=w.map((x,i)=>i===m?'______':x).join(' ');document.getElementById('dicteeText').dataset.answer=w[m];document.getElementById('dicteeResult').textContent=''}
+function startDictee(){if(!rec)return;rec.onresult=e=>{const s=e.results[0][0].transcript.toLowerCase(),a=document.getElementById('dicteeText').dataset.answer.toLowerCase();document.getElementById('dicteeResult').textContent=s.includes(a)?'✅ Bravo !':`❌ C'était "${a}"`};rec.start()}nextDictee();
+const conjQ=[{q:'Je ___ (être) à l\'école.',opts:['suis','es','est'],c:0},{q:'Tu ___ (avoir) un chat.',opts:['ai','as','a'],c:1},{q:'Il ___ (faire) beau.',opts:['fait','fais','font'],c:0},{q:'Nous ___ (aller) au parc.',opts:['allons','allez','vont'],c:0},{q:'Vous ___ (être) gentils.',opts:['sommes','êtes','sont'],c:1},{q:'Elles ___ (avoir) des fleurs.',opts:['ont','avez','avons'],c:0}];let conjCur=-1,conjScore=0;
+function nextConj(){conjCur=Math.floor(Math.random()*conjQ.length);const q=conjQ[conjCur];document.getElementById('conjQ').textContent=q.q;document.getElementById('conjO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkConj(${i},${q.c})">${o}</button>`).join('')}
+function checkConj(s,c){document.querySelectorAll('#conjO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)conjScore++;document.getElementById('conjS').textContent=`Score: ${conjScore}`}nextConj();
+const textes=[['Il était une fois une petite fille','qui habitait avec sa mère','au bord de la forêt.','Sa grand-mère lui avait fait','un petit chaperon rouge.'],['Maître Corbeau, sur un arbre perché','tenait en son bec un fromage.','Maître Renard, par l\'odeur alléché','lui tint à peu près ce langage :','Hé ! bonjour, Monsieur du Corbeau.'],['Il était un meunier','qui avait trois fils.','Le plus jeune hérita d\'un chat.','Mais ce chat était très malin.','Il dit à son maître :','Donne-moi des bottes','et je te rendrai riche.'],['Le chêne dit au roseau :','Vous avez bien raison de plier :','le vent vous est moins rude','qu\'il ne m\'est à moi.','Mais cessez de vous moquer :','car je tiens bon, et vous pliez.']];
+function loadText(){const t=textes[document.getElementById('textSelect').value];document.getElementById('lectureText').innerHTML=t.map(l=>`<span class="word">${l}</span>`).join('<br>')}
+let lecI;function playLecture(){const w=document.querySelectorAll('#lectureText .word');let i=0;lecI=setInterval(()=>{w.forEach((x,j)=>x.classList.toggle('active',j===i));if(i<w.length){speak(w[i].textContent);i++}else{clearInterval(lecI);w.forEach(x=>x.classList.remove('active'))}},600)}
+function stopLecture(){clearInterval(lecI);document.querySelectorAll('#lectureText .word').forEach(x=>x.classList.remove('active'))}
+let calcAns=0,calcOk=0,calcTot=0;
+function newCalc(){const ops=['+','-','×'],op=ops[Math.floor(Math.random()*3)];let a,b,ans,q;if(op==='+'){a=Math.floor(Math.random()*50)+10;b=Math.floor(Math.random()*50)+10;ans=a+b;q=`${a} + ${b}`}else if(op==='-'){a=Math.floor(Math.random()*50)+20;b=Math.floor(Math.random()*a)+1;ans=a-b;q=`${a} - ${b}`}else{a=Math.floor(Math.random()*10)+1;b=Math.floor(Math.random()*10)+1;ans=a*b;q=`${a} × ${b}`}calcAns=ans;document.getElementById('calcQ').textContent=q+' = ?';document.getElementById('calcAnswer').value='';document.getElementById('calcResult').textContent=''}
+function checkCalc(){const v=parseInt(document.getElementById('calcAnswer').value);calcTot++;if(v===calcAns){calcOk++;document.getElementById('calcResult').textContent='✅ Bravo !';document.getElementById('calcResult').style.color='var(--success)'}else{document.getElementById('calcResult').textContent=`❌ C'était ${calcAns}`;document.getElementById('calcResult').style.color='#d62828'}document.getElementById('calcScore').textContent=`Score: ${calcOk}/${calcTot}`}newCalc();
+function showTable(n){let h='';for(let i=1;i<=10;i++)h+=`${n} × ${i} = <b>${n*i}</b><br>`;document.getElementById('tableDisplay').innerHTML=h}
+const enQ=[{q:'Comment dit-on "chat" ?',opts:['Dog','Cat','Bird','Fish'],c:1},{q:'Comment dit-on "maison" ?',opts:['Car','House','Tree','Book'],c:1},{q:'Comment dit-on "eau" ?',opts:['Fire','Earth','Air','Water'],c:3},{q:'Comment dit-on "rouge" ?',opts:['Blue','Green','Red','Yellow'],c:2},{q:'Comment dit-on "bonjour" ?',opts:['Goodbye','Hello','Please','Thanks'],c:1},{q:'Comment dit-on "merci" ?',opts:['Sorry','Please','Thanks','Yes'],c:2},{q:'Comment dit-on "chien" ?',opts:['Cat','Dog','Horse','Cow'],c:1},{q:'Comment dit-on "soleil" ?',opts:['Moon','Star','Sun','Cloud'],c:2},{q:'Comment dit-on "pomme" ?',opts:['Banana','Apple','Orange','Pear'],c:1},{q:'Comment dit-on "école" ?',opts:['Home','School','Park','Shop'],c:1}];let enCur=-1,enScore=0;
+function nextEn(){enCur=Math.floor(Math.random()*enQ.length);const q=enQ[enCur];document.getElementById('enQ').textContent=q.q;document.getElementById('enO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkEn(${i},${q.c})">${o}</button>`).join('');document.getElementById('enStars').textContent=''}
+function checkEn(s,c){document.querySelectorAll('#enO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)enScore++;document.getElementById('enS').textContent=`Score: ${enScore}`;document.getElementById('enStars').textContent='⭐'.repeat(enScore)}nextEn();
+const pronW=['Hello','Goodbye','Please','Thank you','Cat','Dog','House','Water','Friend','Happy','School','Apple'];let pronIdx=0;
+function speakWord(){const w=pronW[pronIdx];if('speechSynthesis'in window){const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=0.8;speechSynthesis.speak(u)}}
+function listenWord(){document.getElementById('pronWord').textContent=pronW[pronIdx];speakWord();if(rec){rec.onresult=e=>{const s=e.results[0][0].toLowerCase(),t=pronW[pronIdx].toLowerCase();document.getElementById('pronWord').textContent=s.includes(t)?'✅ '+pronW[pronIdx]+' !':'🔄 '+pronW[pronIdx]};rec.start()}pronIdx=(pronIdx+1)%pronW.length}
+const sciQ=[{q:'Plus grand organe du corps ?',opts:['Le cœur','La peau','Le foie','Le cerveau'],c:1},{q:'Combien d\'os adulte ?',opts:['106','206','306','156'],c:1},{q:'Gaz plantes absorbent ?',opts:['Oxygène','Azote','CO2','Hélium'],c:2},{q:'Planète + proche Soleil ?',opts:['Venus','Terre','Mercure','Mars'],c:2},{q:'Os le plus long ?',opts:['Humérus','Tibia','Fémur','Péroné'],c:2},{q:'Organe filtre le sang ?',opts:['Cœur','Reins','Poumons','Estomac'],c:1},{q:'Vitesse lumière ?',opts:['300 km/s','300 000 km/s','30 000 km/s'],c:1},{q:'Qu\'est-ce qu\'un atome ?',opts:['Une planète','+ petite matière','Un animal'],c:1}];let sciCur=-1,sciScore=0;
+function nextSci(){sciCur=Math.floor(Math.random()*sciQ.length);const q=sciQ[sciCur];document.getElementById('sciQ').textContent=q.q;document.getElementById('sciO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkSci(${i},${q.c})">${o}</button>`).join('');document.getElementById('sciStars').textContent=''}
+function checkSci(s,c){document.querySelectorAll('#sciO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)sciScore++;document.getElementById('sciS').textContent=`Score: ${sciScore}`;document.getElementById('sciStars').textContent='⭐'.repeat(sciScore)}nextSci();
+const bDM={brain:{t:'🧠 Cerveau',d:'Commande tout ! 1,4 kg, 86 milliards de neurones. 20% de ton énergie !'},heart:{t:'❤️ Cœur',d:'Batt 100 000 fois/jour ! Taille de ton poing. Ne s\'arrête jamais.'},lungs:{t:'🫁 Poumons',d:'Respiration ! O2 entre, CO2 sort. Surface = terrain de tennis !'},stomach:{t:'🫃 Estomac',d:'Digère avec acides ! Peut dissoudre du métal !'},liver:{t:'🟤 Foie',d:'1,5 kg ! Filtre sang, stocke vitamines. Peut se régénérer !'},kidneys:{t:'🫘 Reins',d:'Filtrent 180L de sang/jour ! 1 million de néphrons chacun.'},bones:{t:'🦴 Os',d:'206 os ! Plus dur que béton. Moelle fabrique le sang.'},muscles:{t:'💪 Muscles',d:'600+ ! 40% du poids. Plus fort: masséter.'},nerves:{t:'⚡ Nerfs',d:'Messages à 400 km/h ! Réseau électrique.'},blood:{t:'🩸 Sang',d:'5L ! Tour du corps en 1 minute.'},eyes:{t:'👁️ Yeux',d:'10M de couleurs ! 500 nuances de gris.'},ears:{t:'👂 Oreilles',d:'Sons + équilibre ! 20 à 20 000 Hz.'}};
+function showBody(p){const d=bDM[p];document.getElementById('bodyInfo').style.display='block';document.getElementById('bodyText').innerHTML=`<h4 style="color:var(--primary);margin-bottom:8px;font-size:1.2rem">${d.t}</h4><p style="font-size:1.05rem">${d.d}</p>`;speak(d.t+', '+d.d)}
+const histQ=[{q:'Qui découvre Amérique 1492 ?',opts:['Vasco de Gama','Christophe Colomb','Magellan'],c:1},{q:'Année Révolution française ?',opts:['1776','1789','1804'],c:1},{q:'Premier empereur France ?',opts:['Louis XIV','Napoléon','Charlemagne'],c:1},{q:'Pharaon grande pyramide ?',opts:['Toutânkhamon','Khéops','Ramsès II'],c:1},{q:'Début 1ère Guerre mondiale ?',opts:['1912','1914','1918'],c:1},{q:'Qui peint la Joconde ?',opts:['Michel-Ange','Raphaël','Léonard de Vinci'],c:2},{q:'Qui invente l\'imprimerie ?',opts:['Gutenberg','Einstein','Newton'],c:0},{q:'Roi de Versailles ?',opts:['Louis XIII','Louis XIV','Louis XVI'],c:1}];let histCur=-1,histScore=0;
+function nextHist(){histCur=Math.floor(Math.random()*histQ.length);const q=histQ[histCur];document.getElementById('histQ').textContent=q.q;document.getElementById('histO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkHist(${i},${q.c})">${o}</button>`).join('');document.getElementById('histStars').textContent=''}
+function checkHist(s,c){document.querySelectorAll('#histO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)histScore++;document.getElementById('histS').textContent=`Score: ${histScore}`;document.getElementById('histStars').textContent='⭐'.repeat(histScore)}nextHist();
+const geoQ=[{q:'Capitale France ?',opts:['Lyon','Marseille','Paris'],c:2},{q:'+ grand océan ?',opts:['Atlantique','Indien','Pacifique'],c:2},{q:'+ long fleuve monde ?',opts:['Le Nil','L\'Amazone','Mississippi'],c:0},{q:'Combien continents ?',opts:['5','6','7'],c:2},{q:'Capitale Espagne ?',opts:['Barcelone','Séville','Madrid'],c:2},{q:'Pays + grande population ?',opts:['USA','Inde','Chine'],c:2},{q:'+ petit pays ?',opts:['Monaco','Vatican','Nauru'],c:1},{q:'Capitale Japon ?',opts:['Osaka','Kyoto','Tokyo'],c:2}];let geoCur=-1,geoScore=0;
+function nextGeo(){geoCur=Math.floor(Math.random()*geoQ.length);const q=geoQ[geoCur];document.getElementById('geoQ').textContent=q.q;document.getElementById('geoO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkGeo(${i},${q.c})">${o}</button>`).join('');document.getElementById('geoStars').textContent=''}
+function checkGeo(s,c){document.querySelectorAll('#geoO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)geoScore++;document.getElementById('geoS').textContent=`Score: ${geoScore}`;document.getElementById('geoStars').textContent='⭐'.repeat(geoScore)}nextGeo();
+const chimQ=[{q:'Symbole eau ?',opts:['O2','H2O','CO2'],c:1},{q:'Gaz respirer ?',opts:['Azote','CO2','Oxygène'],c:2},{q:'Symbole fer ?',opts:['Fe','F','Fr'],c:0},{q:'Atomes O dans CO2 ?',opts:['1','2','3'],c:1},{q:'pH eau pure ?',opts:['5','7','9'],c:1},{q:'Métal liquide ?',opts:['Fer','Or','Mercure'],c:2}];let chimCur=-1,chimScore=0;
+function nextChim(){chimCur=Math.floor(Math.random()*chimQ.length);const q=chimQ[chimCur];document.getElementById('chimQ').textContent=q.q;document.getElementById('chimO').innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkChim(${i},${q.c})">${o}</button>`).join('')}
+function checkChim(s,c){document.querySelectorAll('#chimO .quiz-opt').forEach((o,i)=>{o.classList.remove('correct','wrong');if(i===c)o.classList.add('correct');if(i===s&&i!==c)o.classList.add('wrong')});if(s===c)chimScore++;document.getElementById('chimS').textContent=`Score: ${chimScore}`}nextChim();
+const elD={H:{n:'Hydrogène',d:'+ léger ! Eau et étoiles.',c:'#ff6666'},He:{n:'Hélium',d:'Gonfle ballons, voix aiguë !',c:'#ff6666'},C:{n:'Carbone',d:'Base vie ! Diamant, corps.',c:'#ffcc66'},O:{n:'Oxygène',d:'Respirer ! 21% air.',c:'#ffcc66'},Na:{n:'Sodium',d:'Sel ! Réagit avec eau.',c:'#66cc66'},Fe:{n:'Fer',d:'+ utilisé ! Voitures, sang.',c:'#66cc66'},Au:{n:'Or',d:'Précieux, ne rouille pas !',c:'#66ccff'}};
+function showEl(s){const d=elD[s];document.getElementById('elInfo').style.display='block';document.getElementById('elInfo').innerHTML=`<div style="display:flex;gap:12px;align-items:center"><div style="width:50px;height:50px;background:${d.c};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;color:#333">${s}</div><div><b>${d.n}</b><br><small>${d.d}</small></div></div>`}
+const poems=[['Le chat','Dort sur le tapis','Il rêve de souris','Et de poissons frais'],['La lune','Est dans le ciel','Elle brille','Comme un soleil de nuit'],['Il pleut','Il mouille','C\'est la fête','Aux grenouilles'],['Le papillon','Vole dans le jardin','Ses couleurs','Sont un arc-en-ciel'],['Le loup et l\'agneau','Un agneau se désaltérait','Dans le courant d\'une onde pure','Un loup survient à jeun'],['Le chêne et le roseau','Le chêne un jour dit au roseau :','Vous avez bien raison de plier','Le vent vous est moins rude']];let poemI;
+function loadPoem(){const idx=document.getElementById('poemSelect').value,p=poems[idx];document.getElementById('poemText').innerHTML=p.map(w=>`<span class="word">${w}</span>`).join(' ')}
+function playPoem(){const w=document.querySelectorAll('#poemText .word');let i=0;poemI=setInterval(()=>{w.forEach((x,j)=>x.classList.toggle('active',j===i));if(i<w.length){speak(w[i].textContent);i++}else{clearInterval(poemI);w.forEach(x=>x.classList.remove('active'))}},600)}
+function stopPoem(){clearInterval(poemI);document.querySelectorAll('#poemText .word').forEach(x=>x.classList.remove('active'))}
+function recordPoem(){if(!rec)return;document.getElementById('poemText').innerHTML+='<br><br><span style="color:var(--primary)">🎤...</span>';rec.onresult=e=>{document.getElementById('poemText').innerHTML+=`<br><span style="color:var(--success)">✅ "${e.results[0][0].transcript}"</span>`};rec.start()}
+const dCanvas=document.getElementById('drawCanvas'),dctx=dCanvas.getContext('2d');let dD=false,dC='#000',dS=8;
+dCanvas.addEventListener('mousedown',e=>{dD=true;dD2(e)});dCanvas.addEventListener('mousemove',e=>{if(dD)dD2(e)});dCanvas.addEventListener('mouseup',()=>dD=false);
+dCanvas.addEventListener('touchstart',e=>{e.preventDefault();dD=true;dD2(e.touches[0])});dCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(dD)dD2(e.touches[0])});dCanvas.addEventListener('touchend',()=>dD=false);
+function dD2(e){const r=dCanvas.getBoundingClientRect();dctx.beginPath();dctx.arc(e.clientX-r.left,e.clientY-r.top,dS,0,Math.PI*2);dctx.fillStyle=dC;dctx.fill()}
+function setColor(c){dC=c;document.querySelectorAll('.cbtn').forEach(b=>b.classList.toggle('active',b.style.background===c))}
+function setBrush(s){dS=s}function clearDraw(){dctx.clearRect(0,0,dCanvas.width,dCanvas.height)}
+function startMotor(type){const c=document.getElementById('motorCanvas'),x=c.getContext('2d');document.getElementById('motorArea').style.display='block';document.getElementById('motorTitle').textContent={trace:'✏️ Tracer',dots:'🔵 Relier',maze:'🌀 Labyrinthe',letters:'🔤 Lettres'}[type];x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.strokeStyle='#333';x.lineWidth=3;if(type==='trace'){x.strokeStyle='#ddd';x.lineWidth=8;x.setLineDash([10,10]);x.beginPath();x.moveTo(50,175);x.bezierCurveTo(150,50,250,300,350,175);x.stroke();x.setLineDash([]);x.font='14px Atkinson Hyperlegible';x.fillStyle='#666';x.textAlign='center';x.fillText('Suis la ligne !',200,340)}else if(type==='dots'){x.fillStyle='#333';[[80,80],[160,50],[240,80],[320,50],[320,250],[240,290],[160,250],[80,290]].forEach((p,i)=>{x.beginPath();x.arc(p[0],p[1],6,0,Math.PI*2);x.fill();x.font='16px Atkinson Hyperlegible';x.fillText(i+1,p[0]-5,p[1]-12)})}else if(type==='maze'){x.strokeRect(40,40,320,270);x.beginPath();x.moveTo(120,40);x.lineTo(120,200);x.stroke();x.beginPath();x.moveTo(200,110);x.lineTo(200,310);x.stroke();x.fillStyle='#38b000';x.beginPath();x.arc(60,60,10,0,Math.PI*2);x.fill();x.fillStyle='#d62828';x.beginPath();x.arc(340,290,10,0,Math.PI*2);x.fill()}else if(type==='letters'){x.strokeStyle='#ddd';x.lineWidth=2;for(let i=0;i<4;i++){x.beginPath();x.moveTo(50,80+i*60);x.lineTo(350,80+i*60);x.stroke()}x.font='28px Atkinson Hyperlegible';x.fillStyle='#333';x.textAlign='center';x.fillText('A B C D E F G H',200,100);x.fillStyle='#bbb';x.fillText('A B C D E F G H',200,160);x.font='14px Atkinson Hyperlegible';x.fillStyle='#666';x.fillText('Recopie les lettres',200,280)}let mD=false;c.onmousedown=e=>{mD=true;mD2(e,c,x)};c.onmousemove=e=>{if(mD)mD2(e,c,x)};c.onmouseup=()=>mD=false;c.ontouchstart=e=>{e.preventDefault();mD=true;mD2(e.touches[0],c,x)};c.ontouchmove=e=>{e.preventDefault();if(mD)mD2(e.touches[0],c,x)};c.ontouchend=()=>mD=false}
+function mD2(e,c,x){const r=c.getBoundingClientRect();x.beginPath();x.arc(e.clientX-r.left,e.clientY-r.top,3,0,Math.PI*2);x.fillStyle=var(--primary);x.fill()}
+</script>
+</body>
+</html>

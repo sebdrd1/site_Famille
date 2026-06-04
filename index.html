@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 Site Famille — Accueil</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  color: #fff;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.header h1 {
+  font-size: 2.2em;
+  margin-bottom: 8px;
+  background: linear-gradient(90deg, #f093fb, #f5576c, #4facfe, #00f2fe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.header p {
+  color: #aaa;
+  font-size: 1.1em;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 32px 28px;
+  text-decoration: none;
+  color: #fff;
+  transition: all 0.35s ease;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: 20px 20px 0 0;
+}
+.card-game::before { background: linear-gradient(90deg, #f093fb, #f5576c); }
+.card-leana::before { background: linear-gradient(90deg, #ff9a9e, #fad0c4); }
+-card-mathias::before { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+
+.card:hover {
+  transform: translateY(-6px) scale(1.02);
+  background: rgba(255,255,255,0.14);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+
+.card .icon { font-size: 3.5em; margin-bottom: 16px; }
+.card h2 { font-size: 1.4em; margin-bottom: 10px; font-weight: 700; }
+.card p { color: #bbb; font-size: 0.95em; line-height: 1.5; margin-bottom: 16px; }
+
+.badge {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 24px;
+  font-size: 0.82em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.badge-game { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+.badge-gs { background: linear-gradient(135deg, #ff9a9e, #fad0c4); color: #333; }
+.badge-ce2 { background: linear-gradient(135deg, #4facfe, #00f2fe); color: #000; }
+
+.features {
+  margin-top: 50px;
+  width: 100%;
+  max-width: 1000px;
+}
+.features h3 {
+  text-align: center;
+  font-size: 1.3em;
+  margin-bottom: 20px;
+  color: #ccc;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.feature {
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.feature .f-icon { font-size: 2em; margin-bottom: 8px; }
+.feature .f-text { color: #999; font-size: 0.9em; }
+
+footer {
+  margin-top: 50px;
+  color: #555;
+  font-size: 0.85em;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏠 Site Famille</h1>
+  <p>Bienvenue ! Choisis une application ci-dessous 👇</p>
+</div>
+
+<div class="cards">
+
+  <a href="jeu_corps_humain.html" class="card card-game">
+    <div class="icon">🫀</div>
+    <h2>Il était une fois le Corps</h2>
+    <p>Jeu éducatif interactif — Explore le corps humain zone par zone avec des quêtes ludiques ! 9 zones, 15 types de quêtes.</p>
+    <span class="badge badge-game">🎮 JEU</span>
+  </a>
+
+  <a href="dashboard_leana.html" class="card card-leana">
+    <div class="icon">🌸</div>
+    <h2>Dashboard Léana</h2>
+    <p>Espace Grande Section (5-6 ans) — Lettres, chiffres, lecture, dessin, musique, corps humain, memory et plus !</p>
+    <span class="badge badge-gs">📚 GS</span>
+  </a>
+
+  <a href="dashboard_mathias.html" class="card card-mathias">
+    <div class="icon">🚀</div>
+    <h2>Dashboard Mathias</h2>
+    <p>Espace CE2-ULIS (8-9 ans) — Français, maths, sciences, histoire, géo, poésie et plus ! Adapté TDAH.</p>
+    <span class="badge badge-ce2">📖 CE2</span>
+  </a>
+
+</div>
+
+<div class="features">
+  <h3>✨ Fonctionnalités</h3>
+  <div class="features-grid">
+    <div class="feature"><div class="icon">🎯</div><div class="f-text">Adapté TDAH</div></div>
+    <div class="feature"><div class="icon">🔊</div><div class="f-text">Reconnaissance vocale</div></div>
+    <div class="feature"><div class="icon">⏱️</div><div class="f-text">Pomodoro intégré</div></div>
+    <div class="feature"><div class="icon">📱</div><div class="f-text">PC, tablette, téléphone</div></div>
+    <div class="feature"><div class="icon">🎨</div><div class="f-text">Police lisible (Atkinson)</div></div>
+    <div class="feature"><div class="icon">🧠</div><div class="f-text">Mode Focus</div></div>
+  </div>
+</div>
+
+<footer>
+  Site Famille v0.1 — En construction 🚀<br>
+  <small>Compatible PC, tablette et téléphone • 2026</small>
+</footer>
+
+</body>
+</html>
