@@ -162,33 +162,37 @@
   <div class="card" id="motorArea" style="display:none"><h3 id="motorTitle">Exercice</h3><canvas id="motorCanvas" class="draw-canvas" width="400" height="350"></canvas><div style="text-align:center;margin-top:12px"><button class="bbtn bb-reset" onclick="document.getElementById('motorArea').style.display='none'">✕ Fermer</button></div></div>
 </div>
 </main>
-<script>// ===== NAVIGATION PANNEAUX =====
-(function() {
-  var buttons = document.querySelectorAll('[data-panel]');
-  buttons.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var panelName = this.getAttribute('data-panel');
-      // Cacher tous les panneaux
+<script>// NAVIGATION
+document.addEventListener('DOMContentLoaded', function() {
+  var btns = document.querySelectorAll('[data-panel]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function() {
+      var name = this.getAttribute('data-panel');
       var panels = document.querySelectorAll('.panel');
-      panels.forEach(function(p) { p.classList.remove('active'); });
-      // Montrer le panneau cible
-      var target = document.getElementById('pn-' + panelName);
-      if (target) { target.classList.add('active'); }
-      // Activer le bouton
-      buttons.forEach(function(b) { b.classList.remove('active'); });
+      for (var j = 0; j < panels.length; j++) {
+        panels[j].classList.remove('active');
+      }
+      var target = document.getElementById('pn-' + name);
+      if (target) {
+        target.classList.add('active');
+      }
+      for (var k = 0; k < btns.length; k++) {
+        btns[k].classList.remove('active');
+      }
       this.classList.add('active');
     });
-  });
-  
-  // Focus button
-  var focusBtn = document.getElementById('focusBtn');
-  if (focusBtn) {
-    focusBtn.addEventListener('click', function() {
+  }
+  var fb = document.getElementById('focusBtn');
+  if (fb) {
+    fb.addEventListener('click', function() {
       document.body.classList.toggle('focus-mode');
       this.classList.toggle('active');
     });
   }
-})();
+});
+
+// ===== NAVIGATION PANNEAUX =====
+
 
 </script>
 </body>
