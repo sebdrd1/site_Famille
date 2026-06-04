@@ -306,23 +306,44 @@ setupVoice("mathsMic", "mathsTranscript", function(t) {
 });
 
 // SPEAK
+var speakQueue = [], speakBusy = false;
 function speak(txt) {
-  if ("speechSynthesis" in window) {
-    var u = new SpeechSynthesisUtterance(txt);
-    u.lang = "fr-FR";
-    u.rate = 0.85;
-    speechSynthesis.speak(u);
+  if (!("speechSynthesis" in window)) return;
+  speakQueue.push(txt);
+  if (!speakBusy) speakNext();
+}
+function speakNext() {
+  if (speakQueue.length === 0) { speakBusy = false; return; }
+  speakBusy = true;
+  var txt = speakQueue.shift();
+  var u = new SpeechSynthesisUtterance(txt);
+  u.lang = "fr-FR";
+  u.rate = 0.85;
+  u.onend = function() { speakNext(); };
+  u.onerror = function() { speakNext(); };
+  speechSynthesis.speak(u);
+}
+function stopSpeak() {
+  speakQueue = [];
+  speechSynthesis.cancel();
+  speakBusy = false;
+}
+var audioCtx = null;
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
+  return audioCtx;
 }
 function playNote(n) {
   var f = {C:261.63,D:293.66,E:329.63,F:349.23,G:392,A:440,B:493.88,C5:523.25};
   try {
-    var c = new AudioContext();
+    var c = getAudioContext();
     var o = c.createOscillator();
     var g = c.createGain();
     o.connect(g);
     g.connect(c.destination);
-    o.frequency.value = f[n];
+    o.frequency.value = f[n] || 440;
     g.gain.value = 0.3;
     o.start();
     o.stop(c.currentTime + 0.5);
