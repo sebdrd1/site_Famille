@@ -265,42 +265,491 @@ if (_fb) {
 
 
 
-// ACTIVITÉS - Désactivé pour debug
-function speak(txt) { console.log("speak: " + txt); }
-function playNote(n) { console.log("note: " + n); }
-function nextLetQuestion() { console.log("nextLetQuestion"); }
-function checkLet() { console.log("checkLet"); }
-function speakLetter(l) { console.log("speakLetter: " + l); }
-function speakNum(n) { console.log("speakNum: " + n); }
-function nextCount() { console.log("nextCount"); }
-function resetCount() { console.log("resetCount"); }
-function nextCombien() { console.log("nextCombien"); }
-function checkCombien() { console.log("checkCombien"); }
-function playSentence() { console.log("playSentence"); }
-function stopSentence() { console.log("stopSentence"); }
-function nextSentence() { console.log("nextSentence"); }
-function setTraceLetter(l) { console.log("setTraceLetter: " + l); }
-function clearTrace() { console.log("clearTrace"); }
-function clearName() { console.log("clearName"); }
-function newAdd() { console.log("newAdd"); }
-function checkAdd() { console.log("checkAdd"); }
-function newSub() { console.log("newSub"); }
-function checkSub() { console.log("checkSub"); }
-function setColor(c) { console.log("setColor: " + c); }
-function setBrush(s) { console.log("setBrush: " + s); }
-function clearDraw() { console.log("clearDraw"); }
-function clearColor() { console.log("clearColor"); }
-function showBody(p) { console.log("showBody: " + p); }
-function showSense(s) { console.log("showSense: " + s); }
-function nextAnimal() { console.log("nextAnimal"); }
-function checkAnimal() { console.log("checkAnimal"); }
-function nextNature() { console.log("nextNature"); }
-function checkNature() { console.log("checkNature"); }
-function startMotor(t) { console.log("startMotor: " + t); }
-function initMemory() { console.log("initMemory"); }
-function nextQuiz() { console.log("nextQuiz"); }
-function checkQuiz() { console.log("checkQuiz"); }
-function setupVoice() {}
+
+// VOICE
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var rec = null;
+if (SR) {
+  rec = new SR();
+  rec.lang = "fr-FR";
+  rec.interimResults = true;
+  rec.continuous = false;
+}
+function setupVoice(mid, tid, cb) {
+  var m = document.getElementById(mid);
+  var t = document.getElementById(tid);
+  if (!m || !rec) return;
+  m.addEventListener("click", function() {
+    m.classList.add("listening");
+    t.textContent = "Écoute...";
+    rec.onresult = function(e) {
+      var txt = e.results[0][0].transcript;
+      t.textContent = txt;
+      if (e.results[0].isFinal && cb) cb(txt);
+    };
+    rec.onend = function() { m.classList.remove("listening"); };
+    rec.start();
+  });
+}
+setupVoice("lettresMic", "lettresTranscript", function(t) {
+  var l = t.trim().toUpperCase()[0];
+  if (l) speakLetter(l);
+});
+setupVoice("chiffresMic", "chiffresTranscript", function(t) {
+  var n = parseInt(t);
+  if (!isNaN(n) && n >= 0 && n <= 20) speakNum(n);
+});
+setupVoice("lectureMic", "lectureTranscript", function(t) {});
+setupVoice("mathsMic", "mathsTranscript", function(t) {
+  var n = parseInt(t.replace(/\D/g, ""));
+  if (!isNaN(n)) { document.getElementById("addAnswer").value = n; checkAdd(); }
+});
+
+// SPEAK
+function speak(txt) {
+  if ("speechSynthesis" in window) {
+    var u = new SpeechSynthesisUtterance(txt);
+    u.lang = "fr-FR";
+    u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+}
+function playNote(n) {
+  var f = {C:261.63,D:293.66,E:329.63,F:349.23,G:392,A:440,B:493.88,C5:523.25};
+  try {
+    var c = new AudioContext();
+    var o = c.createOscillator();
+    var g = c.createGain();
+    o.connect(g);
+    g.connect(c.destination);
+    o.frequency.value = f[n];
+    g.gain.value = 0.3;
+    o.start();
+    o.stop(c.currentTime + 0.5);
+  } catch(e) {}
+}
+
+// ===== LETTRES =====
+var alphabet = [
+  {l:"A",ex:"avion"},{l:"B",ex:"ballon"},{l:"C",ex:"chat"},{l:"D",ex:"dinosaure"},
+  {l:"E",ex:"éléphant"},{l:"F",ex:"fleur"},{l:"G",ex:"girafe"},{l:"H",ex:"hippopotame"},
+  {l:"I",ex:"igloo"},{l:"J",ex:"jardin"},{l:"K",ex:"kangourou"},{l:"L",ex:"lion"},
+  {l:"M",ex:"maison"},{l:"N",ex:"nuage"},{l:"O",ex:"ours"},{l:"P",ex:"pomme"},
+  {l:"Q",ex:"queue"},{l:"R",ex:"rose"},{l:"S",ex:"soleil"},{l:"T",ex:"tortue"},
+  {l:"U",ex:"uniforme"},{l:"V",ex:"voiture"},{l:"W",ex:"wagon"},{l:"X",ex:"xylophone"},
+  {l:"Y",ex:"yacht"},{l:"Z",ex:"zèbre"}
+];
+var letterGrid = document.getElementById("letterGrid");
+if (letterGrid) {
+  for (var i = 0; i < alphabet.length; i++) {
+    var a = alphabet[i];
+    var btn = document.createElement("button");
+    btn.className = "letter-btn";
+    btn.innerHTML = a.l + "<span class=\"sound\">comme " + a.ex + "</span>";
+    btn.onclick = (function(letter, example) {
+      return function() {
+        speak(letter + ", comme " + example);
+        this.style.background = "var(--primary)";
+        this.style.color = "#fff";
+      };
+    })(a.l, a.ex);
+    letterGrid.appendChild(btn);
+  }
+}
+function speakLetter(l) {
+  for (var i = 0; i < alphabet.length; i++) {
+    if (alphabet[i].l === l) {
+      speak(l + ", comme " + alphabet[i].ex);
+      return;
+    }
+  }
+}
+
+// ===== QUIZ LETTRES =====
+var letQ = [
+  {q:"Quelle lettre fait le son \"a\" ?",opts:["A","O","U"],c:0},
+  {q:"Quelle lettre fait le son \"o\" ?",opts:["A","O","I"],c:1},
+  {q:"Quelle lettre fait le son \"i\" ?",opts:["E","U","I"],c:2},
+  {q:"Quelle lettre fait le son \"é\" ?",opts:["E","A","O"],c:0},
+  {q:"Quelle lettre fait le son \"u\" ?",opts:["O","U","I"],c:1}
+];
+var letCur = -1, letScore = 0;
+function nextLetQuestion() {
+  letCur = Math.floor(Math.random() * letQ.length);
+  var q = letQ[letCur];
+  document.getElementById("letQ").textContent = q.q;
+  var opts = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    opts += "<button class=\"quiz-opt\" onclick=\"checkLet(" + i + "," + q.c + ")\">" + q.opts[i] + "</button>";
+  }
+  document.getElementById("letO").innerHTML = opts;
+  document.getElementById("letStars").textContent = "";
+}
+function checkLet(sel, corr) {
+  var opts = document.querySelectorAll("#letO .quiz-opt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove("correct", "wrong");
+    if (i === corr) opts[i].classList.add("correct");
+    if (i === sel && i !== corr) opts[i].classList.add("wrong");
+  }
+  if (sel === corr) {
+    letScore++;
+    document.getElementById("letStars").textContent = "⭐".repeat(letScore);
+  }
+  document.getElementById("letS").textContent = "Score: " + letScore;
+}
+nextLetQuestion();
+
+// ===== CHIFFRES =====
+var numGrid = document.getElementById("numGrid");
+if (numGrid) {
+  for (var n = 0; n <= 20; n++) {
+    var btn = document.createElement("button");
+    btn.className = "letter-btn";
+    btn.style.fontSize = "1.4rem";
+    btn.textContent = n;
+    btn.onclick = (function(num) {
+      return function() { speakNum(num); };
+    })(n);
+    numGrid.appendChild(btn);
+  }
+}
+function speakNum(n) {
+  var mots = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix",
+    "onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf","vingt"];
+  if (n >= 0 && n <= 20) speak(mots[n]);
+}
+var countN = 0;
+function nextCount() {
+  countN++;
+  if (countN > 20) countN = 0;
+  var area = document.getElementById("countArea");
+  if (area) {
+    area.textContent = countN;
+    speakNum(countN);
+  }
+}
+function resetCount() {
+  countN = 0;
+  var area = document.getElementById("countArea");
+  if (area) area.textContent = "0";
+}
+
+// ===== COMBIEN =====
+var combienQ = [
+  {q:"⭐⭐ Combien d\'étoiles ?",opts:["2","3","4"],c:0},
+  {q:"⭐⭐⭐ Combien d\'étoiles ?",opts:["2","3","4"],c:1},
+  {q:"⭐⭐⭐⭐ Combien d\'étoiles ?",opts:["3","4","5"],c:1},
+  {q:"🐱🐱🐱 Combien de chats ?",opts:["2","3","4"],c:1},
+  {q:"🌸🌸 Combien de fleurs ?",opts:["1","2","3"],c:1}
+];
+var combienCur = -1, combienScore = 0;
+function nextCombien() {
+  combienCur = Math.floor(Math.random() * combienQ.length);
+  var q = combienQ[combienCur];
+  document.getElementById("combienQ").textContent = q.q;
+  var opts = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    opts += "<button class=\"quiz-opt\" onclick=\"checkCombien(" + i + "," + q.c + ")\">" + q.opts[i] + "</button>";
+  }
+  document.getElementById("combienO").innerHTML = opts;
+  document.getElementById("combienS").textContent = "";
+}
+function checkCombien(sel, corr) {
+  var opts = document.querySelectorAll("#combienO .quiz-opt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove("correct", "wrong");
+    if (i === corr) opts[i].classList.add("correct");
+    if (i === sel && i !== corr) opts[i].classList.add("wrong");
+  }
+  if (sel === corr) combienScore++;
+  document.getElementById("combienS").textContent = "Score: " + combienScore;
+}
+nextCombien();
+
+// ===== LECTURE =====
+var motsGS = ["le","la","un","une","est","dans","sur","chat","chien","maison","fleur","soleil","lune","ami","bonjour","merci","papa","maman","école","jouet"];
+var wordList = document.getElementById("wordList");
+if (wordList) {
+  for (var i = 0; i < motsGS.length; i++) {
+    var w = document.createElement("button");
+    w.className = "draw-btn";
+    w.textContent = motsGS[i];
+    w.onclick = (function(mot) {
+      return function() {
+        speak(mot);
+        this.classList.add("active");
+        setTimeout((function(btn) {
+          return function() { btn.classList.remove("active"); };
+        })(this), 1000);
+      };
+    })(motsGS[i]);
+    wordList.appendChild(w);
+  }
+}
+
+// ===== PHRASES =====
+var phrases = ["Le chat dort.", "La fleur est belle.", "Le soleil brille.", "Maman fait à dîner.", "Papa lit un livre.", "L\'ami joue dehors."];
+var phraseIdx = 0;
+function playSentence() {
+  var words = phrases[phraseIdx].split(" ");
+  var sentence = document.getElementById("sentence");
+  var i = 0;
+  sentence.innerHTML = "";
+  for (var j = 0; j < words.length; j++) {
+    var span = document.createElement("span");
+    span.className = "word";
+    span.textContent = words[j];
+    sentence.appendChild(span);
+  }
+  var iv = setInterval(function() {
+    if (i < words.length) {
+      sentence.children[i].classList.add("done");
+      speak(words[i]);
+      i++;
+    } else {
+      clearInterval(iv);
+    }
+  }, 800);
+}
+function stopSentence() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+function nextSentence() {
+  phraseIdx = (phraseIdx + 1) % phrases.length;
+  document.getElementById("sentence").textContent = phrases[phraseIdx];
+}
+nextSentence();
+
+// ===== MATHS =====
+var addA, addB, addAns, addTot = 0, addOk = 0;
+function newAdd() {
+  addA = Math.floor(Math.random() * 5) + 1;
+  addB = Math.floor(Math.random() * 5) + 1;
+  addAns = addA + addB;
+  document.getElementById("addQ").textContent = addA + " + " + addB + " = ?";
+  document.getElementById("addAnswer").value = "";
+  document.getElementById("addResult").textContent = "";
+}
+function checkAdd() {
+  var v = parseInt(document.getElementById("addAnswer").value);
+  addTot++;
+  if (v === addAns) {
+    addOk++;
+    document.getElementById("addResult").textContent = "✅ Bravo !";
+    document.getElementById("addResult").style.color = "var(--success)";
+  } else {
+    document.getElementById("addResult").textContent = "❌ C\'est " + addAns;
+    document.getElementById("addResult").style.color = "#ff4444";
+  }
+  document.getElementById("addScore").textContent = addOk + " / " + addTot;
+}
+newAdd();
+
+var subA, subB, subAns;
+function newSub() {
+  subA = Math.floor(Math.random() * 5) + 3;
+  subB = Math.floor(Math.random() * subA) + 1;
+  subAns = subA - subB;
+  document.getElementById("subQ").textContent = subA + " - " + subB + " = ?";
+  document.getElementById("subAnswer").value = "";
+  document.getElementById("subResult").textContent = "";
+}
+function checkSub() {
+  var v = parseInt(document.getElementById("subAnswer").value);
+  if (v === subAns) {
+    document.getElementById("subResult").textContent = "✅ Bravo !";
+    document.getElementById("subResult").style.color = "var(--success)";
+  } else {
+    document.getElementById("subResult").textContent = "❌ C\'est " + subAns;
+    document.getElementById("subResult").style.color = "#ff4444";
+  }
+}
+newSub();
+
+// ===== CORPS =====
+var bodyData = {
+  head:{t:"🗣️ La Tête",d:"Ta tête contient ton cerveau ! Il pense, rêve et se souvient de tout."},
+  eyes:{t:"👁️ Les Yeux",d:"Tes yeux te permettent de voir ! Ils captent la lumière et envoient des images à ton cerveau."},
+  ears:{t:"👂 Les Oreilles",d:"Tes oreilles entendent les sons ! La musique, la voix de maman, le chant des oiseaux..."},
+  mouth:{t:"👄 La Bouche",d:"Ta bouche sert à manger, boire et parler ! Ta langue goûte les saveurs."},
+  hands:{t:"✋ Les Mains",d:"Tu as 5 doigts sur chaque main ! Tes mains permettent de tenir, toucher, dessiner."},
+  feet:{t:"🦶 Les Pieds",d:"Tes pieds te permettent de marcher, courir et sauter ! Tu as 5 orteils sur chaque pied."},
+  heart:{t:"❤️ Le Cœur",d:"Ton cœur est une pompe dans ta poitrine ! Il bat environ 100 fois par minute."},
+  tummy:{t:"🫃 Le Ventre",d:"Dans ton ventre, il y a ton estomac qui digère la nourriture !"}
+};
+function showBody(p) {
+  var d = bodyData[p];
+  if (!d) return;
+  document.getElementById("bodyInfo").style.display = "block";
+  document.getElementById("bodyText").innerHTML = "<h4 style=\"color:var(--primary);margin-bottom:8px;font-size:1.2rem\">" + d.t + "</h4><p style=\"font-size:1.1rem\">" + d.d + "</p>";
+  speak(d.t + ", " + d.d);
+}
+
+var senseData = {
+  see:{t:"👁️ Voir",d:"On voit avec les yeux ! La lumière entre dans l\'œil et le cerveau comprend ce que c\'est."},
+  hear:{t:"👂 Entendre",d:"On entend avec les oreilles ! Les sons sont des vibrations dans l\'air."},
+  touch:{t:"✋ Toucher",d:"On touche avec la peau ! Ta peau sent quand c\'est doux, rugueux, chaud ou froid."},
+  smell:{t:"👃 Sentir",d:"On sent avec le nez ! L\'air contient des odeurs. Ton nez les capte."},
+  taste:{t:"👅 Goûter",d:"On goûte avec la langue ! Il y a 4 goûts : sucré, salé, acide et amer."}
+};
+function showSense(s) {
+  var d = senseData[s];
+  if (!d) return;
+  document.getElementById("senseInfo").style.display = "block";
+  document.getElementById("senseText").innerHTML = "<h4 style=\"color:var(--primary);margin-bottom:8px;font-size:1.2rem\">" + d.t + "</h4><p style=\"font-size:1.1rem\">" + d.d + "</p>";
+  speak(d.t + ", " + d.d);
+}
+
+// ===== DECOUVRE =====
+var animalQ = [
+  {q:"🐱 Quel animal miaule ?",opts:["Le chien","Le chat","Le poisson"],c:1},
+  {q:"🐶 Quel animal aboie ?",opts:["Le chat","Le chien","La vache"],c:1},
+  {q:"🐟 Quel animal nage ?",opts:["L\'oiseau","Le chat","Le poisson"],c:2},
+  {q:"🐦 Quel animal vole ?",opts:["Le poisson","L\'oiseau","Le chien"],c:1},
+  {q:"🐄 Quel animal fait \"meuh\" ?",opts:["La vache","Le chat","Le coq"],c:0}
+];
+var animalCur = -1, animalScore = 0;
+function nextAnimal() {
+  animalCur = Math.floor(Math.random() * animalQ.length);
+  var q = animalQ[animalCur];
+  document.getElementById("animalQ").textContent = q.q;
+  var opts = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    opts += "<button class=\"quiz-opt\" onclick=\"checkAnimal(" + i + "," + q.c + ")\">" + q.opts[i] + "</button>";
+  }
+  document.getElementById("animalO").innerHTML = opts;
+  document.getElementById("animalS").textContent = "";
+}
+function checkAnimal(sel, corr) {
+  var opts = document.querySelectorAll("#animalO .quiz-opt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove("correct", "wrong");
+    if (i === corr) opts[i].classList.add("correct");
+    if (i === sel && i !== corr) opts[i].classList.add("wrong");
+  }
+  if (sel === corr) animalScore++;
+  document.getElementById("animalS").textContent = "Score: " + animalScore;
+}
+nextAnimal();
+
+var natureQ = [
+  {q:"🌞 Qui brille dans le ciel le jour ?",opts:["La lune","Le soleil","L\'étoile"],c:1},
+  {q:"🌙 Qui brille dans le ciel la nuit ?",opts:["Le soleil","La lune","Le nuage"],c:1},
+  {q:"🌳 Qu\'est-ce qui est vert et a des feuilles ?",opts:["La fleur","L\'arbre","Le caillou"],c:1},
+  {q:"💧 Qu\'est-ce qui tombe du ciel quand il pleut ?",opts:["Du soleil","De l\'eau","Du vent"],c:1}
+];
+var natureCur = -1, natureScore = 0;
+function nextNature() {
+  natureCur = Math.floor(Math.random() * natureQ.length);
+  var q = natureQ[natureCur];
+  document.getElementById("natureQ").textContent = q.q;
+  var opts = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    opts += "<button class=\"quiz-opt\" onclick=\"checkNature(" + i + "," + q.c + ")\">" + q.opts[i] + "</button>";
+  }
+  document.getElementById("natureO").innerHTML = opts;
+  document.getElementById("natureS").textContent = "";
+}
+function checkNature(sel, corr) {
+  var opts = document.querySelectorAll("#natureO .quiz-opt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove("correct", "wrong");
+    if (i === corr) opts[i].classList.add("correct");
+    if (i === sel && i !== corr) opts[i].classList.add("wrong");
+  }
+  if (sel === corr) natureScore++;
+  document.getElementById("natureS").textContent = "Score: " + natureScore;
+}
+nextNature();
+
+// ===== MUSIQUE =====
+// (les boutons piano appellent playNote() déjà défini)
+
+// ===== MEMORY =====
+var memEmojis = ["🐱","🐶","🐸","🦋","🌸","⭐","🌙","🍎"];
+var memCards = [], memFlipped = [], memMatched = [], memLocked = false;
+function initMemory() {
+  var grid = document.getElementById("memoryGrid");
+  if (!grid) return;
+  memCards = memEmojis.concat(memEmojis).sort(function() { return Math.random() - 0.5; });
+  memFlipped = [];
+  memMatched = [];
+  memLocked = false;
+  grid.innerHTML = "";
+  for (var i = 0; i < memCards.length; i++) {
+    var card = document.createElement("button");
+    card.style.cssText = "padding:16px;font-size:2rem;border:3px solid #f0d0f0;border-radius:14px;background:#fff;cursor:pointer;transition:0.3s";
+    card.textContent = "❓";
+    card.setAttribute("data-idx", i);
+    card.onclick = (function(idx, emoji) {
+      return function() { flipCard(idx, this, emoji); };
+    })(i, memCards[i]);
+    grid.appendChild(card);
+  }
+}
+function flipCard(idx, card, emoji) {
+  if (memLocked || memFlipped.indexOf(idx) >= 0 || memMatched.indexOf(idx) >= 0) return;
+  card.textContent = emoji;
+  card.style.background = "var(--primary)";
+  card.style.color = "#fff";
+  memFlipped.push(idx);
+  if (memFlipped.length === 2) {
+    memLocked = true;
+    var a = memFlipped[0], b = memFlipped[1];
+    if (memCards[a] === memCards[b]) {
+      memMatched.push(a, b);
+      memFlipped = [];
+      memLocked = false;
+      if (memMatched.length === memCards.length) speak("Bravo ! Tu as tout trouvé !");
+    } else {
+      setTimeout(function() {
+        var cardA = document.querySelector("[data-idx=\"" + a + "\"]");
+        var cardB = document.querySelector("[data-idx=\"" + b + "\"]");
+        if (cardA) { cardA.textContent = "❓"; cardA.style.background = "#fff"; }
+        if (cardB) { cardB.textContent = "❓"; cardB.style.background = "#fff"; }
+        memFlipped = [];
+        memLocked = false;
+      }, 1000);
+    }
+  }
+}
+initMemory();
+
+// ===== QUIZ GÉNÉRAL =====
+var easyQuiz = [
+  {q:"De quelle couleur est le ciel ?",opts:["Rouge","Bleu","Vert"],c:1},
+  {q:"Combien de jours dans une semaine ?",opts:["5","7","10"],c:1},
+  {q:"Quel animal a une longue trompe ?",opts:["Le lion","L\'éléphant","Le zèbre"],c:1},
+  {q:"Quelle saison fait froid ?",opts:["L\'été","Le printemps","L\'hiver"],c:2},
+  {q:"Combien de pattes a une araignée ?",opts:["4","6","8"],c:2}
+];
+var quizCur = -1, quizScore = 0;
+function nextQuiz() {
+  quizCur = Math.floor(Math.random() * easyQuiz.length);
+  var q = easyQuiz[quizCur];
+  document.getElementById("quizQ").textContent = q.q;
+  var opts = "";
+  for (var i = 0; i < q.opts.length; i++) {
+    opts += "<button class=\"quiz-opt\" onclick=\"checkQuiz(" + i + "," + q.c + ")\">" + q.opts[i] + "</button>";
+  }
+  document.getElementById("quizO").innerHTML = opts;
+  document.getElementById("quizStars").textContent = "";
+}
+function checkQuiz(sel, corr) {
+  var opts = document.querySelectorAll("#quizO .quiz-opt");
+  for (var i = 0; i < opts.length; i++) {
+    opts[i].classList.remove("correct", "wrong");
+    if (i === corr) opts[i].classList.add("correct");
+    if (i === sel && i !== corr) opts[i].classList.add("wrong");
+  }
+  if (sel === corr) {
+    quizScore++;
+    document.getElementById("quizStars").textContent = "⭐".repeat(quizScore);
+  }
+  document.getElementById("quizS").textContent = "Score: " + quizScore;
+}
+nextQuiz();
 </script>
 </body>
 </html>
