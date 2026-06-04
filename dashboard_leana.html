@@ -237,33 +237,29 @@
 </main>
 
 <script>// NAVIGATION
-document.addEventListener('DOMContentLoaded', function() {
-  var btns = document.querySelectorAll('[data-panel]');
-  for (var i = 0; i < btns.length; i++) {
-    btns[i].addEventListener('click', function() {
-      var name = this.getAttribute('data-panel');
-      var panels = document.querySelectorAll('.panel');
-      for (var j = 0; j < panels.length; j++) {
-        panels[j].classList.remove('active');
-      }
-      var target = document.getElementById('pn-' + name);
-      if (target) {
-        target.classList.add('active');
-      }
-      for (var k = 0; k < btns.length; k++) {
-        btns[k].classList.remove('active');
-      }
-      this.classList.add('active');
-    });
-  }
-  var fb = document.getElementById('focusBtn');
-  if (fb) {
-    fb.addEventListener('click', function() {
-      document.body.classList.toggle('focus-mode');
-      this.classList.toggle('active');
-    });
-  }
-});
+var navBtns = document.querySelectorAll('[data-panel]');
+for (var i = 0; i < navBtns.length; i++) {
+  navBtns[i].addEventListener('click', function() {
+    var name = this.getAttribute('data-panel');
+    var panels = document.querySelectorAll('.panel');
+    for (var j = 0; j < panels.length; j++) {
+      panels[j].classList.remove('active');
+    }
+    var target = document.getElementById('pn-' + name);
+    if (target) { target.classList.add('active'); }
+    for (var k = 0; k < navBtns.length; k++) {
+      navBtns[k].classList.remove('active');
+    }
+    this.classList.add('active');
+  });
+}
+var fb = document.getElementById('focusBtn');
+if (fb) {
+  fb.addEventListener('click', function() {
+    document.body.classList.toggle('focus-mode');
+    this.classList.toggle('active');
+  });
+}
 
 // ===== NAVIGATION PANNEAUX =====
 

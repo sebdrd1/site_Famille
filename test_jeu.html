@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Jeu</title>
+<style>
+body{margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh}
+#game-container{width:800px;height:600px}
+</style>
+</head>
+<body>
+<div id="game-container"></div>
+<script src="phaser.min.js"></script>
+<script>
+try {
+  console.log("Phaser version:", Phaser.VERSION);
+  
+  var config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'game-container',
+    backgroundColor: '#1a1a2e',
+    scene: {
+      create: function() {
+        this.add.text(400, 250, "CA MARCHE!", {fontSize: '48px', color: '#44ff44'}).setOrigin(0.5);
+        this.add.text(400, 320, "Phaser " + Phaser.VERSION, {fontSize: '24px', color: '#888'}).setOrigin(0.5);
+        
+        // Bouton test
+        var btn = this.add.text(400, 400, "Clique ici!", {fontSize: '28px', color: '#fff', backgroundColor: '#4488ff', padding: {x:20,y:10}}).setOrigin(0.5);
+        btn.setInteractive({useHandCursor: true});
+        btn.on('pointerdown', function() {
+          this.setText("CLIQUE!");
+        });
+      }
+    }
+  };
+  
+  var game = new Phaser.Game(config);
+  console.log("Game created successfully");
+} catch(e) {
+  console.error("ERROR:", e.message);
+  document.body.innerHTML = '<div style="color:red;padding:40px;font-size:24px">ERREUR: ' + e.message + '</div>';
+}
+</script>
+</body>
+</html>
