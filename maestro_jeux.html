@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Maestro — Jeux Éducatifs</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0a1a;--card:rgba(255,255,255,0.06);--text:#e8e8f0;
+  --accent:#ffd700;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;
+  --red:#e74c3c;--orange:#e67e22;--teal:#1abc9c;
+}
+body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;touch-action:manipulation}
+header{background:linear-gradient(135deg,#1a1a3e,#2d1b69);padding:16px;text-align:center;position:sticky;top:0;z-index:100}
+header h1{font-size:22px;color:var(--accent);text-shadow:0 2px 4px rgba(0,0,0,0.5)}
+header p{font-size:12px;opacity:0.7;margin-top:4px}
+.back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
+.container{padding:16px;max-width:900px;margin:0 auto;padding-bottom:100px}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.game-card{background:var(--card);border-radius:20px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;border:3px solid transparent}
+.game-card:active{transform:scale(0.95)}
+.game-card:hover{border-color:var(--accent)}
+.game-emoji{font-size:48px;display:block;margin-bottom:12px}
+.game-title{font-size:18px;font-weight:bold;color:#fff;margin-bottom:4px}
+.game-desc{font-size:13px;opacity:0.6}
+.game-badge{display:inline-block;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:bold;margin-top:8px}
+.badge-ok{background:rgba(46,204,113,0.2);color:var(--green)}
+.badge-soon{background:rgba(241,196,15,0.2);color:var(--accent)}
+/* QUIZ STYLES */
+.quiz-container{display:none}
+.quiz-container.show{display:block}
+.quiz-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-radius:12px;margin-bottom:16px}
+.quiz-progress{flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;margin:0 16px;overflow:hidden}
+.quiz-progress-bar{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));border-radius:4px;transition:width 0.3s}
+.quiz-q{background:var(--card);border-radius:16px;padding:24px;margin-bottom:16px;font-size:20px;font-weight:bold;text-align:center}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.q-opt{padding:16px;border:3px solid rgba(255,255,255,0.15);border-radius:12px;background:var(--card);color:#fff;font-size:16px;font-weight:bold;cursor:pointer;transition:all 0.2s;text-align:center}
+.q-opt:active{transform:scale(0.95)}
+.q-opt.correct{border-color:var(--green);background:rgba(46,204,113,0.15)}
+.q-opt.wrong{border-color:var(--red);background:rgba(231,76,60,0.15)}
+.q-opt .opt-emoji{font-size:28px;display:block;margin-bottom:4px}
+.feedback{text-align:center;padding:12px;font-size:20px;font-weight:bold;min-height:50px}
+.feedback.ok{color:var(--green)}
+.feedback.no{color:var(--red)}
+.nav-btns{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.nav-btn{padding:12px 20px;border:none;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s}
+.nav-btn:active{transform:scale(0.95)}
+.btn-next{background:linear-gradient(135deg,var(--blue),#2980b9)}
+.btn-sound{background:linear-gradient(135deg,var(--purple),#8e44ad)}
+.btn-home{background:linear-gradient(135deg,#444,#666)}
+.result-screen{text-align:center;padding:40px 20px}
+.result-emoji{font-size:72px}
+.result-title{font-size:28px;font-weight:bold;color:var(--accent);margin:16px 0}
+.result-score{font-size:20px;color:#fff}
+.tutorial-box{background:rgba(255,215,0,0.08);border:2px solid var(--accent);border-radius:16px;padding:20px;margin-bottom:20px;display:none}
+.tutorial-box.show{display:block}
+.tutorial-box h3{color:var(--accent);margin-bottom:12px}
+.tutorial-box p{font-size:15px;line-height:1.6;margin-bottom:8px}
+.tut-step{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:8px;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <button class="back-btn" onclick="goHome()">← Retour</button>
+  <h1 id="pageTitle">🎓 Maestro</h1>
+  <p id="pageSub">Choisis un thème !</p>
+</header>
+<div class="container" id="app"></div>
+
+<script>
+// ===== DONNÉES DES JEUX =====
+var GAMES={
+  homme:{
+    title:"Il était une fois l'Homme",
+    emoji:"🧔",
+    color:"#e67e22",
+    desc:"L'histoire de l'humanité de la préhistoire à nos jours",
+    themes:[
+      {name:"Préhistoire",emoji:"🦴",period:"-3M à -3000",desc:"Les premiers hommes, la chasse, le feu"},
+      {name:"Antiquité",emoji:"🏛️",period:"-3000 à 476",desc:"Égypte, Grèce, Rome"},
+      {name:"Moyen Âge",emoji:"🏰",period:"476 à 1492",desc:"Châteaux, chevaliers, cathédrales"},
+      {name:"Temps Modernes",emoji:"🎨",period:"1492 à 1789",desc:"Renaissance, grandes découvertes"},
+      {name:"Époque Contemporaine",emoji:"🏭",period:"1789 à aujourd'hui",desc:"Révolutions, guerres, technologie"}
+    ],
+    quiz:[
+      {q:"Quand les premiers hommes sont-ils apparus?",opts:["Il y a 3 millions d'années","Il y a 1000 ans","Il y a 100 ans","Il y a 500 ans"],a:0},
+      {q:"Qui a construit les pyramides?",opts:["Les Romains","Les Grecs","Les Égyptiens","Les Gaulois"],a:2},
+      {q:"Qu'est-ce qu'un chevalier?",opts:["Un paysan","Un guerrier à cheval","Un roi","Un marchand"],a:1},
+      {q:"Quand a eu lieu la Révolution française?",opts:["1492","1789","1914","1066"],a:1},
+      {q:"Qui a découvert l'Amérique?",opts:["Vasco de Gama","Christophe Colomb","Marco Polo","Napoléon"],a:1},
+      {q:"Quel événement marque le Moyen Âge?",opts:["La Révolution","Les châteaux forts","L'internet","La voiture"],a:1},
+      {q:"Qui a peint la Joconde?",opts:["Michel-Ange","Léonard de Vinci","Raphaël","Picasso"],a:1},
+      {q:"Qu'est-ce qu'un dinosaure?",opts:["Un animal préhistorique","Un chien","Un poisson","Un oiseau moderne"],a:0},
+      {q:"Quand a eu lieu la Première Guerre mondiale?",opts:["1492","1789","1914","2000"],a:2},
+      {q:"Qui était Jules César?",opts:["Un pharaon","Un empereur romain","Un roi de France","Un explorateur"],a:1}
+    ]
+  },
+  decouvreurs:{
+    title:"Les Découvreurs",
+    emoji:"🧭",
+    color:"#3498db",
+    desc:"Les grands explorateurs et leurs découvertes",
+    themes:[
+      {name:"Christophe Colomb",emoji:"⛵",desc:"Découvre l'Amérique en 1492"},
+      {name:"Marco Polo",emoji:"🐪",desc:"Voyage en Chine par la Route de la Soie"},
+      {name:"Vasco de Gama",emoji:"🌊",desc:"Ouvre la route des Indes"},
+      {name:"James Cook",emoji:"🏝️",desc:"Explore le Pacifique et l'Australie"},
+      {name:"Amundsen",emoji:"🧊",desc:"Premier au pôle Sud"},
+      {name:"Ibn Battuta",emoji:"🕌",desc:"Le plus grand voyageur du Moyen Âge"}
+    ],
+    quiz:[
+      {q:"Qu'a découvert Christophe Colomb?",opts:["L'Inde","L'Amérique","La Chine","L'Afrique"],a:1},
+      {q:"Où est allé Marco Polo?",opts:["En Amérique","En Chine","En Australie","En Antarctique"],a:1},
+      {q:"Quel océan a traversé Vasco de Gama?",opts:["Pacifique","Atlantique","Indien","Arctique"],a:2},
+      {q:"Qui est allé au pôle Sud?",opts:["Cook","Amundsen","Col Polo","Colomb"],a:1},
+      {q:"Quel moyen de transport utilisait Marco Polo?",opts:["Le bateau","Le chameau","L'avion","Le train"],a:1},
+      {q:"En quelle année Colomb découvre l'Amérique?",opts:["1066","1492","1789","1914"],a:1},
+      {q:"Quel continent Cook a-t-il exploré?",opts:["L'Afrique","L'Europe","L'Australie","L'Asie"],a:2},
+      {q:"Ibn Battuta venait de quel pays?",opts:["France","Chine","Maroc","Inde"],a:2}
+    ]
+  },
+  inventeurs:{
+    title:"Les Inventeurs",
+    emoji:"💡",
+    color:"#f39c12",
+    desc:"Les grandes inventions qui ont changé le monde",
+    themes:[
+      {name:"L'imprimerie",emoji:"📚",inventeur:"Gutenberg",year:"1440"},
+      {name:"L'électricité",emoji:"⚡",inventeur:"Edison / Tesla",year:"1879"},
+      {name:"La voiture",emoji:"🚗",inventeur:"Benz",year:"1886"},
+      {name:"L'avion",emoji:"✈️",inventeur:"Frères Wright",year:"1903"},
+      {name:"Le téléphone",emoji:"📞",inventeur:"Bell",year:"1876"},
+      {name:"Internet",emoji:"🌐",inventeur:"ARPANET",year:"1969"},
+      {name:"La pénicilline",emoji:"💊",inventeur:"Fleming",year:"1928"},
+      {name:"L'ampoule",emoji:"💡",inventeur:"Edison",year:"1879"}
+    ],
+    quiz:[
+      {q:"Qui a inventé l'imprimerie?",opts:["Edison","Gutenberg","Bell","Wright"],a:1},
+      {q:"Quand l'avion a-t-il volé pour la première fois?",opts:["1800","1903","1950","2000"],a:1},
+      {q:"Qui a inventé le téléphone?",opts:["Edison","Bell","Gutenberg","Benz"],a:1},
+      {q:"Quelle invention permet de lire des livres?",opts:["Le téléphone","L'imprimerie","La voiture","L'avion"],a:1},
+      {q:"Qui a découvert la pénicilline?",opts:["Edison","Fleming","Bell","Gutenberg"],a:1},
+      {q:"Quand est née Internet?",opts:["1900","1950","1969","2000"],a:2},
+      {q:"Qui a inventé la voiture?",opts:["Wright","Benz","Edison","Bell"],a:1},
+      {q:"À quoi sert l'ampoule?",opts:["À parler","À éclairer","À voyager","À manger"],a:1}
+    ]
+  },
+  espace:{
+    title:"L'Espace",
+    emoji:"🚀",
+    color:"#9b59b6",
+    desc:"Le système solaire, les étoiles et l'univers",
+    themes:[
+      {name:"Le Soleil",emoji:"☀️",desc:"Notre étoile, 4,6 milliards d'années"},
+      {name:"La Terre",emoji:"🌍",desc:"Notre planète, la seule avec de l'eau liquide"},
+      {name:"La Lune",emoji:"🌙",desc:"Notre satellite naturel"},
+      {name:"Mars",emoji:"🔴",desc:"La planète rouge"},
+      {name:"Jupiter",emoji:"🟠",desc:"La plus grande planète"},
+      {name:"Saturne",emoji:"🪐",desc:"Célèbre pour ses anneaux"},
+      {name:"Les étoiles",emoji:"⭐",desc:"Des soleils très lointains"},
+      {name:"La Voie Lactée",emoji:"🌌",desc:"Notre galaxie, 200 milliards d'étoiles"}
+    ],
+    quiz:[
+      {q:"Combien de planètes dans le système solaire?",opts:["5","7","8","12"],a:2},
+      {q:"Quelle est la plus proche du Soleil?",opts:["Terre","Mars","Mercure","Vénus"],a:2},
+      {q:"Quelle planète a des anneaux?",opts:["Mars","Jupiter","Saturne","Neptune"],a:2},
+      {q:"Comment s'appelle notre galaxie?",opts:["Andromède","Voie Lactée","Orion","Cassiopée"],a:1},
+      {q:"Quelle est la planète rouge?",opts:["Vénus","Mars","Jupiter","Mercure"],a:1},
+      {q:"Quel est le satellite de la Terre?",opts:["Mars","La Lune","Le Soleil","Vénus"],a:1},
+      {q:"Quelle est la plus grande planète?",opts:["Terre","Mars","Jupiter","Saturne"],a:2},
+      {q:"De quoi est fait le Soleil?",opts:["De roche","De gaz chaud","De glace","De métal"],a:1}
+    ]
+  },
+  nature:{
+    title:"La Nature",
+    emoji:"🌿",
+    color:"#2ecc71",
+    desc:"Animaux, plantes et écosystèmes",
+    themes:[
+      {name:"Les animaux de la ferme",emoji:"🐄",desc:"Vache, cochon, poule, cheval"},
+      {name:"Les animaux sauvages",emoji:"🦁",desc:"Lion, éléphant, girafe, zèbre"},
+      {name:"Les animaux marins",emoji:"🐋",desc:"Baleine, dauphin, requin, méduse"},
+      {name:"Les insectes",emoji:"🐝",desc:"Abeille, papillon, fourmi, coccinelle"},
+      {name:"Les arbres",emoji:"🌳",desc:"Chêne, sapin, olivier, baobab"},
+      {name:"Les fleurs",emoji:"🌸",desc:"Rose, tournesol, tulipe, marguerite"},
+      {name:"Les saisons",emoji:"🍂",desc:"Printemps, été, automne, hiver"},
+      {name:"Les écosystèmes",emoji:"🌍",desc:"Forêt, océan, désert, montagne"}
+    ],
+    quiz:[
+      {q:"Combien de pattes a une araignée?",opts:["4","6","8","10"],a:2},
+      {q:"Quel animal est le plus grand?",opts:["L'éléphant","La baleine bleue","La girafe","Le requin"],a:1},
+      {q:"Que mangent les vaches?",opts:["De la viande","De l'herbe","Du poisson","Des insectes"],a:1},
+      {q:"Quel animal produit du miel?",opts:["La guêpe","L'abeille","Le papillon","La fourmi"],a:1},
+      {q:"Quelle saison vient après l'hiver?",opts:["L'été","L'automne","Le printemps","La pluie"],a:2},
+      {q:"Où vivent les poissons?",opts:["Dans les arbres","Dans l'eau","Dans le ciel","Dans la terre"],a:1},
+      {q:"Quel animal a une trompe?",opts:["Le lion","L'éléphant","Le zèbre","Le gorille"],a:1},
+      {q:"De quoi les plantes ont-elles besoin?",opts:["De l'eau et du soleil","De la viande","Du plastique","Du métal"],a:0}
+    ]
+  }
+};
+
+// ===== ÉTAT =====
+var currentGame=null;
+var currentMode="menu"; // menu, themes, quiz, result
+var quizIndex=0;
+var score=0;
+var totalQ=0;
+
+// ===== AUDIO =====
+var speechQueue=[],isSpeaking=false;
+function speak(text,cb){
+  if(!('speechSynthesis'in window)){if(cb)cb();return}
+  speechQueue.push({text:text,cb:cb});
+  if(!isSpeaking) processQueue();
+}
+function processQueue(){
+  if(!speechQueue.length){isSpeaking=false;return}
+  isSpeaking=true;
+  var item=speechQueue.shift();
+  var u=new SpeechSynthesisUtterance(item.text);
+  u.lang='fr-FR';u.rate=0.9;u.pitch=1.1;
+  u.onend=function(){if(item.cb)item.cb();processQueue()};
+  u.onerror=function(){processQueue()};
+  speechSynthesis.speak(u);
+}
+function stopSpeech(){speechQueue=[];isSpeaking=false;speechSynthesis.cancel();}
+
+var _audioCtx=null;
+function getAudioCtx(){
+  if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(_audioCtx.state==='suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function playTone(freq,dur){
+  try{
+    var ctx=getAudioCtx();
+    var o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=freq;
+    g.gain.setValueAtTime(0.3,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+dur);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+// ===== RENDU =====
+function render(){
+  var app=document.getElementById('app');
+  document.getElementById('pageTitle').textContent='🎓 Maestro';
+  document.getElementById('pageSub').textContent='Choisis un thème !';
+  
+  if(currentMode==="menu")renderMenu(app);
+  else if(currentMode==="themes")renderThemes(app);
+  else if(currentMode==="quiz")renderQuiz(app);
+  else if(currentMode==="result")renderResult(app);
+}
+
+function renderMenu(app){
+  var html='<div class="tutorial-box show">'
+    +'<h3>🎓 Bienvenue dans Maestro !</h3>'
+    +'<p>Explore l\'histoire, les découvertes, les inventions, l\'espace et la nature.</p>'
+    +'<p>Chaque thème a un <strong>quiz</strong> avec des questions adaptées !</p>'
+    +'<button class="nav-btn btn-sound" style="margin-top:12px" onclick="speak(\'Bienvenue dans Maestro ! Choisis un thème pour commencer.\')">🔊 Écouter</button>'
+    +'</div><div class="game-grid">';
+  
+  var keys=Object.keys(GAMES);
+  for(var i=0;i<keys.length;i++){
+    var g=GAMES[keys[i]];
+    html+='<div class="game-card" onclick="selectGame(\''+keys[i]+'\')">'
+      +'<span class="game-emoji">'+g.emoji+'</span>'
+      +'<div class="game-title">'+g.title+'</div>'
+      +'<div class="game-desc">'+g.desc+'</div>'
+      +'<span class="game-badge badge-ok">Quiz dispo</span>'
+      +'</div>';
+  }
+  html+='</div>';
+  app.innerHTML=html;
+  speak("Bienvenue dans Maestro ! Choisis un thème pour commencer.");
+}
+
+function selectGame(key){
+  currentGame=GAMES[key];
+  currentMode="themes";
+  render();
+}
+
+function renderThemes(app){
+  document.getElementById('pageTitle').textContent=currentGame.emoji+' '+currentGame.title;
+  document.getElementById('pageSub').textContent=currentGame.desc;
+  
+  var html='<div class="tutorial-box show">'
+    +'<h3>'+currentGame.emoji+' '+currentGame.title+'</h3>'
+    +'<p>Choisis un thème pour explorer, ou lance le quiz !</p>'
+    +'<div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;justify-content:center">'
+    +'<button class="nav-btn btn-next" onclick="startQuiz()">🎮 Quiz</button>'
+    +'<button class="nav-btn btn-sound" onclick="speak(\''+currentGame.title+'. '+currentGame.desc+' Choisis un thème ou lance le quiz.\')">🔊 Écouter</button>'
+    +'</div></div><div class="game-grid">';
+  
+  for(var i=0;i<currentGame.themes.length;i++){
+    var t=currentGame.themes[i];
+    var extra='';
+    if(t.period)extra='<div style="opacity:0.5;font-size:12px">'+t.period+'</div>';
+    if(t.inventeur)extra='<div style="opacity:0.5;font-size:12px">'+t.inventeur+' ('+t.year+')</div>';
+    html+='<div class="game-card" onclick="showTheme('+i+')">'
+      +'<span class="game-emoji">'+t.emoji+'</span>'
+      +'<div class="game-title">'+t.name+'</div>'
+      +'<div class="game-desc">'+t.desc+'</div>'
+      +extra+'</div>';
+  }
+  html+='</div>';
+  app.innerHTML=html;
+}
+
+function showTheme(idx){
+  var t=currentGame.themes[idx];
+  var app=document.getElementById('app');
+  var extra='';
+  if(t.period)extra='<p style="opacity:0.7">Période : '+t.period+'</p>';
+  if(t.inventeur)extra='<p style="opacity:0.7">Inventeur : '+t.inventeur+' ('+t.year+')</p>';
+  
+  app.innerHTML='<div class="tutorial-box show" style="text-align:center">'
+    +'<div style="font-size:64px">'+t.emoji+'</div>'
+    +'<h3>'+t.name+'</h3>'
+    +'<p>'+t.desc+'</p>'
+    +extra
+    +'<div style="display:flex;gap:12px;margin-top:16px;justify-content:center;flex-wrap:wrap">'
+    +'<button class="nav-btn btn-sound" onclick="speak(\''+t.name+'. '+t.desc+'\')">🔊 Écouter</button>'
+    +'<button class="nav-btn btn-next" onclick="startQuiz()">🎮 Quiz</button>'
+    +'<button class="nav-btn btn-home" onclick="currentMode=\'themes\';render()">← Thèmes</button>'
+    +'</div></div>';
+  
+  speak(t.name+". "+t.desc);
+}
+
+function startQuiz(){
+  currentMode="quiz";
+  quizIndex=0;
+  score=0;
+  totalQ=currentGame.quiz.length;
+  render();
+}
+
+function renderQuiz(app){
+  var q=currentGame.quiz[quizIndex];
+  var pct=Math.round((quizIndex/totalQ)*100);
+  
+  // Mélanger options
+  var opts=[];
+  for(var i=0;i<q.opts.length;i++)opts.push({text:q.opts[i],ok:i===q.a});
+  for(var i=opts.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=opts[i];opts[i]=opts[j];opts[j]=t;}
+  
+  document.getElementById('pageTitle').textContent='🎮 Quiz';
+  document.getElementById('pageSub').textContent=currentGame.title;
+  
+  var html='<div class="quiz-container show">'
+    +'<div class="quiz-header">'
+    +'<span>'+(quizIndex+1)+'/'+totalQ+'</span>'
+    +'<div class="quiz-progress"><div class="quiz-progress-bar" style="width:'+pct+'%"></div></div>'
+    +'<span>⭐ '+score+'</span>'
+    +'</div>'
+    +'<div class="quiz-q">'+q.q+'</div>'
+    +'<div class="quiz-opts" id="qOpts">';
+  
+  for(var o=0;o<opts.length;o++){
+    (function(opt,idx){
+      html+='<button class="q-opt" onclick="checkAnswer(this,'+opt.ok+')">'+opt.text+'</button>';
+    })(opts[o],o);
+  }
+  
+  html+='</div><div class="feedback" id="qFb"></div>'
+    +'<div class="nav-btns"><button class="nav-btn btn-home" onclick="goHome()">🏠 Menu</button></div></div>';
+  
+  app.innerHTML=html;
+  setTimeout(function(){speak(q.q);},500);
+}
+
+function checkAnswer(btn,isOk){
+  var fb=document.getElementById('qFb');
+  var allBtns=document.querySelectorAll('#qOpts .q-opt');
+  for(var i=0;i<allBtns.length;i++) allBtns[i].onclick=null;
+  
+  if(isOk){
+    btn.className='q-opt correct';
+    fb.className='feedback ok';
+    fb.textContent='✅ Bravo !';
+    score++;
+    playTone(523,0.15);
+    setTimeout(function(){playTone(784,0.3);},150);
+    speak("Bravo !");
+  }else{
+    btn.className='q-opt wrong';
+    fb.className='feedback no';
+    fb.textContent='❌ Essaie encore !';
+    playTone(200,0.3);
+    speak("Non, essaie encore !");
+  }
+  
+  setTimeout(function(){
+    quizIndex++;
+    if(quizIndex>=totalQ)currentMode="result";
+    render();
+  },1500);
+}
+
+function renderResult(app){
+  var pct=Math.round((score/totalQ)*100);
+  var emoji=pct>=80?'🏆':pct>=50?'⭐':'💪';
+  var msg=pct>=80?'Excellent !':pct>=50?'Bien joué !':'Continue !';
+  
+  document.getElementById('pageTitle').textContent=emoji+' '+msg;
+  document.getElementById('pageSub').textContent=currentGame.title;
+  
+  app.innerHTML='<div class="result-screen">'
+    +'<div class="result-emoji">'+emoji+'</div>'
+    +'<div class="result-title">'+msg+'</div>'
+    +'<div class="result-score">Score : '+score+'/'+totalQ+' ('+pct+'%)</div>'
+    +'<div class="nav-btns" style="margin-top:24px">'
+    +'<button class="nav-btn btn-next" onclick="startQuiz()">🔄 Rejouer</button>'
+    +'<button class="nav-btn btn-home" onclick="currentMode=\'themes\';render()">← Thèmes</button>'
+    +'<button class="nav-btn btn-home" onclick="goHome()">🏠 Menu</button>'
+    +'</div></div>';
+  
+  speak("C'est fini ! "+score+" sur "+totalQ+" bonnes réponses. "+msg);
+}
+
+function goHome(){
+  currentGame=null;
+  currentMode="menu";
+  score=0;
+  render();
+}
+
+// ===== INIT =====
+render();
+</script>
+</body>
+</html>
