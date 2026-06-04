@@ -162,7 +162,40 @@
   <div class="card" id="motorArea" style="display:none"><h3 id="motorTitle">Exercice</h3><canvas id="motorCanvas" class="draw-canvas" width="400" height="350"></canvas><div style="text-align:center;margin-top:12px"><button class="bbtn bb-reset" onclick="document.getElementById('motorArea').style.display='none'">✕ Fermer</button></div></div>
 </div>
 </main>
-<script>// NAVIGATION
+<script>// NAVIGATION - Ultra simple
+(function() {
+  var allBtns = document.querySelectorAll("[data-panel]");
+  var allPanels = document.querySelectorAll(".panel");
+  var i, j, target;
+  for (i = 0; i < allBtns.length; i++) {
+    allBtns[i].onclick = function() {
+      var panelName = this.getAttribute("data-panel");
+      for (j = 0; j < allPanels.length; j++) {
+        allPanels[j].className = allPanels[j].className.replace(" active", "").replace("active", "");
+      }
+      target = document.getElementById("pn-" + panelName);
+      if (target) { target.className += " active"; }
+      for (j = 0; j < allBtns.length; j++) {
+        allBtns[j].className = allBtns[j].className.replace(" active", "").replace("active", "");
+      }
+      this.className += " active";
+    };
+  }
+  var fb = document.getElementById("focusBtn");
+  if (fb) {
+    fb.onclick = function() {
+      if (document.body.className.indexOf("focus-mode") >= 0) {
+        document.body.className = document.body.className.replace(" focus-mode", "").replace("focus-mode", "");
+        this.className = this.className.replace(" active", "").replace("active", "");
+      } else {
+        document.body.className += " focus-mode";
+        this.className += " active";
+      }
+    };
+  }
+})();
+
+// NAVIGATION
 var navBtns = document.querySelectorAll('[data-panel]');
 for (var i = 0; i < navBtns.length; i++) {
   navBtns[i].addEventListener('click', function() {

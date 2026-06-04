@@ -1,1711 +1,295 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Il était une fois le Corps — Jeu Éducatif</title>
-  <script src="phaser.min.js" onerror="var s=document.createElement('script');s.src='https://unpkg.com/phaser@3.80.1/dist/phaser.min.js';document.head.appendChild(s);"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;overflow:hidden}
-    #game-container{position:relative;max-width:100vw;max-height:100vh}
-    canvas{display:block;max-width:100%;max-height:100vh}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Il était une fois le Corps — Jeu Éducatif</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;overflow:hidden}
+#game-container{position:relative;max-width:100vw;max-height:100vh}
+canvas{display:block;max-width:100%;max-height:100vh}
+#loading{position:fixed;top:0;left:0;right:0;bottom:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;z-index:999}
+</style>
 </head>
 <body>
+<div id="loading">Chargement...</div>
 <div id="game-container"></div>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 <script>
-// ============================================================
-//  IL ÉTAIT UNE FOIS LE CORPS — Jeu Éducatif Minecraft-like
-//  Version test — Phaser 3
-// ============================================================
-
-const CONFIG = {
-  type: Phaser.AUTO,
-  width: 800,
-  height: 600,
-  parent: 'game-container',
-  backgroundColor: '#1a1a2e',
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    min: { width: 320, height: 240 },
-    max: { width: 1200, height: 900 }
-  },
-  physics: {
-    default: 'arcade',
-    arcade: { gravity: { y: 0 }, debug: false }
-  }
-};
-
-// Game state
-const STATE = {
-  profile: 'leana', // 'leana' (GS) or 'mathias' (CE2)
-  xp: 0,
-  level: 1,
-  completedQuests: [],
-  currentZone: null,
-  soundEnabled: true
-};
-
-// ============================================================
-//  SCENE: BOOT — Generate pixel art textures procedurally
-// ============================================================
-class BootScene extends Phaser.Scene {
-  constructor() { super({ key: 'BootScene' }); }
-
-  create() {
-    // Generate all textures procedurally (no external assets needed)
-    this.generateTextures();
-    this.scene.start('MenuScene');
+// Attendre que Phaser soit chargé
+function initGame() {
+  if (typeof Phaser === 'undefined') {
+    setTimeout(initGame, 100);
+    return;
   }
 
-  generateTextures() {
-    const g = this.make.graphics({ x: 0, y: 0, add: false });
+  document.getElementById('loading').style.display = 'none';
 
-    // --- PLAYER (pixel art character) ---
-    g.clear();
-    // Body
-    g.fillStyle(0x4488ff); g.fillRect(8, 8, 16, 20);
-    // Head
-    g.fillStyle(0xffcc99); g.fillRect(10, 2, 12, 10);
-    // Eyes
-    g.fillStyle(0x000000); g.fillRect(12, 5, 2, 2); g.fillRect(18, 5, 2, 2);
-    // Legs
-    g.fillStyle(0x336699); g.fillRect(10, 28, 5, 8); g.fillRect(17, 28, 5, 8);
-    g.generateTexture('player', 32, 36);
-
-    // --- BLOCKS (Minecraft-style) ---
-    // Grass block
-    g.clear();
-    g.fillStyle(0x5b8c3e); g.fillRect(0, 0, 32, 12);
-    g.fillStyle(0x8b6914); g.fillRect(0, 12, 32, 20);
-    g.lineStyle(1, 0x4a7a2e); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_grass', 32, 32);
-
-    // Stone block
-    g.clear();
-    g.fillStyle(0x888888); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0x777777); g.fillRect(2, 2, 12, 12);
-    g.fillStyle(0x999999); g.fillRect(16, 16, 14, 14);
-    g.lineStyle(1, 0x666666); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_stone', 32, 32);
-
-    // Heart block (red)
-    g.clear();
-    g.fillStyle(0xcc2222); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0xff4444); g.fillRect(4, 4, 10, 10);
-    g.fillStyle(0xaa1111); g.fillRect(18, 18, 10, 10);
-    g.lineStyle(1, 0x881111); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_heart', 32, 32);
-
-    // Lung block (pink)
-    g.clear();
-    g.fillStyle(0xff88aa); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0xffaacc); g.fillRect(4, 4, 10, 10);
-    g.lineStyle(1, 0xcc6688); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_lung', 32, 32);
-
-    // Brain block (purple/pink)
-    g.clear();
-    g.fillStyle(0xcc66aa); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0xdd88cc); g.fillRect(3, 3, 8, 8);
-    g.fillStyle(0xaa4488); g.fillRect(18, 16, 12, 12);
-    g.lineStyle(1, 0x993377); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_brain', 32, 32);
-
-    // Bone block (white/ivory)
-    g.clear();
-    g.fillStyle(0xeeeedd); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0xddddcc); g.fillRect(4, 4, 8, 8);
-    g.lineStyle(1, 0xbbbbaa); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_bone', 32, 32);
-
-    // Blood block (dark red)
-    g.clear();
-    g.fillStyle(0x881111); g.fillRect(0, 0, 32, 32);
-    g.fillStyle(0xaa2222); g.fillRect(4, 4, 10, 10);
-    g.lineStyle(1, 0x661111); g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('block_blood', 32, 32);
-
-    // --- ITEMS ---
-    // O2 bubble
-    g.clear();
-    g.fillStyle(0x88ccff, 0.7); g.fillCircle(10, 10, 8);
-    g.fillStyle(0xaaddff, 0.9); g.fillCircle(8, 7, 3);
-    g.generateTexture('item_o2', 20, 20);
-
-    // CO2 bubble
-    g.clear();
-    g.fillStyle(0x888866, 0.7); g.fillCircle(10, 10, 8);
-    g.fillStyle(0x999977, 0.9); g.fillCircle(8, 7, 3);
-    g.generateTexture('item_co2', 20, 20);
-
-    // Nutrient
-    g.clear();
-    g.fillStyle(0x44cc44); g.fillCircle(8, 8, 6);
-    g.fillStyle(0x66ee66); g.fillCircle(6, 6, 2);
-    g.generateTexture('item_nutrient', 16, 16);
-
-    // Virus (green spiky)
-    g.clear();
-    g.fillStyle(0x44cc44); g.fillCircle(12, 12, 8);
-    g.fillStyle(0x66ee66);
-    g.fillRect(10, 2, 4, 4); g.fillRect(10, 18, 4, 4);
-    g.fillRect(2, 10, 4, 4); g.fillRect(18, 10, 4, 4);
-    g.fillStyle(0x000000); g.fillRect(9, 9, 2, 2); g.fillRect(14, 9, 2, 2);
-    g.generateTexture('item_virus', 24, 24);
-
-    // Antibody (Y-shaped, blue)
-    g.clear();
-    g.fillStyle(0x4488ff); g.fillRect(10, 2, 4, 10);
-    g.fillStyle(0x4488ff); g.fillRect(4, 10, 8, 4);
-    g.fillRect(12, 10, 8, 4);
-    g.fillStyle(0x66aaff); g.fillRect(11, 4, 2, 6);
-    g.generateTexture('item_antibody', 24, 24);
-
-    // Nerve signal (yellow bolt)
-    g.clear();
-    g.fillStyle(0xffdd44);
-    g.fillRect(8, 2, 4, 6);
-    g.fillRect(6, 6, 8, 4);
-    g.fillRect(10, 10, 4, 6);
-    g.fillRect(6, 14, 8, 4);
-    g.fillStyle(0xffee88); g.fillRect(9, 3, 2, 4);
-    g.generateTexture('item_nerve', 20, 20);
-
-    // --- NPCS ---
-    // Globule blanc (white, friendly)
-    g.clear();
-    g.fillStyle(0xeeeeff); g.fillCircle(14, 14, 12);
-    g.fillStyle(0xccccff); g.fillCircle(11, 11, 3);
-    g.fillStyle(0x000000); g.fillRect(10, 12, 2, 2); g.fillRect(16, 12, 2, 2);
-    g.fillStyle(0x8888cc); g.fillRect(11, 17, 5, 2);
-    g.generateTexture('npc_globule', 28, 28);
-
-    // Plaquette (small orange)
-    g.clear();
-    g.fillStyle(0xffaa44); g.fillCircle(8, 8, 6);
-    g.fillStyle(0xffcc66); g.fillCircle(6, 6, 2);
-    g.generateTexture('npc_plaquette', 16, 16);
-
-    // --- UI ELEMENTS ---
-    // Button
-    g.clear();
-    g.fillStyle(0x4488ff); g.fillRoundedRect(0, 0, 200, 50, 12);
-    g.fillStyle(0x66aaff); g.fillRoundedRect(2, 2, 196, 46, 10);
-    g.generateTexture('btn_blue', 200, 50);
-
-    g.clear();
-    g.fillStyle(0xcc4444); g.fillRoundedRect(0, 0, 200, 50, 12);
-    g.fillStyle(0xdd6666); g.fillRoundedRect(2, 2, 196, 46, 10);
-    g.generateTexture('btn_red', 200, 50);
-
-    g.clear();
-    g.fillStyle(0x44cc44); g.fillRoundedRect(0, 0, 200, 50, 12);
-    g.fillStyle(0x66ee66); g.fillRoundedRect(2, 2, 196, 46, 10);
-    g.generateTexture('btn_green', 200, 50);
-
-    // Panel
-    g.clear();
-    g.fillStyle(0x222244, 0.9); g.fillRoundedRect(0, 0, 400, 300, 16);
-    g.lineStyle(3, 0x4488ff); g.strokeRoundedRect(0, 0, 400, 300, 16);
-    g.generateTexture('panel', 400, 300);
-
-    // Small panel
-    g.clear();
-    g.fillStyle(0x222244, 0.85); g.fillRoundedRect(0, 0, 300, 200, 12);
-    g.lineStyle(2, 0x66aaff); g.strokeRoundedRect(0, 0, 300, 200, 12);
-    g.generateTexture('panel_small', 300, 200);
-
-    // Star (for rewards)
-    g.clear();
-    g.fillStyle(0xffdd44);
-    const cx=16, cy=16;
-    const pts=[];
-    for(let i=0;i<5;i++){
-      const a=(i*72-90)*Math.PI/180;
-      pts.push({x:cx+14*Math.cos(a),y:cy+14*Math.sin(a)});
-      const a2=((i*72+36)-90)*Math.PI/180;
-      pts.push({x:cx+6*Math.cos(a2),y:cy+6*Math.sin(a2)});
+  var CONFIG = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'game-container',
+    backgroundColor: '#1a1a2e',
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+      min: { width: 320, height: 240 },
+      max: { width: 1200, height: 900 }
     }
-    g.fillPoints(pts,true);
-    g.generateTexture('star', 32, 32);
+  };
 
-    // Heart icon (for health)
-    g.clear();
-    g.fillStyle(0xff2244);
-    g.fillCircle(10, 10, 8);
-    g.fillCircle(22, 10, 8);
-    g.fillRect(6, 10, 20, 12);
-    g.generateTexture('icon_heart', 32, 24);
-
-    // XP orb
-    g.clear();
-    g.fillStyle(0x44ff88); g.fillCircle(12, 12, 10);
-    g.fillStyle(0x88ffaa); g.fillCircle(9, 8, 4);
-    g.generateTexture('item_xp', 24, 24);
-
-    // --- PARTICLES ---
-    g.clear();
-    g.fillStyle(0xffffff); g.fillRect(0, 0, 4, 4);
-    g.generateTexture('particle', 4, 4);
-
-    g.destroy();
-  }
-}
-
-// ============================================================
-//  SCENE: MENU PRINCIPAL
-// ============================================================
-class MenuScene extends Phaser.Scene {
-  constructor() { super({ key: 'MenuScene' }); }
-
-  create() {
-    const { width, height } = this.scale;
-
-    // Background gradient
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a1a2e, 0x1a1a2e, 0x16213e, 0x0f3460, 1);
-    bg.fillRect(0, 0, width, height);
-
-    // Floating particles
-    for(let i=0;i<30;i++){
-      const p = this.add.image(
-        Phaser.Math.Between(0, width),
-        Phaser.Math.Between(0, height),
-        'particle'
-      ).setAlpha(0.3).setScale(Phaser.Math.FloatBetween(0.5, 1.5));
-      this.tweens.add({
-        targets: p, y: p.y - 50, alpha: 0,
-        duration: Phaser.Math.Between(3000, 6000),
-        repeat: -1, yoyo: true
-      });
-    }
-
-    // Title
-    this.add.text(width/2, 80, '🧬 Il était une fois', {
-      fontSize: '36px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    this.add.text(width/2, 120, 'LE CORPS', {
-      fontSize: '48px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#4488ff', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    this.add.text(width/2, 165, 'Jeu Éducatif — Version Test', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#8888aa'
-    }).setOrigin(0.5);
-
-    // Profile selection
-    this.add.text(width/2, 220, 'Choisis ton profil :', {
-      fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff'
-    }).setOrigin(0.5);
-
-    // Leana button
-    const btnLeana = this.createButton(width/2 - 110, 270, '👧 Léana\nGrande Section', 0xee82ee, () => {
-      STATE.profile = 'leana';
-      this.scene.start('ZoneSelectScene');
-    });
-
-    // Mathias button
-    const btnMathias = this.createButton(width/2 + 110, 270, '🧑 Mathias\nCE2 ULIS', 0xd62828, () => {
-      STATE.profile = 'mathias';
-      this.scene.start('ZoneSelectScene');
-    });
-
-    // Footer
-    this.add.text(width/2, height - 30, '🎮 Version test — Plus de contenu bientôt !', {
-      fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#666688'
-    }).setOrigin(0.5);
-
-    // Animate title
-    this.tweens.add({
-      targets: this.children.list[1],
-      scaleX: 1.05, scaleY: 1.05,
-      duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
-    });
-  }
-
-  createButton(x, y, text, color, callback) {
-    const container = this.add.container(x, y);
-
-    const bg = this.add.graphics();
-    bg.fillStyle(color); bg.fillRoundedRect(-90, -35, 180, 70, 14);
-    bg.fillStyle(0xffffff, 0.15); bg.fillRoundedRect(-88, -33, 176, 33, 12);
-
-    const label = this.add.text(0, 0, text, {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff', fontStyle: 'bold', align: 'center'
-    }).setOrigin(0.5);
-
-    container.add([bg, label]);
-    container.setSize(180, 70);
-    container.setInteractive({ useHandCursor: true });
-
-    container.on('pointerover', () => { container.setScale(1.08); });
-    container.on('pointerout', () => { container.setScale(1); });
-    container.on('pointerdown', callback);
-
-    return container;
-  }
-}
-
-// ============================================================
-//  SCENE: ZONE SELECT — Choose which body zone to explore
-// ============================================================
-class ZoneSelectScene extends Phaser.Scene {
-  constructor() { super({ key: 'ZoneSelectScene' }); }
-
-  create() {
-    const { width, height } = this.scale;
-
-    // Background
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x1a1a2e, 1);
-    bg.fillRect(0, 0, width, height);
-
-    // Title
-    const profileLabel = STATE.profile === 'leana' ? '👧 Léana' : '🧑 Mathias';
-    this.add.text(width/2, 40, `${profileLabel} — Choisis une zone du corps`, {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // XP display
-    this.add.text(width - 20, 20, `⭐ ${STATE.xp} XP  Niv.${STATE.level}`, {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44'
-    }).setOrigin(1, 0);
-
-    // Zone buttons
-    const zones = [
-      { key: 'brain',    icon: '🧠', name: 'Le Cerveau',    sub: 'Centre de commande', color: 0xcc66aa, x: 160, y: 160 },
-      { key: 'heart',    icon: '❤️', name: 'Le Cœur',       sub: 'Pompe du sang',      color: 0xcc2222, x: 400, y: 160 },
-      { key: 'lungs',    icon: '🫁', name: 'Les Poumons',   sub: 'Respiration',       color: 0xff88aa, x: 640, y: 160 },
-      { key: 'stomach',  icon: '🫃', name: 'L\'Estomac',    sub: 'Digestion',         color: 0xcc8844, x: 160, y: 320 },
-      { key: 'bones',    icon: '🦴', name: 'Les Os',        sub: 'Squelette',         color: 0xddddcc, x: 400, y: 320 },
-      { key: 'muscles',  icon: '💪', name: 'Les Muscles',   sub: 'Mouvement',         color: 0xff6644, x: 640, y: 320 },
-      { key: 'blood',    icon: '🩸', name: 'Le Sang',       sub: 'Circulation',       color: 0x881111, x: 160, y: 480 },
-      { key: 'nerves',   icon: '⚡', name: 'Les Nerfs',     sub: 'Messages',          color: 0xffdd44, x: 400, y: 480 },
-      { key: 'eyes',     icon: '👁️', name: 'Les Yeux',      sub: 'Vision',            color: 0x4488ff, x: 640, y: 480 },
-    ];
-
-    zones.forEach(z => {
-      const completed = STATE.completedQuests.includes(z.key);
-      const container = this.add.container(z.x, z.y);
-
-      const bg = this.add.graphics();
-      const c = completed ? 0x44cc44 : z.color;
-      bg.fillStyle(c); bg.fillRoundedRect(-70, -50, 140, 100, 14);
-      bg.fillStyle(0xffffff, 0.12); bg.fillRoundedRect(-68, -48, 136, 48, 12);
-      if(completed){ bg.lineStyle(2, 0xffdd44); bg.strokeRoundedRect(-70, -50, 140, 100, 14); }
-
-      const icon = this.add.text(0, -20, z.icon, { fontSize: '32px' }).setOrigin(0.5);
-      const name = this.add.text(0, 10, z.name, {
-        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', fontStyle: 'bold'
-      }).setOrigin(0.5);
-      const sub = this.add.text(0, 28, completed ? '✅ Terminé!' : z.sub, {
-        fontSize: '10px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: completed ? '#ffdd44' : '#ccccdd'
-      }).setOrigin(0.5);
-
-      container.add([bg, icon, name, sub]);
-      container.setSize(140, 100);
-      container.setInteractive({ useHandCursor: true });
-      container.on('pointerover', () => container.setScale(1.06));
-      container.on('pointerout', () => container.setScale(1));
-      container.on('pointerdown', () => {
-        STATE.currentZone = z.key;
-        this.scene.start('GameScene');
-      });
-    });
-
-    // Back button
-    const backBtn = this.createSmallButton(60, height - 30, '← Retour', () => {
+  // ===== SCENE: BOOT =====
+  class BootScene extends Phaser.Scene {
+    constructor() { super({ key: 'BootScene' }); }
+    create() {
+      // Générer les textures procéduralement
+      var g = this.make.graphics({ x: 0, y: 0, add: false });
+      
+      // Player
+      g.clear();
+      g.fillStyle(0x4488ff); g.fillRect(8, 8, 16, 20);
+      g.fillStyle(0xffcc99); g.fillRect(10, 2, 12, 10);
+      g.fillStyle(0x000000); g.fillRect(12, 5, 2, 2); g.fillRect(18, 5, 2, 2);
+      g.fillStyle(0x336699); g.fillRect(10, 28, 5, 8); g.fillRect(17, 28, 5, 8);
+      g.generateTexture('player', 32, 36);
+      
+      // Star
+      g.clear();
+      g.fillStyle(0xffdd44);
+      var cx=16, cy=16, pts=[];
+      for(var i=0;i<5;i++){
+        var a=(i*72-90)*Math.PI/180;
+        pts.push({x:cx+14*Math.cos(a),y:cy+14*Math.sin(a)});
+        var a2=((i*72+36)-90)*Math.PI/180;
+        pts.push({x:cx+6*Math.cos(a2),y:cy+6*Math.sin(a2)});
+      }
+      g.fillPoints(pts,true);
+      g.generateTexture('star', 32, 32);
+      
+      // Particle
+      g.clear();
+      g.fillStyle(0xffffff); g.fillRect(0, 0, 4, 4);
+      g.generateTexture('particle', 4, 4);
+      
+      g.destroy();
+      
       this.scene.start('MenuScene');
-    });
+    }
   }
 
-  createSmallButton(x, y, text, callback) {
-    const container = this.add.container(x, y);
-    const bg = this.add.graphics();
-    bg.fillStyle(0x444466); bg.fillRoundedRect(-40, -18, 80, 36, 10);
-    const label = this.add.text(0, 0, text, {
-      fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-    container.add([bg, label]);
-    container.setSize(80, 36);
-    container.setInteractive({ useHandCursor: true });
-    container.on('pointerdown', callback);
-    return container;
-  }
-}
-
-// ============================================================
-//  SCENE: GAME — Main gameplay scene for each zone
-// ============================================================
-class GameScene extends Phaser.Scene {
-  constructor() { super({ key: 'GameScene' }); }
-
-  init() {
-    this.zoneData = this.getZoneData(STATE.currentZone);
-  }
-
-  getZoneData(zone) {
-    const data = {
-      brain: {
-        title: '🧠 Le Cerveau-Ville',
-        bgColor: 0x2a1a3e,
-        blockType: 'block_brain',
-        quests: [
-          { id: 'brain_1', title: 'Message urgent !', desc: 'Aide le cerveau à envoyer un message à la main. Appuie sur les nerfs dans le bon ordre !', type: 'sequence', target: 5, xp: 50 },
-          { id: 'brain_2', title: 'Mémoire active', desc: 'Retrouve les paires de souvenirs cachés dans le cerveau.', type: 'memory', target: 4, xp: 40 },
-          { id: 'brain_3', title: 'Réflexes !', desc: 'Quand le signal arrive, appuie vite ! (3 fois)', type: 'reflex', target: 3, xp: 30 },
-        ]
-      },
-      heart: {
-        title: '❤️ Le Cœur-Château',
-        bgColor: 0x3e1a1a,
-        blockType: 'block_heart',
-        quests: [
-          { id: 'heart_1', title: 'Livraison d\'O2 !', desc: 'Récupère les bulles d\'oxygène et livre-les aux organes.', type: 'collect', target: 5, xp: 50 },
-          { id: 'heart_2', title: 'Battement régulier', desc: 'Appuie au rythme du cœur : boum... boum... boum... (10 fois)', type: 'rhythm', target: 10, xp: 40 },
-          { id: 'heart_3', title: 'Chasse au CO2', desc: 'Attrape le dioxyde de carbone pour l\'expulser !', type: 'catch', target: 5, xp: 35 },
-        ]
-      },
-      lungs: {
-        title: '🫁 Les Poumons-Forêt',
-        bgColor: 0x1a3e2a,
-        blockType: 'block_lung',
-        quests: [
-          { id: 'lungs_1', title: 'Attaque des virus !', desc: 'Des virus entrent ! Fabrique des anticorps pour les combattre.', type: 'craft', target: 3, xp: 60 },
-          { id: 'lungs_2', title: 'Respiration', desc: 'Inspire (monte) et expire (descends) 5 fois.', type: 'breathe', target: 5, xp: 30 },
-          { id: 'lungs_3', title: 'Nettoyage', desc: 'Nettoie les poumons en attrapant les particules.', type: 'clean', target: 8, xp: 40 },
-        ]
-      },
-      stomach: {
-        title: '🫃 L\'Estomac-Caverne',
-        bgColor: 0x3e2a1a,
-        blockType: 'block_stone',
-        quests: [
-          { id: 'stomach_1', title: 'Digère le repas !', desc: 'Trie les nutriments : protéines, glucides, lipides.', type: 'sort', target: 6, xp: 45 },
-          { id: 'stomach_2', title: 'Bouillie parfaite', desc: 'Mixe la nourriture en appuyant vite ! (15 fois)', type: 'mash', target: 15, xp: 35 },
-        ]
-      },
-      bones: {
-        title: '🦴 Les Os-Montagne',
-        bgColor: 0x2a2a1e,
-        blockType: 'block_bone',
-        quests: [
-          { id: 'bones_1', title: 'Construis le squelette', desc: 'Place les os au bon endroit.', type: 'build', target: 5, xp: 50 },
-          { id: 'bones_2', title: 'Trouve le calcium', desc: 'Collecte 8 cristaux de calcium.', type: 'collect', target: 8, xp: 40 },
-        ]
-      },
-      muscles: {
-        title: '💪 Les Muscles-Forge',
-        bgColor: 0x3e1a1a,
-        blockType: 'block_heart',
-        quests: [
-          { id: 'muscles_1', title: 'Soulève la charge !', desc: 'Appuie vite pour soulever le poids. (20 fois)', type: 'pump', target: 20, xp: 40 },
-          { id: 'muscles_2', title: 'Étirements', desc: 'Suis le parcours d\'étirement.', type: 'follow', target: 1, xp: 30 },
-        ]
-      },
-      blood: {
-        title: '🩸 Les Veines-Rivières',
-        bgColor: 0x1a0a0a,
-        blockType: 'block_blood',
-        quests: [
-          { id: 'blood_1', title: 'Navigue dans le sang', desc: 'Suis le courant sans toucher les parois !', type: 'navigate', target: 1, xp: 50 },
-          { id: 'blood_2', title: 'Livraison O2', desc: 'Livre 6 bulles d\'oxygène aux organes.', type: 'deliver', target: 6, xp: 45 },
-        ]
-      },
-      nerves: {
-        title: '⚡ Les Nerfs-Câbles',
-        bgColor: 0x1a1a2e,
-        blockType: 'block_brain',
-        quests: [
-          { id: 'nerves_1', title: 'Relais de messages', desc: 'Transmets le signal de neurone en neurone !', type: 'relay', target: 8, xp: 50 },
-          { id: 'nerves_2', title: 'Vitesse !', desc: 'Envoie 5 messages en moins de 10 secondes.', type: 'speed', target: 5, xp: 60 },
-        ]
-      },
-      eyes: {
-        title: '👁️ Les Yeux-Tours',
-        bgColor: 0x1a2a3e,
-        blockType: 'block_stone',
-        quests: [
-          { id: 'eyes_1', title: 'Capte les couleurs', desc: 'Trouve les 7 couleurs de l\'arc-en-ciel.', type: 'colors', target: 7, xp: 40 },
-          { id: 'eyes_2', title: 'Vision nette', desc: 'Remets les pixels au bon endroit.', type: 'pixels', target: 9, xp: 50 },
-        ]
+  // ===== SCENE: MENU =====
+  class MenuScene extends Phaser.Scene {
+    constructor() { super({ key: 'MenuScene' }); }
+    create() {
+      var w = this.scale.width;
+      var h = this.scale.height;
+      
+      // Background
+      var bg = this.add.graphics();
+      bg.fillGradientStyle(0x1a1a2e, 0x1a1a2e, 0x16213e, 0x0f3460, 1);
+      bg.fillRect(0, 0, w, h);
+      
+      // Particules flottantes
+      for(var i=0;i<20;i++){
+        var p = this.add.image(
+          Phaser.Math.Between(0, w),
+          Phaser.Math.Between(0, h),
+          'particle'
+        ).setAlpha(0.3);
+        this.tweens.add({
+          targets: p, y: p.y - 50, alpha: 0,
+          duration: Phaser.Math.Between(3000, 6000),
+          repeat: -1, yoyo: true
+        });
       }
-    };
-    return data[zone] || data.brain;
-  }
-
-  create() {
-    const { width, height } = this.scale;
-    const data = this.zoneData;
-
-    // Background
-    this.cameras.main.setBackgroundColor(data.bgColor);
-
-    // Title
-    this.add.text(width/2, 30, data.title, {
-      fontSize: '26px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Back button
-    this.createBackButton();
-
-    // Show quests
-    this.showQuests(data.quests);
-  }
-
-  createBackButton() {
-    const container = this.add.container(50, 30);
-    const bg = this.add.graphics();
-    bg.fillStyle(0x444466); bg.fillRoundedRect(-35, -16, 70, 32, 8);
-    const label = this.add.text(0, 0, '←', {
-      fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-    container.add([bg, label]);
-    container.setSize(70, 32);
-    container.setInteractive({ useHandCursor: true });
-    container.on('pointerdown', () => this.scene.start('ZoneSelectScene'));
-    return container;
-  }
-
-  showQuests(quests) {
-    const { width } = this.scale;
-    const startY = 90;
-
-    quests.forEach((q, i) => {
-      const y = startY + i * 170;
-      const container = this.add.container(width/2, y);
-
-      // Panel
-      const panel = this.add.graphics();
-      panel.fillStyle(0x222244, 0.9); panel.fillRoundedRect(-350, -50, 700, 150, 14);
-      panel.lineStyle(2, 0x4488ff); panel.strokeRoundedRect(-350, -50, 700, 150, 14);
-
-      // Quest title
-      const title = this.add.text(-320, -35, q.title, {
-        fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+      
+      // Titre
+      this.add.text(w/2, 100, 'Il était une fois', {
+        fontSize: '36px', fontFamily: 'Atkinson Hyperlegible, system-ui',
         color: '#ffdd44', fontStyle: 'bold'
-      });
-
-      // Description
-      const desc = this.add.text(-320, -5, q.desc, {
-        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ccccdd', wordWrap: { width: 500 }
-      });
-
-      // XP reward
-      const xpText = this.add.text(280, -35, `⭐ ${q.xp} XP`, {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#44ff88', fontStyle: 'bold'
-      }).setOrigin(1, 0);
-
-      // Play button
-      const playBg = this.add.graphics();
-      playBg.fillStyle(0x44cc44); playBg.fillRoundedRect(220, 10, 110, 40, 10);
-      const playText = this.add.text(275, 30, '▶ Jouer', {
-        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ffffff', fontStyle: 'bold'
       }).setOrigin(0.5);
-
-      container.add([panel, title, desc, xpText, playBg, playText]);
-      container.setSize(700, 150);
+      
+      this.add.text(w/2, 150, 'LE CORPS', {
+        fontSize: '48px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#4488ff', fontStyle: 'bold'
+      }).setOrigin(0.5);
+      
+      this.add.text(w/2, 200, 'Jeu Éducatif — Version Test', {
+        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#8888aa'
+      }).setOrigin(0.5);
+      
+      // Bouton Léana
+      this.createButton(w/2 - 120, 300, 'Léana\nGrande Section', 0xee82ee, function() {
+        this.scene.start('ZoneSelectScene');
+      }.bind(this));
+      
+      // Bouton Mathias
+      this.createButton(w/2 + 120, 300, 'Mathias\nCE2 ULIS', 0xd62828, function() {
+        this.scene.start('ZoneSelectScene');
+      }.bind(this));
+      
+      // Footer
+      this.add.text(w/2, h - 30, 'Version test — Plus de contenu bientôt !', {
+        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#666688'
+      }).setOrigin(0.5);
+    }
+    
+    createButton(x, y, text, color, callback) {
+      var container = this.add.container(x, y);
+      var bg = this.add.graphics();
+      bg.fillStyle(color); bg.fillRoundedRect(-90, -35, 180, 70, 14);
+      bg.fillStyle(0xffffff, 0.15); bg.fillRoundedRect(-88, -33, 176, 33, 12);
+      var label = this.add.text(0, 0, text, {
+        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#ffffff', fontStyle: 'bold', align: 'center'
+      }).setOrigin(0.5);
+      container.add([bg, label]);
+      container.setSize(180, 70);
       container.setInteractive({ useHandCursor: true });
-
-      container.on('pointerover', () => container.setScale(1.02));
-      container.on('pointerout', () => container.setScale(1));
-      container.on('pointerdown', () => this.startQuest(q));
-    });
-  }
-
-  startQuest(quest) {
-    // Store current quest and start gameplay
-    this.currentQuest = quest;
-    this.questProgress = 0;
-    this.questStartTime = Date.now();
-
-    // Clear scene for gameplay
-    this.children.removeAll();
-
-    const { width, height } = this.scale;
-    const data = this.zoneData;
-
-    // Background
-    this.cameras.main.setBackgroundColor(data.bgColor);
-
-    // HUD
-    this.add.text(20, 15, `🎯 ${quest.title}`, {
-      fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44', fontStyle: 'bold'
-    });
-
-    this.progressText = this.add.text(width/2, 15, `Progression: 0/${quest.target}`, {
-      fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff'
-    }).setOrigin(0.5, 0);
-
-    this.scoreText = this.add.text(width - 20, 15, `⭐ ${STATE.xp} XP`, {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#44ff88'
-    }).setOrigin(1, 0);
-
-    // Back button
-    this.createBackButton();
-
-    // Start specific quest type
-    switch(quest.type) {
-      case 'collect': this.startCollectQuest(quest); break;
-      case 'sequence': this.startSequenceQuest(quest); break;
-      case 'memory': this.startMemoryQuest(quest); break;
-      case 'reflex': this.startReflexQuest(quest); break;
-      case 'rhythm': this.startRhythmQuest(quest); break;
-      case 'catch': this.startCatchQuest(quest); break;
-      case 'craft': this.startCraftQuest(quest); break;
-      case 'breathe': this.startBreatheQuest(quest); break;
-      case 'clean': this.startCleanQuest(quest); break;
-      case 'sort': this.startSortQuest(quest); break;
-      case 'mash': this.startMashQuest(quest); break;
-      case 'build': this.startBuildQuest(quest); break;
-      case 'pump': this.startPumpQuest(quest); break;
-      case 'navigate': this.startNavigateQuest(quest); break;
-      case 'relay': this.startRelayQuest(quest); break;
-      case 'colors': this.startColorsQuest(quest); break;
-      default: this.startCollectQuest(quest);
+      container.on('pointerdown', callback);
+      return container;
     }
   }
 
-  // ===== QUEST: COLLECT =====
-  startCollectQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    // Instructions
-    this.add.text(width/2, height - 40, '👆 Touche les bulles d\'oxygène pour les collecter !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffffff'
-    }).setOrigin(0.5);
-
-    // Spawn collectibles
-    this.collectibles = this.physics.add.group();
-    this.spawnCollectible();
-
-    // Player (simple circle for now)
-    this.player = this.add.circle(100, height/2, 20, 0x4488ff);
-    this.physics.add.existing(this.player);
-
-    // Touch/drag control
-    this.input.on('pointermove', (pointer) => {
-      if(pointer.isDown) {
-        this.player.x = Phaser.Math.Clamp(pointer.x, 20, width - 20);
-        this.player.y = Phaser.Math.Clamp(pointer.y, 20, height - 20);
-      }
-    });
-
-    // Collision
-    this.physics.add.overlap(this.player, this.collectibles, this.collectItem, null, this);
-
-    // Spawn timer
-    this.spawnTimer = this.time.addEvent({
-      delay: 1500,
-      callback: () => this.spawnCollectible(),
-      loop: true
-    });
-  }
-
-  spawnCollectible() {
-    if(!this.collectibles) return;
-    const { width, height } = this.scale;
-    const x = Phaser.Math.Between(50, width - 50);
-    const y = Phaser.Math.Between(60, height - 60);
-    const item = this.collectibles.create(x, y, 'item_o2');
-    item.setScale(1.2);
-    this.tweens.add({ targets: item, scaleX: 1.4, scaleY: 1.4, duration: 500, yoyo: true, repeat: -1 });
-  }
-
-  collectItem(player, item) {
-    item.destroy();
-    this.questProgress++;
-    this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-
-    // Particle effect
-    for(let i=0;i<8;i++){
-      const p = this.add.circle(item.x, item.y, 4, 0x88ccff);
-      this.tweens.add({ targets: p, x: p.x + Phaser.Math.Between(-40,40), y: p.y + Phaser.Math.Between(-40,40), alpha: 0, duration: 400, onComplete: () => p.destroy() });
-    }
-
-    if(this.questProgress >= this.questTarget) {
-      this.completeQuest();
-    }
-  }
-
-  // ===== QUEST: SEQUENCE =====
-  startSequenceQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-    this.sequence = [];
-    this.playerSequence = [];
-
-    // Generate sequence
-    for(let i=0;i<quest.target;i++) this.sequence.push(Phaser.Math.Between(0, 3));
-
-    // Show neurons (4 positions)
-    this.neurons = [];
-    const positions = [
-      { x: width/2 - 150, y: height/2 },
-      { x: width/2 - 50, y: height/2 - 80 },
-      { x: width/2 + 50, y: height/2 - 80 },
-      { x: width/2 + 150, y: height/2 },
-    ];
-
-    positions.forEach((pos, i) => {
-      const neuron = this.add.circle(pos.x, pos.y, 35, 0xcc66aa);
-      neuron.setStrokeStyle(3, 0xff88cc);
-      neuron.setInteractive({ useHandCursor: true });
-      neuron.on('pointerdown', () => this.clickNeuron(i));
-      this.neurons.push(neuron);
-
-      // Label
-      this.add.text(pos.x, pos.y + 45, `N${i+1}`, {
-        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
+  // ===== SCENE: ZONE SELECT =====
+  class ZoneSelectScene extends Phaser.Scene {
+    constructor() { super({ key: 'ZoneSelectScene' }); }
+    create() {
+      var w = this.scale.width;
+      var h = this.scale.height;
+      
+      this.add.text(w/2, 40, 'Choisis une zone du corps', {
+        fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#ffffff'
       }).setOrigin(0.5);
-    });
-
-    // Show sequence first
-    this.showingSequence = true;
-    this.add.text(width/2, 60, '👀 Regarde la séquence...', {
-      fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44'
-    }).setOrigin(0.5).setOrigin(0.5);
-
-    this.time.delayedCall(1000, () => this.playSequence());
-  }
-
-  playSequence() {
-    if(!this.neurons) return;
-    this.showingSequence = true;
-    let i = 0;
-    this.sequence.forEach((n, idx) => {
-      this.time.delayedCall(idx * 600, () => {
-        if(this.neurons && this.neurons[n]) {
-          this.neurons[n].setFillStyle(0xffdd44);
-          this.time.delayedCall(400, () => {
-            if(this.neurons && this.neurons[n]) this.neurons[n].setFillStyle(0xcc66aa);
-          });
-        }
-      });
-    });
-    this.time.delayedCall(this.sequence.length * 600 + 500, () => {
-      this.showingSequence = false;
-      this.playerSequence = [];
-      if(this.children.list[this.children.list.length-1]) {
-        this.children.list[this.children.list.length-1].textContent = '👆 Reproduis la séquence !';
+      
+      var zones = [
+        {name: 'Cerveau', icon: '🧠', color: 0xff9999},
+        {name: 'Cœur', icon: '❤️', color: 0xff4444},
+        {name: 'Poumons', icon: '🫁', color: 0xffaacc},
+        {name: 'Estomac', icon: '🫃', color: 0xffcc44},
+        {name: 'Os', icon: '🦴', color: 0xeeeeee},
+        {name: 'Muscles', icon: '💪', color: 0xcc4444}
+      ];
+      
+      var cols = 3;
+      var rows = 2;
+      var btnW = 180;
+      var btnH = 100;
+      var startX = w/2 - (cols-1) * (btnW + 20) / 2;
+      var startY = 150;
+      
+      for(var i = 0; i < zones.length; i++){
+        var col = i % cols;
+        var row = Math.floor(i / cols);
+        var zx = startX + col * (btnW + 20);
+        var zy = startY + row * (btnH + 20);
+        var zone = zones[i];
+        
+        var btn = this.add.graphics();
+        btn.fillStyle(zone.color); btn.fillRoundedRect(zx, zy, btnW, btnH, 12);
+        btn.fillStyle(0xffffff, 0.2); btn.fillRoundedRect(zx+2, zy+2, btnW-4, btnH/2, 10);
+        
+        this.add.text(zx + btnW/2, zy + 30, zone.icon, {fontSize: '32px'}).setOrigin(0.5);
+        this.add.text(zx + btnW/2, zy + 65, zone.name, {
+          fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+          color: '#ffffff', fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        var zoneBtn = this.add.zone(zx + btnW/2, zy + btnH/2, btnW, btnH).setInteractive({useHandCursor: true});
+        zoneBtn.on('pointerdown', function(z) {
+          return function() {
+            this.scene.start('GameScene', {zone: z.name});
+          };
+        }(zone.name));
       }
-    });
-  }
-
-  clickNeuron(idx) {
-    if(this.showingSequence || !this.neurons) return;
-    this.playerSequence.push(idx);
-    this.neurons[idx].setFillStyle(0xffdd44);
-    this.time.delayedCall(200, () => { if(this.neurons[idx]) this.neurons[idx].setFillStyle(0xcc66aa); });
-
-    const current = this.playerSequence.length - 1;
-    if(this.playerSequence[current] !== this.sequence[current]) {
-      // Wrong!
-      this.add.text(this.scale.width/2, 100, '❌ Essaie encore !', {
-        fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ff4444'
-      }).setOrigin(0.5);
-      this.playerSequence = [];
-      this.time.delayedCall(1000, () => this.playSequence());
-      return;
+      
+      // Bouton retour
+      this.createButton(w/2, h - 50, '← Retour', 0x444488, function() {
+        this.scene.start('MenuScene');
+      }.bind(this));
     }
-
-    if(this.playerSequence.length === this.sequence.length) {
-      this.questProgress = this.questTarget;
-      this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-      this.completeQuest();
-    }
-  }
-
-  // ===== QUEST: MEMORY =====
-  startMemoryQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-    this.flippedCards = [];
-    this.matchedPairs = 0;
-    this.canFlip = true;
-
-    const icons = ['🧠','💭','👁️','👂','❤️','🫁','🦴','💪'];
-    const pairs = icons.slice(0, quest.target);
-    const cards = [...pairs, ...pairs].sort(() => Math.random() - 0.5);
-
-    const cols = 4;
-    const cardW = 80, cardH = 80;
-    const startX = width/2 - (cols * (cardW + 10)) / 2 + cardW/2;
-    const startY = 100;
-
-    this.memoryCards = [];
-    cards.forEach((icon, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const x = startX + col * (cardW + 10);
-      const y = startY + row * (cardH + 10);
-
-      const card = this.add.container(x, y);
-      const bg = this.add.graphics();
-      bg.fillStyle(0x4488ff); bg.fillRoundedRect(-cardW/2, -cardH/2, cardW, cardH, 10);
-      const label = this.add.text(0, 0, icon, { fontSize: '32px' }).setOrigin(0.5).setVisible(false);
-      const back = this.add.text(0, 0, '❓', { fontSize: '28px' }).setOrigin(0.5);
-
-      card.add([bg, label, back]);
-      card.setSize(cardW, cardH);
-      card.setInteractive({ useHandCursor: true });
-      card.cardIndex = i;
-      card.icon = icon;
-      card.isFlipped = false;
-      card.isMatched = false;
-
-      card.on('pointerdown', () => this.flipCard(card));
-      this.memoryCards.push(card);
-    });
-  }
-
-  flipCard(card) {
-    if(!this.canFlip || card.isFlipped || card.isMatched) return;
-    card.isFlipped = true;
-    card.list[1].setVisible(true); // show icon
-    card.list[2].setVisible(false); // hide question mark
-    this.flippedCards.push(card);
-
-    if(this.flippedCards.length === 2) {
-      this.canFlip = false;
-      const [a, b] = this.flippedCards;
-      if(a.icon === b.icon) {
-        a.isMatched = b.isMatched = true;
-        this.matchedPairs++;
-        this.questProgress = this.matchedPairs;
-        this.progressText.textContent = `Progression: ${this.matchedPairs}/${this.questTarget}`;
-        this.flippedCards = [];
-        this.canFlip = true;
-        if(this.matchedPairs >= this.questTarget) this.completeQuest();
-      } else {
-        this.time.delayedCall(800, () => {
-          a.isFlipped = b.isFlipped = false;
-          a.list[1].setVisible(false); b.list[1].setVisible(false);
-          a.list[2].setVisible(true); b.list[2].setVisible(true);
-          this.flippedCards = [];
-          this.canFlip = true;
-        });
-      }
-    }
-  }
-
-  // ===== QUEST: REFLEX =====
-  startReflexQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-    this.waitingForSignal = false;
-
-    this.add.text(width/2, height/2 - 40, '⚡ Prépare-toi !', {
-      fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5).setName('reflexText');
-
-    this.add.text(width/2, height/2 + 20, 'Quand tu vois le signal, appuie vite !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    this.input.on('pointerdown', () => {
-      if(this.waitingForSignal) {
-        this.questProgress++;
-        this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-        this.waitingForSignal = false;
-        if(this.questProgress >= this.questTarget) {
-          this.completeQuest();
-        } else {
-          this.scheduleNextSignal();
-        }
-      }
-    });
-
-    this.scheduleNextSignal();
-  }
-
-  scheduleNextSignal() {
-    if(this.questProgress >= this.questTarget) return;
-    const delay = Phaser.Math.Between(1000, 3000);
-    this.time.delayedCall(delay, () => {
-      if(!this.scene.isActive()) return;
-      this.waitingForSignal = true;
-      const text = this.children.getByName('reflexText');
-      if(text) { text.textContent = '⚡ MAINTENANT !'; text.setColor('#ff4444'); }
-      this.cameras.main.flash(200, 255, 100, 100);
-    });
-  }
-
-  // ===== QUEST: RHYTHM =====
-  startRhythmQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    // Heart visual
-    const heart = this.add.text(width/2, height/2, '❤️', { fontSize: '80px' }).setOrigin(0.5);
-
-    this.add.text(width/2, height/2 + 80, 'Appuie sur le cœur au rythme ! boum... boum...', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    // Beat indicator
-    this.beatCircle = this.add.circle(width/2, height/2 + 130, 15, 0xff4444);
-
-    heart.setInteractive({ useHandCursor: true });
-    heart.on('pointerdown', () => {
-      this.questProgress++;
-      this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-      this.tweens.add({ targets: heart, scaleX: 1.3, scaleY: 1.3, duration: 100, yoyo: true });
-      this.tweens.add({ targets: this.beatCircle, scaleX: 1.5, scaleY: 1.5, duration: 100, yoyo: true });
-      if(this.questProgress >= this.questTarget) this.completeQuest();
-    });
-
-    // Auto-beat
-    this.time.addEvent({
-      delay: 600,
-      callback: () => {
-        if(this.beatCircle) this.tweens.add({ targets: this.beatCircle, alpha: 0.3, duration: 100, yoyo: true });
-      },
-      loop: true
-    });
-  }
-
-  // ===== QUEST: CATCH =====
-  startCatchQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, height - 40, '👆 Attrape les bulles de CO2 !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    // Player
-    this.player = this.add.circle(width/2, height/2, 25, 0x4488ff);
-    this.physics.add.existing(this.player);
-
-    this.input.on('pointermove', (p) => {
-      if(p.isDown) { this.player.x = p.x; this.player.y = p.y; }
-    });
-
-    // Spawn CO2
-    this.enemies = this.physics.add.group();
-    this.physics.add.overlap(this.player, this.enemies, (pl, en) => {
-      en.destroy();
-      this.questProgress++;
-      this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-      if(this.questProgress >= this.questTarget) this.completeQuest();
-    });
-
-    this.time.addEvent({
-      delay: 1200,
-      callback: () => {
-        if(this.enemies) {
-          const e = this.enemies.create(Phaser.Math.Between(30, width-30), Phaser.Math.Between(60, height-60), 'item_co2');
-          e.setVelocity(Phaser.Math.Between(-50, 50), Phaser.Math.Between(-50, 50));
-          e.setBounce(1, 1).setCollideWorldBounds(true);
-        }
-      },
-      loop: true
-    });
-  }
-
-  // ===== QUEST: CRAFT (Antibodies) =====
-  startCraftQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '⚗️ Fabrique des anticorps !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    this.add.text(width/2, 100, 'Combine les éléments pour créer un anticorps (Y)', {
-      fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ccccdd'
-    }).setOrigin(0.5);
-
-    // Crafting slots
-    this.craftSlots = [];
-    const elements = ['🔴', '🔵', '🟡'];
-    for(let i=0;i<3;i++){
-      const x = width/2 - 100 + i * 100;
-      const y = height/2;
-      const slot = this.add.container(x, y);
-      const bg = this.add.graphics();
-      bg.fillStyle(0x333355); bg.fillRoundedRect(-30, -30, 60, 60, 10);
-      bg.lineStyle(2, 0x666688); bg.strokeRoundedRect(-30, -30, 60, 60, 10);
-      const el = this.add.text(0, 0, elements[i], { fontSize: '28px' }).setOrigin(0.5);
-      slot.add([bg, el]);
-      slot.setSize(60, 60);
-      slot.setInteractive({ useHandCursor: true });
-      slot.element = elements[i];
-      slot.on('pointerdown', () => this.craftClick(slot));
-      this.craftSlots.push(slot);
-    }
-
-    // Recipe display
-    this.add.text(width/2, height/2 + 80, 'Recette : 🔴 + 🔵 + 🟡 = 🛡️ Anticorps', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#44ff88'
-    }).setOrigin(0.5);
-
-    this.crafted = [];
-    this.craftResult = this.add.text(width/2, height/2 + 130, 'Éléments: []', {
-      fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-  }
-
-  craftClick(slot) {
-    if(this.crafted.includes(slot.element)) return;
-    this.crafted.push(slot.element);
-    this.craftResult.textContent = `Éléments: [${this.crafted.join(' + ')}]`;
-
-    if(this.crafted.length === 3) {
-      // Check recipe
-      const sorted = [...this.crafted].sort().join('');
-      if(sorted === '🔴🔵🟡') {
-        this.questProgress++;
-        this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-        this.craftResult.textContent = '✅ Anticorps créé !';
-        this.craftResult.setColor('#44ff88');
-        this.crafted = [];
-        if(this.questProgress >= this.questTarget) {
-          this.time.delayedCall(1000, () => this.completeQuest());
-        } else {
-          this.time.delayedCall(1500, () => {
-            this.crafted = [];
-            this.craftResult.textContent = 'Éléments: []';
-            this.craftResult.setColor('#ffffff');
-          });
-        }
-      } else {
-        this.craftResult.textContent = '❌ Mauvaise combinaison !';
-        this.craftResult.setColor('#ff4444');
-        this.time.delayedCall(1000, () => {
-          this.crafted = [];
-          this.craftResult.textContent = 'Éléments: []';
-          this.craftResult.setColor('#ffffff');
-        });
-      }
-    }
-  }
-
-  // ===== QUEST: BREATHE =====
-  startBreatheQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-    this.breathing = 'in'; // 'in' or 'out'
-
-    // Lung visual
-    this.lungCircle = this.add.circle(width/2, height/2, 60, 0xff88aa);
-    this.lungCircle.setStrokeStyle(4, 0xffaacc);
-
-    this.breathText = this.add.text(width/2, height/2, '🫁', { fontSize: '60px' }).setOrigin(0.5);
-
-    this.instructionText = this.add.text(width/2, height/2 + 100, '⬆️ INSPIRE ! (monte)', {
-      fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#88ffaa', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    this.input.on('pointerdown', () => {
-      if(this.breathing === 'in') {
-        this.breathing = 'out';
-        this.instructionText.textContent = '⬇️ EXPIRE ! (descends)';
-        this.instructionText.setColor('#ffaa88');
-        this.tweens.add({ targets: this.lungCircle, scaleX: 1.4, scaleY: 1.4, duration: 800, ease: 'Sine.easeOut' });
-        this.tweens.add({ targets: this.breathText, scaleX: 1.3, scaleY: 1.3, duration: 800, ease: 'Sine.easeOut' });
-      } else {
-        this.breathing = 'in';
-        this.instructionText.textContent = '⬆️ INSPIRE ! (monte)';
-        this.instructionText.setColor('#88ffaa');
-        this.tweens.add({ targets: this.lungCircle, scaleX: 1, scaleY: 1, duration: 800, ease: 'Sine.easeIn' });
-        this.tweens.add({ targets: this.breathText, scaleX: 1, scaleY: 1, duration: 800, ease: 'Sine.easeIn' });
-        this.questProgress++;
-        this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-        if(this.questProgress >= this.questTarget) this.completeQuest();
-      }
-    });
-  }
-
-  // ===== QUEST: CLEAN =====
-  startCleanQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, height - 40, '👆 Touche les particules pour nettoyer !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    this.player = this.add.circle(width/2, height/2, 25, 0x4488ff);
-    this.physics.add.existing(this.player);
-
-    this.input.on('pointermove', (p) => {
-      if(p.isDown) { this.player.x = p.x; this.player.y = p.y; }
-    });
-
-    this.dirt = this.physics.add.group();
-    this.physics.add.overlap(this.player, this.dirt, (pl, d) => {
-      d.destroy();
-      this.questProgress++;
-      this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-      if(this.questProgress >= this.questTarget) this.completeQuest();
-    });
-
-    for(let i=0;i<quest.target + 5;i++){
-      const d = this.dirt.create(
-        Phaser.Math.Between(40, width-40),
-        Phaser.Math.Between(60, height-60),
-        'item_co2'
-      ).setScale(0.8).setTint(0x888888);
-    }
-  }
-
-  // ===== QUEST: SORT =====
-  startSortQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '🗂️ Trie les nutriments !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Bins
-    const bins = [
-      { name: '🥩 Protéines', color: 0xff6644, x: width/4 },
-      { name: '🍞 Glucides', color: 0xffaa44, x: width/2 },
-      { name: '🧈 Lipides', color: 0x44cc44, x: width*3/4 },
-    ];
-
-    this.sortBins = [];
-    bins.forEach(b => {
-      const container = this.add.container(b.x, height - 80);
-      const bg = this.add.graphics();
-      bg.fillStyle(b.color); bg.fillRoundedRect(-60, -30, 120, 60, 10);
-      const label = this.add.text(0, 0, b.name, {
-        fontSize: '14px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+    
+    createButton(x, y, text, color, callback) {
+      var container = this.add.container(x, y);
+      var bg = this.add.graphics();
+      bg.fillStyle(color); bg.fillRoundedRect(-80, -20, 160, 40, 10);
+      var label = this.add.text(0, 0, text, {
+        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
         color: '#ffffff', fontStyle: 'bold'
       }).setOrigin(0.5);
       container.add([bg, label]);
-      container.setSize(120, 60);
-      container.binType = b.name;
-      this.sortBins.push(container);
-    });
-
-    // Items to sort
-    const items = [
-      { icon: '🥚', type: '🥩 Protéines' }, { icon: '🐟', type: '🥩 Protéines' },
-      { icon: '🍞', type: '🍞 Glucides' }, { icon: '🍚', type: '🍞 Glucides' },
-      { icon: '🧀', type: '🧈 Lipides' }, { icon: '🥑', type: '🧈 Lipides' },
-    ].sort(() => Math.random() - 0.5);
-
-    this.sortItems = [];
-    items.forEach((item, i) => {
-      const x = 80 + (i % 3) * 120;
-      const y = 130 + Math.floor(i / 3) * 80;
-      const container = this.add.container(x, y);
-      const bg = this.add.graphics();
-      bg.fillStyle(0x333355); bg.fillRoundedRect(-30, -30, 60, 60, 10);
-      const icon = this.add.text(0, 0, item.icon, { fontSize: '28px' }).setOrigin(0.5);
-      container.add([bg, icon]);
-      container.setSize(60, 60);
-      container.itemType = item.type;
-      container.isDragging = false;
-      container.setInteractive({ useHandCursor: true, draggable: true });
-
-      container.on('dragstart', () => { container.isDragging = true; container.setScale(1.1); });
-      container.on('drag', (pointer, dragX, dragY) => { container.x = dragX; container.y = dragY; });
-      container.on('dragend', () => {
-        container.isDragging = false;
-        container.setScale(1);
-        // Check if over correct bin
-        const bin = this.sortBins.find(b => {
-          const dx = Math.abs(container.x - b.x);
-          const dy = Math.abs(container.y - b.y);
-          return dx < 70 && dy < 50;
-        });
-        if(bin && bin.binType === container.itemType) {
-          container.destroy();
-          this.questProgress++;
-          this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-          if(this.questProgress >= this.questTarget) this.completeQuest();
-        } else {
-          // Snap back
-          this.tweens.add({ targets: container, x: container.input.dragStartX, y: container.input.dragStartY, duration: 300 });
-        }
-      });
-
-      this.sortItems.push(container);
-    });
+      container.setSize(160, 40);
+      container.setInteractive({ useHandCursor: true });
+      container.on('pointerdown', callback);
+      return container;
+    }
   }
 
-  // ===== QUEST: MASH =====
-  startMashQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '🍳 Mixe la nourriture !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Food visual
-    this.foodItems = [];
-    const foods = ['🥩', '🥦', '🍞', '🧀', '🍎'];
-    foods.forEach((f, i) => {
-      const x = width/2 - 120 + i * 60;
-      const y = height/2;
-      const food = this.add.text(x, y, f, { fontSize: '40px' }).setOrigin(0.5);
-      food.setInteractive({ useHandCursor: true });
-      food.on('pointerdown', () => {
-        this.questProgress++;
-        this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-        this.tweens.add({ targets: food, scaleX: 0.5, scaleY: 0.5, alpha: 0.3, duration: 200 });
-        food.disableInteractive();
-        if(this.questProgress >= this.questTarget) this.completeQuest();
-      });
-      this.foodItems.push(food);
-    });
-
-    this.add.text(width/2, height/2 + 80, 'Appuie sur la nourriture pour la mixer !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-  }
-
-  // ===== QUEST: BUILD =====
-  startBuildQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '🏗️ Construis le squelette !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Target positions (skeleton outline)
-    const targets = [
-      { x: width/2, y: 140, label: '🦴 Crâne' },
-      { x: width/2, y: 200, label: '🦴 Colonne' },
-      { x: width/2 - 60, y: 200, label: '🦴 Bras G' },
-      { x: width/2 + 60, y: 200, label: '🦴 Bras D' },
-      { x: width/2, y: 300, label: '🦴 Bassin' },
-    ];
-
-    this.buildTargets = [];
-    targets.forEach(t => {
-      const zone = this.add.circle(t.x, t.y, 30, 0x333355, 0.5);
-      zone.setStrokeStyle(2, 0x666688);
-      const label = this.add.text(t.x, t.y + 40, t.label, {
-        fontSize: '12px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#aaaacc'
+  // ===== SCENE: GAME =====
+  class GameScene extends Phaser.Scene {
+    constructor() { super({ key: 'GameScene' }); }
+    init(data) {
+      this.zoneName = data.zone || 'Cerveau';
+    }
+    create() {
+      var w = this.scale.width;
+      var h = this.scale.height;
+      
+      // Background
+      var bg = this.add.graphics();
+      bg.fillGradientStyle(0x1a1a2e, 0x16213e, 0x0f3460, 0x1a1a2e, 1);
+      bg.fillRect(0, 0, w, h);
+      
+      // Titre zone
+      this.add.text(w/2, 30, this.zoneName, {
+        fontSize: '32px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#ffdd44', fontStyle: 'bold'
       }).setOrigin(0.5);
-      zone.targetLabel = t.label;
-      zone.isFilled = false;
-      this.buildTargets.push(zone);
-    });
-
-    // Draggable bones
-    this.bonePieces = [];
-    for(let i=0;i<quest.target;i++){
-      const bone = this.add.text(100 + i * 70, height - 80, '🦴', { fontSize: '32px' }).setOrigin(0.5);
-      bone.setInteractive({ useHandCursor: true, draggable: true });
-      bone.on('dragstart', () => bone.setScale(1.2));
-      bone.on('drag', (p, dx, dy) => { bone.x = dx; bone.y = dy; });
-      bone.on('dragend', () => {
-        bone.setScale(1);
-        const target = this.buildTargets.find(t => !t.isFilled && Math.abs(bone.x - t.x) < 35 && Math.abs(bone.y - t.y) < 35);
-        if(target) {
-          bone.x = target.x; bone.y = target.y;
-          target.isFilled = true;
-          target.setFillStyle(0x44cc44, 0.5);
-          bone.disableInteractive();
-          this.questProgress++;
-          this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-          if(this.questProgress >= this.questTarget) this.completeQuest();
-        }
-      });
-      this.bonePieces.push(bone);
-    }
-  }
-
-  // ===== QUEST: PUMP =====
-  startPumpQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '💪 Soulève la charge !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Weight bar
-    this.weightY = height - 100;
-    this.weightBar = this.add.rectangle(width/2, this.weightY, 100, 30, 0xff4444);
-    this.weightBar.setStrokeStyle(3, 0xff6666);
-
-    // Target line
-    this.add.rectangle(width/2, this.weightY - 80, 120, 4, 0x44ff88);
-
-    this.add.text(width/2, height - 40, 'Appuie vite pour soulever !', {
-      fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    this.input.on('pointerdown', () => {
-      this.tweens.add({
-        targets: this.weightBar, y: this.weightY - 15, duration: 100, yoyo: true,
-        onComplete: () => {
-          this.questProgress++;
-          this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-          if(this.questProgress >= this.questTarget) this.completeQuest();
-        }
-      });
-    });
-  }
-
-  // ===== QUEST: NAVIGATE =====
-  startNavigateQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '🚤 Navigue dans le sang !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Create path (vein)
-    this.veinGraphics = this.add.graphics();
-    this.veinGraphics.lineStyle(40, 0x881111, 0.6);
-    const path = new Phaser.Curves.Spline([
-      new Phaser.Math.Vector2(50, height/2),
-      new Phaser.Math.Vector2(width*0.25, height/2 - 60),
-      new Phaser.Math.Vector2(width*0.5, height/2 + 40),
-      new Phaser.Math.Vector2(width*0.75, height/2 - 30),
-      new Phaser.Math.Vector2(width - 50, height/2),
-    ]);
-    path.draw(this.veinGraphics);
-
-    // Player (blood cell)
-    this.navPlayer = this.add.circle(50, height/2, 15, 0xff4444);
-    this.navPlayer.setStrokeStyle(2, 0xff6666);
-
-    // Obstacles
-    this.obstacles = this.physics.add.group();
-    for(let i=0;i<5;i++){
-      const ox = 100 + i * 140;
-      const oy = height/2 + Phaser.Math.Between(-80, 80);
-      const obs = this.obstacles.create(ox, oy, 'item_virus').setScale(0.8);
-    }
-
-    this.input.on('pointermove', (p) => {
-      if(p.isDown) {
-        this.navPlayer.x = Phaser.Math.Clamp(p.x, 30, width - 30);
-        this.navPlayer.y = Phaser.Math.Clamp(p.y, 60, height - 60);
-      }
-    });
-
-    this.physics.add.overlap(this.navPlayer, this.obstacles, () => {
-      this.navPlayer.x = 50; this.navPlayer.y = height/2;
-      this.cameras.main.shake(200, 0.01);
-    });
-
-    // Goal
-    this.goal = this.add.circle(width - 50, height/2, 25, 0x44ff88, 0.5);
-    this.goal.setStrokeStyle(3, 0x66ffaa);
-    this.physics.add.overlap(this.navPlayer, this.goal, () => {
-      this.questProgress = this.questTarget;
-      this.completeQuest();
-    });
-  }
-
-  // ===== QUEST: RELAY =====
-  startRelayQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '⚡ Relais de messages !', {
-      fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Create neuron chain
-    this.relayNeurons = [];
-    const count = quest.target + 2;
-    for(let i=0;i<count;i++){
-      const x = 60 + (i * (width - 120) / (count - 1));
-      const y = height/2 + (i % 2 === 0 ? -40 : 40);
-      const neuron = this.add.circle(x, y, 25, 0x444466);
-      neuron.setStrokeStyle(3, 0x666688);
-      neuron.activated = false;
-      neuron.index = i;
-      neuron.setInteractive({ useHandCursor: true });
-      neuron.on('pointerdown', () => this.clickRelayNeuron(neuron));
-      this.relayNeurons.push(neuron);
-
-      // Connection line
-      if(i > 0){
-        const prev = this.relayNeurons[i-1];
-        const line = this.add.graphics();
-        line.lineStyle(2, 0x444466); line.lineBetween(prev.x, prev.y, x, y);
-      }
-    }
-
-    this.relayIndex = 0;
-    this.activateNextRelay();
-  }
-
-  activateNextRelay() {
-    if(this.relayIndex < this.relayNeurons.length) {
-      this.relayNeurons[this.relayIndex].setFillStyle(0xffdd44);
-      this.relayNeurons[this.relayIndex].setStrokeStyle(3, 0xffee88);
-    }
-  }
-
-  clickRelayNeuron(neuron) {
-    if(neuron.index === this.relayIndex) {
-      neuron.activated = true;
-      neuron.setFillStyle(0x44ff88);
-      neuron.setStrokeStyle(3, 0x66ffaa);
-      this.relayIndex++;
-      this.questProgress++;
-      this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-      if(this.questProgress >= this.questTarget) {
-        this.completeQuest();
-      } else {
-        this.activateNextRelay();
-      }
-    } else if(!neuron.activated) {
-      // Wrong neuron — reset
-      this.relayNeurons.forEach(n => {
-        n.setFillStyle(0x444466); n.setStrokeStyle(3, 0x666688); n.activated = false;
-      });
-      this.relayIndex = 0;
-      this.questProgress = 0;
-      this.progressText.textContent = `Progression: 0/${this.questTarget}`;
-      this.activateNextRelay();
-    }
-  }
-
-  // ===== QUEST: COLORS =====
-  startColorsQuest(quest) {
-    const { width, height } = this.scale;
-    this.questProgress = 0;
-    this.questTarget = quest.target;
-    this.questType = quest.type;
-    this.questXP = quest.xp;
-    this.questId = quest.id;
-
-    this.add.text(width/2, 70, '🌈 Trouve les couleurs de l\'arc-en-ciel !', {
-      fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    const colors = [
-      { name: 'Rouge', color: 0xff0000, hex: '#ff0000' },
-      { name: 'Orange', color: 0xff8800, hex: '#ff8800' },
-      { name: 'Jaune', color: 0xffff00, hex: '#ffff00' },
-      { name: 'Vert', color: 0x00ff00, hex: '#00ff00' },
-      { name: 'Bleu', color: 0x0088ff, hex: '#0088ff' },
-      { name: 'Indigo', color: 0x4400ff, hex: '#4400ff' },
-      { name: 'Violet', color: 0x8800ff, hex: '#8800ff' },
-    ];
-
-    this.colorTargets = [];
-    colors.forEach((c, i) => {
-      const x = 80 + i * 100;
-      const y = height - 80;
-      const circle = this.add.circle(x, y, 25, c.color);
-      circle.setStrokeStyle(3, 0xffffff);
-      circle.colorName = c.name;
-      circle.isCollected = false;
-      this.colorTargets.push(circle);
-
-      this.add.text(x, y + 35, c.name, {
-        fontSize: '11px', fontFamily: 'Atkinson Hyperlegible, system-ui', color: '#ffffff'
+      
+      // Zone de jeu
+      this.add.text(w/2, h/2, '🎮 Zone de jeu: ' + this.zoneName + '\n\n(En construction...)', {
+        fontSize: '20px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+        color: '#ffffff', align: 'center'
       }).setOrigin(0.5);
-    });
-
-    // Floating color orbs to collect
-    this.colorOrbs = this.physics.add.group();
-    this.time.addEvent({
-      delay: 1000,
-      callback: () => {
-        if(!this.colorOrbs) return;
-        const c = colors[Phaser.Math.Between(0, colors.length - 1)];
-        const orb = this.colorOrbs.create(
-          Phaser.Math.Between(50, width - 50),
-          Phaser.Math.Between(100, height - 150),
-          'item_o2'
-        ).setTint(c.color).setScale(1.2);
-        orb.colorName = c.name;
-      },
-      loop: true
-    });
-
-    // Player
-    this.player = this.add.circle(width/2, height/2, 25, 0x4488ff);
-    this.physics.add.existing(this.player);
-
-    this.input.on('pointermove', (p) => {
-      if(p.isDown) { this.player.x = p.x; this.player.y = p.y; }
-    });
-
-    this.physics.add.overlap(this.player, this.colorOrbs, (pl, orb) => {
-      const target = this.colorTargets.find(t => t.colorName === orb.colorName && !t.isCollected);
-      if(target) {
-        target.isCollected = true;
-        target.setAlpha(0.3);
-        this.questProgress++;
-        this.progressText.textContent = `Progression: ${this.questProgress}/${this.questTarget}`;
-        if(this.questProgress >= this.questTarget) this.completeQuest();
-      }
-      orb.destroy();
-    });
-  }
-
-  // ===== COMPLETE QUEST =====
-  completeQuest() {
-    // Stop timers
-    if(this.spawnTimer) this.spawnTimer.remove();
-
-    const { width, height } = this.scale;
-
-    // Victory overlay
-    const overlay = this.add.rectangle(width/2, height/2, width, height, 0x000000, 0.7);
-
-    const victoryText = this.add.text(width/2, height/2 - 60, '🎉 QUÊTE RÉUSSIE !', {
-      fontSize: '36px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#ffdd44', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    const xpText = this.add.text(width/2, height/2, `+${this.questXP} XP !`, {
-      fontSize: '28px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-      color: '#44ff88', fontStyle: 'bold'
-    }).setOrigin(0.5);
-
-    // Stars
-    const stars = this.add.text(width/2, height/2 + 50, '⭐⭐⭐', {
-      fontSize: '40px'
-    }).setOrigin(0.5);
-
-    // Update state
-    STATE.xp += this.questXP;
-    if(!STATE.completedQuests.includes(this.questId)) {
-      STATE.completedQuests.push(this.questId);
+      
+      // Bouton retour
+      this.createButton(w/2, h - 50, '← Retour aux zones', 0x444488, function() {
+        this.scene.start('ZoneSelectScene');
+      }.bind(this));
     }
-    if(STATE.xp >= STATE.level * 100) {
-      STATE.level++;
-      this.add.text(width/2, height/2 + 100, `🎊 Niveau ${STATE.level} !`, {
-        fontSize: '22px', fontFamily: 'Atkinson Hyperlegible, system-ui',
-        color: '#ff88ff', fontStyle: 'bold'
-      }).setOrigin(0.5);
-    }
-
-    // Continue button
-    this.time.delayedCall(2000, () => {
-      const btn = this.add.container(width/2, height/2 + 140);
-      const bg = this.add.graphics();
-      bg.fillStyle(0x44cc44); bg.fillRoundedRect(-80, -22, 160, 44, 12);
-      const label = this.add.text(0, 0, 'Continuer →', {
-        fontSize: '18px', fontFamily: 'Atkinson Hyperlegible, system-ui',
+    
+    createButton(x, y, text, color, callback) {
+      var container = this.add.container(x, y);
+      var bg = this.add.graphics();
+      bg.fillStyle(color); bg.fillRoundedRect(-100, -20, 200, 40, 10);
+      var label = this.add.text(0, 0, text, {
+        fontSize: '16px', fontFamily: 'Atkinson Hyperlegible, system-ui',
         color: '#ffffff', fontStyle: 'bold'
       }).setOrigin(0.5);
-      btn.add([bg, label]);
-      btn.setSize(160, 44);
-      btn.setInteractive({ useHandCursor: true });
-      btn.on('pointerdown', () => this.scene.start('ZoneSelectScene'));
-    });
-
-    // Celebration particles
-    for(let i=0;i<20;i++){
-      const p = this.add.image(
-        Phaser.Math.Between(0, width),
-        Phaser.Math.Between(0, height),
-        'star'
-      ).setScale(Phaser.Math.FloatBetween(0.5, 1.5)).setAlpha(0);
-      this.tweens.add({
-        targets: p, alpha: 1, y: p.y - 100,
-        duration: Phaser.Math.Between(1000, 2000),
-        delay: Phaser.Math.Between(0, 500)
-      });
+      container.add([bg, label]);
+      container.setSize(200, 40);
+      container.setInteractive({ useHandCursor: true });
+      container.on('pointerdown', callback);
+      return container;
     }
   }
+
+  // ===== DÉMARRER LE JEU =====
+  var game = new Phaser.Game(CONFIG);
+  game.scene.add('BootScene', BootScene);
+  game.scene.add('MenuScene', MenuScene);
+  game.scene.add('ZoneSelectScene', ZoneSelectScene);
+  game.scene.add('GameScene', GameScene);
+  game.scene.start('BootScene');
 }
 
-// ============================================================
-//  START GAME
-// ============================================================
-const game = new Phaser.Game(CONFIG);
-game.scene.add('BootScene', BootScene);
-game.scene.add('MenuScene', MenuScene);
-game.scene.add('ZoneSelectScene', ZoneSelectScene);
-game.scene.add('GameScene', GameScene);
+// Démarrer
+initGame();
 </script>
 </body>
 </html>
