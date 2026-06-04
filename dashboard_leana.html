@@ -237,38 +237,31 @@
 </main>
 
 
-<script>// NAVIGATION - Ultra simple
-(function() {
-  var allBtns = document.querySelectorAll("[data-panel]");
-  var allPanels = document.querySelectorAll(".panel");
-  var i, j, target;
-  for (i = 0; i < allBtns.length; i++) {
-    allBtns[i].onclick = function() {
-      var panelName = this.getAttribute("data-panel");
-      for (j = 0; j < allPanels.length; j++) {
-        allPanels[j].className = allPanels[j].className.replace(" active", "").replace("active", "");
-      }
-      target = document.getElementById("pn-" + panelName);
-      if (target) { target.className += " active"; }
-      for (j = 0; j < allBtns.length; j++) {
-        allBtns[j].className = allBtns[j].className.replace(" active", "").replace("active", "");
-      }
-      this.className += " active";
-    };
-  }
-  var fb = document.getElementById("focusBtn");
-  if (fb) {
-    fb.onclick = function() {
-      if (document.body.className.indexOf("focus-mode") >= 0) {
-        document.body.className = document.body.className.replace(" focus-mode", "").replace("focus-mode", "");
-        this.className = this.className.replace(" active", "").replace("active", "");
-      } else {
-        document.body.className += " focus-mode";
-        this.className += " active";
-      }
-    };
-  }
-})();
+<script>// NAVIGATION
+// NAVIGATION
+var navBtns = document.querySelectorAll('[data-panel]');
+for (var i = 0; i < navBtns.length; i++) {
+  navBtns[i].addEventListener('click', function() {
+    var name = this.getAttribute('data-panel');
+    var panels = document.querySelectorAll('.panel');
+    for (var j = 0; j < panels.length; j++) {
+      panels[j].classList.remove('active');
+    }
+    var target = document.getElementById('pn-' + name);
+    if (target) { target.classList.add('active'); }
+    for (var k = 0; k < navBtns.length; k++) {
+      navBtns[k].classList.remove('active');
+    }
+    this.classList.add('active');
+  });
+}
+var fb = document.getElementById('focusBtn');
+if (fb) {
+  fb.addEventListener('click', function() {
+    document.body.classList.toggle('focus-mode');
+    this.classList.toggle('active');
+  });
+}
 
 // VOICE
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
