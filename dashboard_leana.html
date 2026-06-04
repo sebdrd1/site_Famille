@@ -236,30 +236,33 @@
   </div>
 </main>
 
-<script>
-// ===== NAVIGATION PANNEAUX =====
-document.querySelectorAll('[data-panel]').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const panelName = this.dataset.panel;
-    // Cacher tous les panneaux
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    // Afficher le panneau cible
-    const target = document.getElementById('pn-' + panelName);
-    if (target) target.classList.add('active');
-    // Mettre à jour les boutons actifs
-    document.querySelectorAll('[data-panel]').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
+<script>// ===== NAVIGATION PANNEAUX =====
+(function() {
+  var buttons = document.querySelectorAll('[data-panel]');
+  buttons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var panelName = this.getAttribute('data-panel');
+      // Cacher tous les panneaux
+      var panels = document.querySelectorAll('.panel');
+      panels.forEach(function(p) { p.classList.remove('active'); });
+      // Montrer le panneau cible
+      var target = document.getElementById('pn-' + panelName);
+      if (target) { target.classList.add('active'); }
+      // Activer le bouton
+      buttons.forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+    });
   });
-});
-
-
-// NAV
-document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');document.getElementById('pn-'+b.dataset.panel).classList.add('active');
-}));
-document.getElementById('focusBtn').addEventListener('click',function(){document.body.classList.toggle('focus-mode');this.classList.toggle('active')});
+  
+  // Focus button
+  var focusBtn = document.getElementById('focusBtn');
+  if (focusBtn) {
+    focusBtn.addEventListener('click', function() {
+      document.body.classList.toggle('focus-mode');
+      this.classList.toggle('active');
+    });
+  }
+})();
 
 // VOICE
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -655,7 +658,6 @@ function checkQuiz(sel,corr){
   if(sel===corr){quizScore++;document.getElementById('quizStars').textContent='⭐'.repeat(quizScore)}
   document.getElementById('quizS').textContent=`Score: ${quizScore}`;
 }
-nextQuiz();
-</script>
+nextQuiz();</script>
 </body>
 </html>
