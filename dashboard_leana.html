@@ -238,425 +238,69 @@
 
 
 <script>// NAVIGATION
-// NAVIGATION
-var navBtns = document.querySelectorAll("[data-panel]");
-for (var i = 0; i < navBtns.length; i++) {
-  navBtns[i].addEventListener("click", function() {
-    var name = this.getAttribute("data-panel");
-    var panels = document.querySelectorAll(".panel");
-    for (var j = 0; j < panels.length; j++) {
-      panels[j].classList.remove("active");
+var _allBtns = document.querySelectorAll("[data-panel]");
+var _allPnl = document.querySelectorAll(".panel");
+var _i, _j, _t;
+for (_i = 0; _i < _allBtns.length; _i++) {
+  _allBtns[_i].onclick = function() {
+    var nm = this.getAttribute("data-panel");
+    for (_j = 0; _j < _allPnl.length; _j++) {
+      _allPnl[_j].className = "panel";
     }
-    var target = document.getElementById("pn-" + name);
-    if (target) { target.classList.add("active"); }
-    for (var k = 0; k < navBtns.length; k++) {
-      navBtns[k].classList.remove("active");
+    _t = document.getElementById("pn-" + nm);
+    if (_t) { _t.className = "panel active"; }
+    for (_j = 0; _j < _allBtns.length; _j++) {
+      _allBtns[_j].className = "nav-btn";
     }
-    this.classList.add("active");
-  });
+    this.className = "nav-btn active";
+  };
 }
-var fb = document.getElementById("focusBtn");
-if (fb) {
-  fb.addEventListener("click", function() {
-    document.body.classList.toggle("focus-mode");
-    this.classList.toggle("active");
-  });
+var _fb = document.getElementById("focusBtn");
+if (_fb) {
+  _fb.onclick = function() {
+    if(document.body.className.indexOf("focus-mode")>=0){document.body.className=document.body.className.replace(" focus-mode","").replace("focus-mode","");}else{document.body.className+=" focus-mode";}
+    if(this.className.indexOf("active")>=0){this.className=this.className.replace(" active","").replace("active","");}else{this.className+=" active";}
+  };
 }
 
-// VOICE
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null;
-if(SR){rec=new SR();rec.lang="fr-FR";rec.interimResults=true;rec.continuous=false}
-function setupVoice(mid,tid,cb){const m=document.getElementById(mid),t=document.getElementById(tid);if(!m||!rec)return;m.addEventListener("click",()=>{m.classList.add("listening");t.textContent="Écoute...";rec.onresult=e=>{const txt=e.results[0][0].transcript;t.textContent=txt;if(e.results[0].isFinal&&cb)cb(txt)};rec.onend=()=>m.classList.remove("listening");rec.start()})}
-setupVoice("lettresMic","lettresTranscript",t=>{const l=t.trim().toUpperCase()[0];if(l)speakLetter(l)});
-setupVoice("chiffresMic","chiffresTranscript",t=>{const n=parseInt(t);if(!isNaN(n)&&n>=0&&n<=20)speakNum(n)});
-setupVoice("lectureMic","lectureTranscript",t=>{});
-setupVoice("mathsMic","mathsTranscript",t=>{const n=parseInt(t.replace(/\D/g,""));if(!isNaN(n)){document.getElementById("addAnswer").value=n;checkAdd()}});
 
-// SPEAK
-function speak(t){if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(t);u.lang="fr-FR";u.rate=0.85;speechSynthesis.speak(u)}}
-function playNote(n){const f={C:261.63,D:293.66,E:329.63,F:349.23,G:392,A:440,B:493.88,C5:523.25};try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f[n];g.gain.value=0.3;o.start();o.stop(c.currentTime+0.5)}catch(e){}}
 
-// ===== LETTRES =====
-const alphabet=[
-  {l:"A",s:"a",ex:"Avion"},{l:"B",s:"b",ex:"Ballon"},{l:"C",s:"c",ex:"Chat"},{l:"D",s:"d",ex:"Dinosaure"},
-  {l:"E",s:"e",ex:"Éléphant"},{l:"F",s:"f",ex:"Fleur"},{l:"G",s:"g",ex:"Girafe"},{l:"H",s:"h",ex:"Hibou"},
-  {l:"I",s:"i",ex:"Iglou"},{l:"J",s:"j",ex:"Jardin"},{l:"K",s:"k",ex:"Kangourou"},{l:"L",s:"l",ex:"Lion"},
-  {l:"M",s:"m",ex:"Maison"},{l:"N",s:"n",ex:"Nuage"},{l:"O",s:"o",ex:"Orange"},{l:"P",s:"p",ex:"Papillon"},
-  {l:"Q",s:"q",ex:"Quatre"},{l:"R",s:"r",ex:"Rose"},{l:"S",s:"s",ex:"Soleil"},{l:"T",s:"t",ex:"Tortue"},
-  {l:"U",s:"u",ex:"Uniforme"},{l:"V",s:"v",ex:"Voiture"},{l:"W",s:"w",ex:"Wagon"},{l:"X",s:"x",ex:"Xylophone"},
-  {l:"Y",s:"y",ex:"Yak"},{l:"Z",s:"z",ex:"Zèbre"}
-];
-const letterGrid=document.getElementById("letterGrid");
-alphabet.forEach(a=>{
-  const btn=document.createElement("button");
-  btn.className="letter-btn";
-  btn.innerHTML=`${a.l}<span class="sound">${a.ex}</span>`;
-  btn.onclick=()=>{speak(`${a.l}, comme ${a.ex}`);btn.style.background="var(--primary)";btn.style.color="#fff";setTimeout(()=>{btn.style.background="";btn.style.color=""},1500)};
-  letterGrid.appendChild(btn);
-});
-function speakLetter(l){const a=alphabet.find(x=>x.l===l);if(a)speak(`${l}, comme ${a.ex}`)}
-
-// Letter quiz
-const letQuiz=[
-  {q:"Quelle lettre fait le son "a" ?",opts:["A","B","C"],c:0},
-  {q:"Quelle lettre fait le son "b" ?",opts:["D","B","P"],c:1},
-  {q:"Quelle lettre fait le son "ch" ?",opts:["C","K","S"],c:0},
-  {q:"Quelle lettre fait le son "d" ?",opts:["B","T","D"],c:2},
-  {q:"Quelle lettre fait le son "é" ?",opts:["E","A","I"],c:0},
-  {q:"Quelle lettre fait le son "f" ?",opts:["F","V","P"],c:0},
-  {q:"Quelle lettre fait le son "l" ?",opts:["R","L","N"],c:1},
-  {q:"Quelle lettre fait le son "m" ?",opts:["N","M","W"],c:1},
-  {q:"Quelle lettre fait le son "o" ?",opts:["O","U","A"],c:0},
-  {q:"Quelle lettre fait le son "s" ?",opts:["C","Z","S"],c:2},
-];
-let letCur=-1,letScore=0;
-function nextLetQuestion(){
-  letCur=Math.floor(Math.random()*letQuiz.length);
-  const q=letQuiz[letCur];
-  document.getElementById("letQ").textContent=q.q;
-  document.getElementById("letO").innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkLet(${i},${q.c})">${o}</button>`).join("");
-  document.getElementById("letStars").textContent="";
-}
-function checkLet(sel,corr){
-  document.querySelectorAll("#letO .quiz-opt").forEach((o,i)=>{o.classList.remove("correct","wrong");if(i===corr)o.classList.add("correct");if(i===sel&&i!==corr)o.classList.add("wrong")});
-  if(sel===corr){letScore++;document.getElementById("letStars").textContent="⭐".repeat(letScore)}
-  document.getElementById("letS").textContent=`Score: ${letScore}`;
-}
-nextLetQuestion();
-
-// ===== CHIFFRES =====
-const numGrid=document.getElementById("numGrid");
-for(let i=0;i<=20;i++){
-  const btn=document.createElement("button");
-  btn.className="num-btn";
-  btn.innerHTML=`${i}<span class="word">${["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf","vingt"][i]}</span>`;
-  btn.onclick=()=>{speak(String(i));btn.style.background="var(--primary)";btn.style.color="#fff";setTimeout(()=>{btn.style.background="";btn.style.color=""},1000)};
-  numGrid.appendChild(btn);
-}
-function speakNum(n){speak(String(n))}
-
-// Counting
-let countN=1;
-function nextCount(){countN++;if(countN>20)countN=1;document.getElementById("countArea").textContent=countN;speak(String(countN))}
-function resetCount(){countN=1;document.getElementById("countArea").textContent=1;speak("un")}
-
-// Combien quiz
-const combienQ=[
-  {q:"🍎🍎 Combien de pommes ?",opts:["1","2","3"],c:1},
-  {q:"⭐⭐⭐ Combien d\'étoiles ?",opts:["2","3","4"],c:1},
-  {q:"🐱🐱🐱🐱 Combien de chats ?",opts:["3","4","5"],c:1},
-  {q:"🌸 Combien de fleurs ?",opts:["0","1","2"],c:1},
-  {q:"🚗🚗🚗 Combien de voitures ?",opts:["2","3","4"],c:1},
-  {q:"🎈🎈🎈🎈🎈 Combien de ballons ?",opts:["4","5","6"],c:1},
-];
-let combienCur=-1,combienScore=0;
-function nextCombien(){
-  combienCur=Math.floor(Math.random()*combienQ.length);
-  const q=combienQ[combienCur];
-  document.getElementById("combienQ").textContent=q.q;
-  document.getElementById("combienO").innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkCombien(${i},${q.c})">${o}</button>`).join("");
-}
-function checkCombien(sel,corr){
-  document.querySelectorAll("#combienO .quiz-opt").forEach((o,i)=>{o.classList.remove("correct","wrong");if(i===corr)o.classList.add("correct");if(i===sel&&i!==corr)o.classList.add("wrong")});
-  if(sel===corr)combienScore++;
-  document.getElementById("combienS").textContent=`Score: ${combienScore}`;
-}
-nextCombien();
-
-// ===== LECTURE =====
-const motsGS=["LE","LA","UN","UNE","EST","DANS","SUR","SOUS","CHAT","CHIEN","MAISON","FLEUR","SOLEIL","LUNE","ETOILE","PAPA","MAMI","BEBE","JOUET","BALLON"];
-const wordList=document.getElementById("wordList");
-motsGS.forEach(m=>{
-  const w=document.createElement("span");
-  w.className="word";w.textContent=m;
-  w.onclick=()=>{speak(m);w.classList.add("active");setTimeout(()=>w.classList.remove("active"),1000)};
-  wordList.appendChild(w);
-});
-
-const phrasesGS=["Le chat dort.","La lune brille.","Le soleil est chaud.","Un papillon vole.","La fleur est belle.","Le chien court.","Une étoile brille.","Le bébé dort."];
-let phraseIdx=0;
-function playSentence(){
-  const words=phrasesGS[phraseIdx].split(" ");
-  let i=0;
-  const iv=setInterval(()=>{
-    document.getElementById("sentence").innerHTML=words.map((w,j)=>`<span class="word ${j<i?"done":""} ${j===i?"active":""}">${w}</span>`).join(" ");
-    if(i<words.length){speak(words[i]);i++}
-    else{clearInterval(iv);document.getElementById("sentence").innerHTML=words.map(w=>`<span class="word done">${w}</span>`).join(" ")}
-  },700);
-}
-function stopSentence(){}
-function nextSentence(){phraseIdx=(phraseIdx+1)%phrasesGS.length;document.getElementById("sentence").textContent=phrasesGS[phraseIdx]}
-
-// ===== ECRITURE =====
-const traceCanvas=document.getElementById("traceCanvas"),tctx=traceCanvas.getContext("2d");
-let tDrawing=false,tLetter="A";
-traceCanvas.addEventListener("mousedown",e=>{tDrawing=true;tDraw(e)});
-traceCanvas.addEventListener("mousemove",e=>{if(tDrawing)tDraw(e)});
-traceCanvas.addEventListener("mouseup",()=>tDrawing=false);
-traceCanvas.addEventListener("touchstart",e=>{e.preventDefault();tDrawing=true;tDraw(e.touches[0])});
-traceCanvas.addEventListener("touchmove",e=>{e.preventDefault();if(tDrawing)tDraw(e.touches[0])});
-traceCanvas.addEventListener("touchend",()=>tDrawing=false);
-function tDraw(e){const r=traceCanvas.getBoundingClientRect();tctx.beginPath();tctx.arc(e.clientX-r.left,e.clientY-r.top,4,0,Math.PI*2);tctx.fillStyle=var(--primary);tctx.fill()}
-function setTraceLetter(l){tLetter=l;tctx.clearRect(0,0,traceCanvas.width,traceCanvas.height);tctx.font="bold 120px Atkinson Hyperlegible";tctx.fillStyle="#ddd";tctx.textAlign="center";tctx.textBaseline="middle";tctx.fillText(l,200,150);speak(`Trace la lettre ${l}`)}
-function clearTrace(){tctx.clearRect(0,0,traceCanvas.width,traceCanvas.height);setTraceLetter(tLetter)}
-setTraceLetter("A");
-
-// Name canvas
-const nameCanvas=document.getElementById("nameCanvas"),nctx=nameCanvas.getContext("2d");
-let nDrawing=false;
-nameCanvas.addEventListener("mousedown",e=>{nDrawing=true;nDraw(e)});
-nameCanvas.addEventListener("mousemove",e=>{if(nDrawing)nDraw(e)});
-nameCanvas.addEventListener("mouseup",()=>nDrawing=false);
-nameCanvas.addEventListener("touchstart",e=>{e.preventDefault();nDrawing=true;nDraw(e.touches[0])});
-nameCanvas.addEventListener("touchmove",e=>{e.preventDefault();if(nDrawing)nDraw(e.touches[0])});
-nameCanvas.addEventListener("touchend",()=>nDrawing=false);
-function nDraw(e){const r=nameCanvas.getBoundingClientRect();nctx.beginPath();nctx.arc(e.clientX-r.left,e.clientY-r.top,3,0,Math.PI*2);nctx.fillStyle="#000";nctx.fill()}
-function clearName(){nctx.clearRect(0,0,nameCanvas.width,nameCanvas.height)}
-
-// ===== MATHS =====
-let addA=0,addB=0,addAns=0,addOk=0,addTot=0;
-function newAdd(){addA=Math.floor(Math.random()*5)+1;addB=Math.floor(Math.random()*5)+1;addAns=addA+addB;document.getElementById("addQ").textContent=`${addA} + ${addB} = ?`;document.getElementById("addAnswer").value="";document.getElementById("addResult").textContent=""}
-function checkAdd(){const v=parseInt(document.getElementById("addAnswer").value);addTot++;if(v===addAns){addOk++;document.getElementById("addResult").textContent="✅ Bravo !";document.getElementById("addResult").style.color="var(--success)"}else{document.getElementById("addResult").textContent=`❌ C"était ${addAns}`;document.getElementById("addResult").style.color="#d62828"}document.getElementById("addScore").textContent=`Score: ${addOk}/${addTot}`}
-newAdd();
-
-let subA=0,subB=0,subAns=0;
-function newSub(){subA=Math.floor(Math.random()*5)+3;subB=Math.floor(Math.random()*subA)+1;subAns=subA-subB;document.getElementById("subQ").textContent=`${subA} - ${subB} = ?`;document.getElementById("subAnswer").value="";document.getElementById("subResult").textContent=""}
-function checkSub(){const v=parseInt(document.getElementById("subAnswer").value);if(v===subAns){document.getElementById("subResult").textContent="✅ Bravo !";document.getElementById("subResult").style.color="var(--success)"}else{document.getElementById("subResult").textContent=`❌ C"était ${subAns}`;document.getElementById("subResult").style.color="#d62828"}}
-newSub();
-
-// ===== DESSIN =====
-const drawCanvas=document.getElementById("drawCanvas"),dctx=drawCanvas.getContext("2d");
-let dDrawing=false,dColor="#000",dSize=8;
-drawCanvas.addEventListener("mousedown",e=>{dDrawing=true;dDraw(e)});
-drawCanvas.addEventListener("mousemove",e=>{if(dDrawing)dDraw(e)});
-drawCanvas.addEventListener("mouseup",()=>dDrawing=false);
-drawCanvas.addEventListener("touchstart",e=>{e.preventDefault();dDrawing=true;dDraw(e.touches[0])});
-drawCanvas.addEventListener("touchmove",e=>{e.preventDefault();if(dDrawing)dDraw(e.touches[0])});
-drawCanvas.addEventListener("touchend",()=>dDrawing=false);
-function dDraw(e){const r=drawCanvas.getBoundingClientRect();dctx.beginPath();dctx.arc(e.clientX-r.left,e.clientY-r.top,dSize,0,Math.PI*2);dctx.fillStyle=dColor;dctx.fill()}
-function setColor(c){dColor=c;document.querySelectorAll(".cbtn").forEach(b=>b.classList.toggle("active",b.style.background===c))}
-function setBrush(s){dSize=s}
-function clearDraw(){dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height)}
-
-// Color canvas
-const colorCanvas=document.getElementById("colorCanvas"),cctx=colorCanvas.getContext("2d");
-let cDrawing=false;
-colorCanvas.addEventListener("mousedown",e=>{cDrawing=true;cDraw(e)});
-colorCanvas.addEventListener("mousemove",e=>{if(cDrawing)cDraw(e)});
-colorCanvas.addEventListener("mouseup",()=>cDrawing=false);
-colorCanvas.addEventListener("touchstart",e=>{e.preventDefault();cDrawing=true;cDraw(e.touches[0])});
-colorCanvas.addEventListener("touchmove",e=>{e.preventDefault();if(cDrawing)cDraw(e.touches[0])});
-colorCanvas.addEventListener("touchend",()=>cDrawing=false);
-function cDraw(e){const r=colorCanvas.getBoundingClientRect();cctx.beginPath();cctx.arc(e.clientX-r.left,e.clientY-r.top,dSize,0,Math.PI*2);cctx.fillStyle=dColor;cctx.fill()}
-function clearColor(){cctx.clearRect(0,0,colorCanvas.width,colorCanvas.height);drawColorTemplate()}
-function drawColorTemplate(){
-  // Draw a simple cat outline with numbered zones
-  cctx.strokeStyle="#333";cctx.lineWidth=3;
-  // Head
-  cctx.beginPath();cctx.arc(200,150,60,0,Math.PI*2);cctx.stroke();
-  // Ears
-  cctx.beginPath();cctx.moveTo(150,100);cctx.lineTo(140,50);cctx.lineTo(170,90);cctx.stroke();
-  cctx.beginPath();cctx.moveTo(250,100);cctx.lineTo(260,50);cctx.lineTo(230,90);cctx.stroke();
-  // Eyes
-  cctx.font="20px Atkinson Hyperlegible";cctx.fillStyle="#333";cctx.textAlign="center";
-  cctx.fillText("1",175,140);cctx.fillText("2",225,140);
-  // Nose
-  cctx.fillText("3",200,165);
-  // Body
-  cctx.beginPath();cctx.ellipse(200,260,70,50,0,0,Math.PI*2);cctx.stroke();
-  cctx.fillText("4",200,260);
-  // Tail
-  cctx.beginPath();cctx.moveTo(270,260);cctx.quadraticCurveTo(320,200,300,180);cctx.stroke();
-  cctx.fillText("5",300,210);
-  // Paws
-  cctx.fillText("6",160,300);cctx.fillText("7",240,300);
-  // Legend
-  cctx.font="12px Atkinson Hyperlegible";cctx.textAlign="left";
-  cctx.fillText("1=Rouge 2=Bleu 3=Vert 4=Jaune 5=Orange 6=Violet 7=Rose",20,340);
-}
-drawColorTemplate();
-
-// ===== CORPS =====
-const bodyData={
-  head:{t:"🗣️ La Tête",d:"Ta tête contient ton cerveau ! Il pense, rêve et se souvient de tout. Tu as aussi tes yeux, ton nez, ta bouche et tes oreilles sur ta tête."},
-  eyes:{t:"👁️ Les Yeux",d:"Tes yeux te permettent de voir ! Ils captent la lumière et envoient des images à ton cerveau. Tu peux voir les couleurs, les formes et les mouvements."},
-  ears:{t:"👂 Les Oreilles",d:"Tes oreilles entendent les sons ! La musique, la voix de maman, le chant des oiseaux... Tes oreilles captent les vibrations de l\'air."},
-  mouth:{t:"👄 La Bouche",d:"Ta bouche sert à manger, boire et parler ! Ta langue goûte les saveurs : sucré, salé, acide et amer. Tes dents broient la nourriture."},
-  hands:{t:"✋ Les Mains",d:"Tu as 5 doigts sur chaque main ! Tes mains permettent de tenir, toucher, dessiner et écrire. Ton pouce est très important pour attraper."},
-  feet:{t:"🦶 Les Pieds",d:"Tes pieds te permettent de marcher, courir et sauter ! Tu as 5 orteils sur chaque pied. Tes pieds sentent le sol sous tes pas."},
-  heart:{t:"❤️ Le Cœur",d:"Ton cœur est une pompe dans ta poitrine ! Il bat environ 100 fois par minute pour envoyer le sang partout dans ton corps."},
-  tummy:{t:"🫃 Le Ventre",d:"Dans ton ventre, il y a ton estomac qui digère la nourriture ! C\'est comme un mélangeur qui transforme ce que tu manges en énergie."}
-};
-function showBody(p){const d=bodyData[p];document.getElementById("bodyInfo").style.display="block";document.getElementById("bodyText").innerHTML=`<h4 style="color:var(--primary);margin-bottom:8px;font-size:1.2rem">${d.t}</h4><p style="font-size:1.1rem">${d.d}</p>`;speak(d.t+", "+d.d)}
-
-const senseData={
-  see:{t:"👁️ Voir",d:"On voit avec les yeux ! La lumière entre dans l\'œil et le cerveau comprend ce que c\'est. On peut voir les couleurs, les formes et les mouvements."},
-  hear:{t:"👂 Entendre",d:"On entend avec les oreilles ! Les sons sont des vibrations dans l\'air. L\'oreille les capte et le cerveau les comprend."},
-  touch:{t:"✋ Toucher",d:"On touche avec la peau ! Ta peau sent quand c\'est doux, rugueux, chaud ou froid. Tes doigts sont très sensibles."},
-  smell:{t:"👃 Sentir",d:"On sent avec le nez ! L\'air contient des odeurs. Ton nez les capte et ton cerveau les reconnaît : ça sent bon ou mauvais !"},
-  taste:{t:"👅 Goûter",d:"On goûte avec la langue ! Il y a 4 goûts : sucré 🍬, salé 🧂, acide 🍋 et amer. Ta langue a des papilles qui sentent les goûts."}
-};
-function showSense(s){const d=senseData[s];document.getElementById("senseInfo").style.display="block";document.getElementById("senseText").innerHTML=`<h4 style="color:var(--primary);margin-bottom:8px;font-size:1.2rem">${d.t}</h4><p style="font-size:1.1rem">${d.d}</p>`;speak(d.t+", "+d.d)}
-
-// ===== DECOUVRE =====
-const animalQ=[
-  {q:"🐱 Quel animal miaule ?",opts:["Le chien","Le chat","Le poisson"],c:1},
-  {q:"🐶 Quel animal aboie ?",opts:["Le chat","Le chien","La vache"],c:1},
-  {q:"🐟 Quel animal nage ?",opts:["L\'oiseau","Le chat","Le poisson"],c:2},
-  {q:"🐦 Quel animal vole ?",opts:["Le poisson","L\'oiseau","Le chien"],c:1},
-  {q:"🐄 Quel animal fait "meuh" ?",opts:["La vache","Le chat","Le coq"],c:0},
-  {q:"🐔 Quel animal fait "cocorico" ?",opts:["La poule","Le coq","Le canard"],c:1},
-];
-let animalCur=-1,animalScore=0;
-function nextAnimal(){
-  animalCur=Math.floor(Math.random()*animalQ.length);
-  const q=animalQ[animalCur];
-  document.getElementById("animalQ").textContent=q.q;
-  document.getElementById("animalO").innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkAnimal(${i},${q.c})">${o}</button>`).join("");
-}
-function checkAnimal(sel,corr){
-  document.querySelectorAll("#animalO .quiz-opt").forEach((o,i)=>{o.classList.remove("correct","wrong");if(i===corr)o.classList.add("correct");if(i===sel&&i!==corr)o.classList.add("wrong")});
-  if(sel===corr)animalScore++;
-  document.getElementById("animalS").textContent=`Score: ${animalScore}`;
-}
-nextAnimal();
-
-const natureQ=[
-  {q:"🌞 Qui brille dans le ciel le jour ?",opts:["La lune","Le soleil","L\'étoile"],c:1},
-  {q:"🌙 Qui brille dans le ciel la nuit ?",opts:["Le soleil","La lune","Le nuage"],c:1},
-  {q:"🌳 Qu\'est-ce qui est vert et a des feuilles ?",opts:["La fleur","L\'arbre","Le caillou"],c:1},
-  {q:"💧 Qu\'est-ce qui tombe du ciel quand il pleut ?",opts:["Du soleil","De l\'eau","Du vent"],c:1},
-  {q:"🌈 Qu\'est-ce qui apparaît après la pluie ?",opts:["L\'arc-en-ciel","La neige","Le brouillard"],c:0},
-];
-let natureCur=-1,natureScore=0;
-function nextNature(){
-  natureCur=Math.floor(Math.random()*natureQ.length);
-  const q=natureQ[natureCur];
-  document.getElementById("natureQ").textContent=q.q;
-  document.getElementById("natureO").innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkNature(${i},${q.c})">${o}</button>`).join("");
-}
-function checkNature(sel,corr){
-  document.querySelectorAll("#natureO .quiz-opt").forEach((o,i)=>{o.classList.remove("correct","wrong");if(i===corr)o.classList.add("correct");if(i===sel&&i!==corr)o.classList.add("wrong")});
-  if(sel===corr)natureScore++;
-  document.getElementById("natureS").textContent=`Score: ${natureScore}`;
-}
-nextNature();
-
-// ===== MOTRICITE =====
-function startMotor(type){
-  const c=document.getElementById("motorCanvas"),x=c.getContext("2d");
-  document.getElementById("motorArea").style.display="block";
-  document.getElementById("motorTitle").textContent={trace:"✏️ Tracer",dots:"🔵 Relier",maze:"🌀 Labyrinthe",shapes:"⭐ Formes"}[type];
-  x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
-  x.strokeStyle="#333";x.lineWidth=3;
-  if(type==="trace"){
-    x.strokeStyle="#ddd";x.lineWidth=8;x.setLineDash([10,10]);
-    x.beginPath();x.moveTo(50,175);x.bezierCurveTo(150,50,250,300,350,175);x.stroke();
-    x.setLineDash([]);x.strokeStyle=var(--primary);x.lineWidth=4;
-    x.font="14px Atkinson Hyperlegible";x.fillStyle="#666";x.fillText("Suis la ligne !",150,340);
-  } else if(type==="dots"){
-    x.fillStyle="#333";
-    const pts=[[80,80],[160,50],[240,80],[320,50],[320,250],[240,290],[160,250],[80,290]];
-    pts.forEach((p,i)=>{x.beginPath();x.arc(p[0],p[1],6,0,Math.PI*2);x.fill();x.font="16px Atkinson Hyperlegible";x.fillText(i+1,p[0]-5,p[1]-12)});
-  } else if(type==="maze"){
-    x.strokeRect(40,40,320,270);
-    x.beginPath();x.moveTo(120,40);x.lineTo(120,200);x.stroke();
-    x.beginPath();x.moveTo(200,110);x.lineTo(200,310);x.stroke();
-    x.beginPath();x.moveTo(280,40);x.lineTo(280,200);x.stroke();
-    x.fillStyle="#38b000";x.beginPath();x.arc(60,60,10,0,Math.PI*2);x.fill();
-    x.fillStyle="#d62828";x.beginPath();x.arc(340,290,10,0,Math.PI*2);x.fill();
-    x.font="12px Atkinson Hyperlegible";x.fillStyle="#333";x.textAlign="center";
-    x.fillText("🟢",50,30);x.fillText("🔴",350,320);
-  } else if(type==="shapes"){
-    x.font="14px Atkinson Hyperlegible";x.fillStyle="#666";x.textAlign="center";
-    x.fillText("Dessine ces formes !",200,30);
-    // Circle
-    x.strokeStyle="#ddd";x.setLineDash([5,5]);x.beginPath();x.arc(100,120,40,0,Math.PI*2);x.stroke();
-    x.fillStyle="#333";x.fillText("Cercle",100,180);
-    // Square
-    x.strokeRect(160,80,80,80);x.fillText("Carré",200,180);
-    // Triangle
-    x.beginPath();x.moveTo(300,160);x.lineTo(260,80);x.lineTo(340,80);x.closePath();x.stroke();
-    x.fillText("Triangle",300,180);
-    // Star
-    x.setLineDash([]);
-    x.font="12px Atkinson Hyperlegible";
-    x.fillText("⭐ Étoile",100,280);x.fillText("♥️ Cœur",200,280);x.fillText("🏠 Maison",300,280);
-  }
-  let mD=false;
-  c.onmousedown=e=>{mD=true;mDraw(e,c,x)};
-  c.onmousemove=e=>{if(mD)mDraw(e,c,x)};
-  c.onmouseup=()=>mD=false;
-  c.ontouchstart=e=>{e.preventDefault();mD=true;mDraw(e.touches[0],c,x)};
-  c.ontouchmove=e=>{e.preventDefault();if(mD)mDraw(e.touches[0],c,x)};
-  c.ontouchend=()=>mD=false;
-}
-function mDraw(e,c,x){const r=c.getBoundingClientRect();x.beginPath();x.arc(e.clientX-r.left,e.clientY-r.top,3,0,Math.PI*2);x.fillStyle=var(--primary);x.fill()}
-
-// ===== MEMORY =====
-const memEmojis=["🐱","🐶","🐸","🦋","🌸","⭐","🌙","🍎"];
-let memCards=[],memFlipped=[],memMatched=[],memLocked=false;
-function initMemory(){
-  const grid=document.getElementById("memoryGrid");
-  memCards=[...memEmojis,...memEmojis].sort(()=>Math.random()-0.5);
-  memFlipped=[];memMatched=[];memLocked=false;
-  grid.innerHTML="";
-  memCards.forEach((emoji,i)=>{
-    const card=document.createElement("button");
-    card.style.cssText="padding:16px;font-size:2rem;border:3px solid #f0d0f0;border-radius:14px;background:#fff;cursor:pointer;transition:0.3s";
-    card.textContent="❓";
-    card.dataset.idx=i;
-    card.onclick=()=>flipCard(i,card,emoji);
-    grid.appendChild(card);
-  });
-}
-function flipCard(idx,card,emoji){
-  if(memLocked||memFlipped.includes(idx)||memMatched.includes(idx))return;
-  card.textContent=emoji;card.style.background="var(--primary)";card.style.color="#fff";
-  memFlipped.push(idx);
-  if(memFlipped.length===2){
-    memLocked=true;
-    const [a,b]=memFlipped;
-    if(memCards[a]===memCards[b]){
-      memMatched.push(a,b);
-      memFlipped=[];memLocked=false;
-      if(memMatched.length===memCards.length)speak("Bravo ! Tu as tout trouvé !");
-    } else {
-      setTimeout(()=>{
-        document.querySelector(`[data-idx="${a}"]`).textContent="❓";
-        document.querySelector(`[data-idx="${a}"]`).style.background="#fff";
-        document.querySelector(`[data-idx="${b}"]`).textContent="❓";
-        document.querySelector(`[data-idx="${b}"]`).style.background="#fff";
-        memFlipped=[];memLocked=false;
-      },1000);
-    }
-  }
-}
-initMemory();
-
-// ===== QUIZ =====
-const easyQuiz=[
-  {q:"De quelle couleur est le ciel ?",opts:["Rouge","Bleu","Vert"],c:1},
-  {q:"Combien de jours dans une semaine ?",opts:["5","7","10"],c:1},
-  {q:"Quel animal a une longue trompe ?",opts:["Le lion","L\'éléphant","Le zèbre"],c:1},
-  {q:"Quelle saison fait froid ?",opts:["L\'été","Le printemps","L\'hiver"],c:2},
-  {q:"Combien de pattes a une araignée ?",opts:["4","6","8"],c:2},
-  {q:"Qu\'est-ce qui est rond et orange ?",opts:["La pomme","La carotte","L\'orange"],c:2},
-];
-let quizCur=-1,quizScore=0;
-function nextQuiz(){
-  quizCur=Math.floor(Math.random()*easyQuiz.length);
-  const q=easyQuiz[quizCur];
-  document.getElementById("quizQ").textContent=q.q;
-  document.getElementById("quizO").innerHTML=q.opts.map((o,i)=>`<button class="quiz-opt" onclick="checkQuiz(${i},${q.c})">${o}</button>`).join("");
-  document.getElementById("quizStars").textContent="";
-}
-function checkQuiz(sel,corr){
-  document.querySelectorAll("#quizO .quiz-opt").forEach((o,i)=>{o.classList.remove("correct","wrong");if(i===corr)o.classList.add("correct");if(i===sel&&i!==corr)o.classList.add("wrong")});
-  if(sel===corr){quizScore++;document.getElementById("quizStars").textContent="⭐".repeat(quizScore)}
-  document.getElementById("quizS").textContent=`Score: ${quizScore}`;
-}
-nextQuiz();</script>
+// ACTIVITÉS - Désactivé pour debug
+function speak(txt) { console.log("speak: " + txt); }
+function playNote(n) { console.log("note: " + n); }
+function nextLetQuestion() { console.log("nextLetQuestion"); }
+function checkLet() { console.log("checkLet"); }
+function speakLetter(l) { console.log("speakLetter: " + l); }
+function speakNum(n) { console.log("speakNum: " + n); }
+function nextCount() { console.log("nextCount"); }
+function resetCount() { console.log("resetCount"); }
+function nextCombien() { console.log("nextCombien"); }
+function checkCombien() { console.log("checkCombien"); }
+function playSentence() { console.log("playSentence"); }
+function stopSentence() { console.log("stopSentence"); }
+function nextSentence() { console.log("nextSentence"); }
+function setTraceLetter(l) { console.log("setTraceLetter: " + l); }
+function clearTrace() { console.log("clearTrace"); }
+function clearName() { console.log("clearName"); }
+function newAdd() { console.log("newAdd"); }
+function checkAdd() { console.log("checkAdd"); }
+function newSub() { console.log("newSub"); }
+function checkSub() { console.log("checkSub"); }
+function setColor(c) { console.log("setColor: " + c); }
+function setBrush(s) { console.log("setBrush: " + s); }
+function clearDraw() { console.log("clearDraw"); }
+function clearColor() { console.log("clearColor"); }
+function showBody(p) { console.log("showBody: " + p); }
+function showSense(s) { console.log("showSense: " + s); }
+function nextAnimal() { console.log("nextAnimal"); }
+function checkAnimal() { console.log("checkAnimal"); }
+function nextNature() { console.log("nextNature"); }
+function checkNature() { console.log("checkNature"); }
+function startMotor(t) { console.log("startMotor: " + t); }
+function initMemory() { console.log("initMemory"); }
+function nextQuiz() { console.log("nextQuiz"); }
+function checkQuiz() { console.log("checkQuiz"); }
+function setupVoice() {}
+</script>
 </body>
 </html>
