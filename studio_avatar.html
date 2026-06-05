@@ -15,8 +15,17 @@ header h1{font-size:22px;color:var(--accent)}
 
 /* Preview */
 .preview-box{background:var(--card);border-radius:20px;padding:20px;margin-bottom:16px;text-align:center}
-#avatarCanvas{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:100%;height:auto}
+#avatarCanvas{border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.4);max-width:100%;height:auto;cursor:crosshair}
 .preview-label{font-size:18px;font-weight:bold;color:var(--accent);margin-top:10px}
+
+/* Onglets principaux */
+.main-tabs{display:flex;gap:8px;margin-bottom:16px;justify-content:center}
+.main-tab{padding:12px 20px;border:2px solid rgba(255,255,255,0.15);border-radius:20px;background:var(--card);color:#fff;font-size:14px;font-weight:bold;cursor:pointer}
+.main-tab.sel{border-color:var(--accent);background:rgba(255,215,0,0.15);color:var(--accent)}
+
+/* Sections */
+.section{display:none}
+.section.show{display:block}
 
 /* Input */
 .input-row{display:flex;gap:8px;margin-bottom:12px}
@@ -24,7 +33,33 @@ header h1{font-size:22px;color:var(--accent)}
 .input-row input:focus{border-color:var(--accent)}
 .input-row button{padding:12px 18px;border:none;border-radius:10px;background:var(--accent);color:#000;font-size:14px;font-weight:bold;cursor:pointer}
 
-/* Sections */
+/* Upload zone */
+.upload-zone{border:3px dashed rgba(255,255,255,0.2);border-radius:16px;padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;background:rgba(255,255,255,0.02)}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(255,215,0,0.05)}
+.upload-zone .upload-icon{font-size:48px;margin-bottom:8px}
+.upload-zone .upload-text{font-size:16px;color:#fff;margin-bottom:4px}
+.upload-zone .upload-hint{font-size:12px;opacity:0.5}
+.upload-zone input[type=file]{display:none}
+
+/* URL input */
+.url-row{display:flex;gap:8px;margin-bottom:12px}
+.url-row input{flex:1;padding:12px;border:2px solid rgba(255,255,255,0.15);border-radius:10px;background:var(--card);color:#fff;font-size:14px;outline:none}
+.url-row input:focus{border-color:var(--accent)}
+.url-row button{padding:12px 16px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:13px;font-weight:bold;cursor:pointer}
+
+/* Crop overlay */
+.crop-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.crop-overlay.show{display:flex}
+.crop-title{color:var(--accent);font-size:18px;font-weight:bold;margin-bottom:12px;text-align:center}
+.crop-canvas-wrap{position:relative;margin-bottom:12px;max-width:100%}
+#cropCanvas{display:block;max-width:100%;max-height:50vh;border-radius:8px;cursor:move}
+.crop-hint{font-size:12px;opacity:0.6;margin-bottom:12px;text-align:center;color:#fff}
+.crop-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.crop-btn{padding:12px 24px;border:none;border-radius:20px;font-size:14px;font-weight:bold;cursor:pointer;color:#fff}
+.crop-ok{background:linear-gradient(135deg,var(--green),#27ae60)}
+.crop-cancel{background:linear-gradient(135deg,var(--red),#c0392b)}
+
+/* Sec titles */
 .sec-title{font-size:14px;font-weight:bold;color:var(--accent);margin:14px 0 8px}
 
 /* Colors */
@@ -64,24 +99,57 @@ header h1{font-size:22px;color:var(--accent)}
 </header>
 <div class="container">
 
+  <!-- PRÉVISUALISATION -->
   <div class="preview-box">
     <canvas id="avatarCanvas" width="250" height="280"></canvas>
     <div class="preview-label" id="prevLabel">Ton avatar</div>
   </div>
 
-  <div class="sec-title">📝 Nom</div>
-  <div class="input-row">
-    <input type="text" id="nameInput" placeholder="Ton nom..." maxlength="15" oninput="draw()">
-    <button onclick="draw()">OK</button>
+  <!-- ONGLETS PRINCIPAUX -->
+  <div class="main-tabs">
+    <div class="main-tab sel" data-mtab="create" onclick="switchMainTab('create')">✨ Créer</div>
+    <div class="main-tab" data-mtab="upload" onclick="switchMainTab('upload')">📷 Photo</div>
   </div>
 
-  <div class="sec-title">🎨 Fond</div>
-  <div class="color-row" id="bgColors"></div>
+  <!-- SECTION CRÉER (pixel art) -->
+  <div class="section show" id="secCreate">
+    <div class="sec-title">📝 Nom</div>
+    <div class="input-row">
+      <input type="text" id="nameInput" placeholder="Ton nom..." maxlength="15" oninput="draw()">
+      <button onclick="draw()">OK</button>
+    </div>
+    <div class="sec-title">🎨 Fond</div>
+    <div class="color-row" id="bgColors"></div>
+    <div class="sec-title">👤 Personnaliser</div>
+    <div class="cat-tabs" id="catTabs"></div>
+    <div class="parts-grid" id="partsGrid"></div>
+  </div>
 
-  <div class="sec-title">👤 Personnaliser</div>
-  <div class="cat-tabs" id="catTabs"></div>
-  <div class="parts-grid" id="partsGrid"></div>
+  <!-- SECTION UPLOAD PHOTO -->
+  <div class="section" id="secUpload">
+    <div class="sec-title">📱 Depuis ton appareil</div>
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">Appuie pour choisir une photo</div>
+      <div class="upload-hint">ou glisse-dépose une image ici</div>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)">
+    </div>
 
+    <div class="sec-title">🌐 Depuis une URL</div>
+    <div class="url-row">
+      <input type="text" id="urlInput" placeholder="Colle l'URL d'une image...">
+      <button onclick="loadFromURL()">Charger</button>
+    </div>
+
+    <div class="sec-title">📋 Coller une image</div>
+    <div class="upload-zone" onclick="pasteFromClipboard()" style="padding:16px">
+      <div class="upload-icon" style="font-size:32px">📋</div>
+      <div class="upload-text" style="font-size:14px">Appuie pour coller depuis le presse-papiers</div>
+      <div class="upload-hint">(Ctrl+V ou Cmd+V)</div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
   <div class="actions">
     <button class="act-btn btn-rand" onclick="randomAll()">🎲 Aléatoire</button>
     <button class="act-btn btn-voice" onclick="speakAvatar()">🔊 Parler</button>
@@ -89,18 +157,31 @@ header h1{font-size:22px;color:var(--accent)}
     <button class="act-btn btn-save" onclick="saveAvatar()">✅ Sauver</button>
   </div>
 </div>
+
+<!-- CROP OVERLAY -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-title">✂️ Recadre ton image</div>
+  <div class="crop-canvas-wrap">
+    <canvas id="cropCanvas" width="300" height="300"></canvas>
+  </div>
+  <div class="crop-hint">Déplace l'image pour la recadrer · Le carré montre la zone finale</div>
+  <div class="crop-btns">
+    <button class="crop-btn crop-ok" onclick="applyCrop()">✅ Utiliser</button>
+    <button class="crop-btn crop-cancel" onclick="cancelCrop()">❌ Annuler</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== CANVAS PRINCIPAL =====
 var C=document.getElementById('avatarCanvas');
 var X=C.getContext('2d');
 var W=250,H=280;
-
-var BGCOLS=['#4488ff','#ff69b4','#2ecc71','#e74c3c','#9b59b6','#ffd700','#1abc9c','#e67e22','#0f0f23','#ffffff','#ff9a9e','#a8edea'];
 var bgCol='#4488ff';
+var BGCOLS=['#4488ff','#ff69b4','#2ecc71','#e74c3c','#9b59b6','#ffd700','#1abc9c','#e67e22','#0f0f23','#ffffff','#ff9a9e','#a8edea'];
 
-// Chaque partie a une fonction de dessin qui reçoit (ctx, cx, cy)
-// cx=125, cy=130 (centre du visage)
+// ===== PARTS DATA =====
 var PARTS={
   face:[
     {id:'round',emoji:'⭕',label:'Rond',skin:'#ffcc99',dark:'#cc9966'},
@@ -109,87 +190,293 @@ var PARTS={
     {id:'peach',emoji:'🍑',label:'Pêche',skin:'#ffe0bd',dark:'#d4a574'},
   ],
   eyes:[
-    {id:'normal',emoji:'👀',label:'Normaux'},
-    {id:'happy',emoji:'😊',label:'Heureux'},
-    {id:'sleepy',emoji:'😴',label:'Dormeur'},
-    {id:'wink',emoji:'😉',label:'Clin'},
-    {id:'big',emoji:'🤩',label:'Grands'},
-    {id:'closed',emoji:'😌',label:'Fermés'},
+    {id:'normal',emoji:'👀',label:'Normaux'},{id:'happy',emoji:'😊',label:'Heureux'},
+    {id:'sleepy',emoji:'😴',label:'Dormeur'},{id:'wink',emoji:'😉',label:'Clin'},
+    {id:'big',emoji:'🤩',label:'Grands'},{id:'closed',emoji:'😌',label:'Fermés'},
   ],
   mouth:[
-    {id:'smile',emoji:'😊',label:'Sourire'},
-    {id:'open',emoji:'😮',label:'Ouvert'},
-    {id:'flat',emoji:'😐',label:'Neutre'},
-    {id:'tongue',emoji:'😛',label:'Langue'},
+    {id:'smile',emoji:'😊',label:'Sourire'},{id:'open',emoji:'😮',label:'Ouvert'},
+    {id:'flat',emoji:'😐',label:'Neutre'},{id:'tongue',emoji:'😛',label:'Langue'},
     {id:'sad',emoji:'😢',label:'Triste'},
   ],
   hair:[
-    {id:'none',emoji:'🥚',label:'Chauve'},
-    {id:'short',emoji:'💇',label:'Court'},
-    {id:'long',emoji:'💇‍♀️',label:'Long'},
-    {id:'spiky',emoji:'🦔',label:'Hérissé'},
+    {id:'none',emoji:'🥚',label:'Chauve'},{id:'short',emoji:'💇',label:'Court'},
+    {id:'long',emoji:'💇‍♀️',label:'Long'},{id:'spiky',emoji:'🦔',label:'Hérissé'},
     {id:'curly',emoji:'🌀',label:'Bouclé'},
   ],
   hat:[
-    {id:'none',emoji:'❌',label:'Aucun'},
-    {id:'cap',emoji:'🧢',label:'Casquette'},
-    {id:'crown',emoji:'👑',label:'Couronne'},
-    {id:'tophat',emoji:'🎩',label:'Haut-de-forme'},
-    {id:'wizard',emoji:'🧙',label:'Magicien'},
-    {id:'party',emoji:'🥳',label:'Fête'},
+    {id:'none',emoji:'❌',label:'Aucun'},{id:'cap',emoji:'🧢',label:'Casquette'},
+    {id:'crown',emoji:'👑',label:'Couronne'},{id:'tophat',emoji:'🎩',label:'Haut-de-forme'},
+    {id:'wizard',emoji:'🧙',label:'Magicien'},{id:'party',emoji:'🥳',label:'Fête'},
   ],
   extra:[
-    {id:'none',emoji:'❌',label:'Aucun'},
-    {id:'glasses',emoji:'👓',label:'Lunettes'},
-    {id:'sunglasses',emoji:'😎',label:'Soleil'},
-    {id:'blush',emoji:'😊',label:'Joues'},
-    {id:'beard',emoji:'🧔',label:'Barbe'},
-    {id:'freckles',emoji:'✨',label:'Taches'},
+    {id:'none',emoji:'❌',label:'Aucun'},{id:'glasses',emoji:'👓',label:'Lunettes'},
+    {id:'sunglasses',emoji:'😎',label:'Soleil'},{id:'blush',emoji:'😊',label:'Joues'},
+    {id:'beard',emoji:'🧔',label:'Barbe'},{id:'freckles',emoji:'✨',label:'Taches'},
   ]
 };
-
 var sel={face:'round',eyes:'normal',mouth:'smile',hair:'short',hat:'none',extra:'none'};
 var curCat='face';
+var mode='create'; // 'create' or 'upload'
+var uploadedImage=null;
 
-// ===== DESSIN =====
-function draw(){
-  var name=document.getElementById('nameInput').value.trim()||'Moi';
+// ===== CROP SYSTEM =====
+var cropCanvas,cropCtx;
+var cropImg=null;
+var cropX=0,cropY=0;
+var cropSize=300;
+var isDragging=false;
+var dragStartX=0,dragStartY=0;
+
+function initCropSystem(){
+  cropCanvas=document.getElementById('cropCanvas');
+  cropCtx=cropCanvas.getContext('2d');
   
-  // Clear
-  X.clearRect(0,0,W,H);
+  // Mouse events
+  cropCanvas.addEventListener('mousedown',function(e){startDrag(e);});
+  cropCanvas.addEventListener('mousemove',function(e){doDrag(e);});
+  cropCanvas.addEventListener('mouseup',function(){endDrag();});
+  cropCanvas.addEventListener('mouseleave',function(){endDrag();});
+  
+  // Touch events
+  cropCanvas.addEventListener('touchstart',function(e){e.preventDefault();startDrag(e.touches[0]);},{passive:false});
+  cropCanvas.addEventListener('touchmove',function(e){e.preventDefault();doDrag(e.touches[0]);},{passive:false});
+  cropCanvas.addEventListener('touchend',function(){endDrag();});
+}
+
+function startDrag(e){
+  isDragging=true;
+  var rect=cropCanvas.getBoundingClientRect();
+  dragStartX=e.clientX-cropX;
+  dragStartY=e.clientY-cropY;
+}
+
+function doDrag(e){
+  if(!isDragging)return;
+  var rect=cropCanvas.getBoundingClientRect();
+  cropX=e.clientX-dragStartX;
+  cropY=e.clientY-dragStartY;
+  drawCrop();
+}
+
+function endDrag(){
+  isDragging=false;
+}
+
+function drawCrop(){
+  if(!cropImg)return;
+  cropCtx.clearRect(0,0,300,300);
   
   // Fond
+  cropCtx.fillStyle='#1a1a2e';
+  cropCtx.fillRect(0,0,300,300);
+  
+  // Image déplaçable
+  var scale=Math.max(300/cropImg.width,300/cropImg.height)*0.8;
+  var iw=cropImg.width*scale;
+  var ih=cropImg.height*scale;
+  cropCtx.drawImage(cropImg,cropX,cropY,iw,ih);
+  
+  // Masque (assombrir l'extérieur du carré central)
+  cropCtx.fillStyle='rgba(0,0,0,0.6)';
+  cropCtx.fillRect(0,0,300,100); // haut
+  cropCtx.fillRect(0,200,300,100); // bas
+  cropCtx.fillRect(0,0,50,300); // gauche
+  cropCtx.fillRect(250,0,50,300); // droite
+  
+  // Bordure du carré central
+  cropCtx.strokeStyle='#ffd700';
+  cropCtx.lineWidth=2;
+  cropCtx.setLineDash([5,5]);
+  cropCtx.strokeRect(50,100,200,200);
+  cropCtx.setLineDash([]);
+}
+
+function openCrop(img){
+  cropImg=img;
+  cropX=0;
+  cropY=0;
+  document.getElementById('cropOverlay').classList.add('show');
+  drawCrop();
+}
+
+function applyCrop(){
+  if(!cropImg)return;
+  
+  // Calculer la zone de crop
+  var scale=Math.max(300/cropImg.width,300/crop.height)*0.8;
+  var iw=cropImg.width*scale;
+  var ih=cropImg.height*scale;
+  
+  // Source coords dans l'image originale
+  var sx=(-cropX+50)/scale;
+  var sy=(-cropY+100)/scale;
+  var sw=200/scale;
+  var sh=200/scale;
+  
+  // Créer l'image cropée
+  var tmpCanvas=document.createElement('canvas');
+  tmpCanvas.width=250;
+  tmpCanvas.height=280;
+  var tmpCtx=tmpCanvas.getContext('2d');
+  
+  // Fond
+  tmpCtx.fillStyle=bgCol;
+  tmpCtx.fillRect(0,0,250,280);
+  
+  // Image cropée centrée
+  tmpCtx.drawImage(cropImg,sx,sy,Math.min(sw,cropImg.width),Math.min(sh,cropImg.height),0,0,250,250);
+  
+  // Nom
+  var name=document.getElementById('nameInput').value.trim()||'Moi';
+  tmpCtx.fillStyle='rgba(0,0,0,0.45)';
+  tmpCtx.fillRect(0,250,250,30);
+  tmpCtx.fillStyle='#fff';
+  tmpCtx.font='bold 16px system-ui,sans-serif';
+  tmpCtx.textAlign='center';
+  tmpCtx.textBaseline='middle';
+  tmpCtx.fillText(name,125,265);
+  
+  // Charger comme image uploadée
+  var newImg=new Image();
+  newImg.onload=function(){
+    uploadedImage=newImg;
+    mode='upload';
+    drawUploaded();
+    showToast('✅ Photo appliquée !');
+    speak('Photo appliquée !');
+  };
+  newImg.src=tmpCanvas.toDataURL('image/png');
+  
+  cancelCrop();
+}
+
+function cancelCrop(){
+  document.getElementById('cropOverlay').classList.remove('show');
+  cropImg=null;
+}
+
+// ===== UPLOAD HANDLERS =====
+function handleFile(input){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  if(!file.type.startsWith('image/')){
+    showToast('⚠️ Choisis une image !');
+    return;
+  }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      openCrop(img);
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
+function loadFromURL(){
+  var url=document.getElementById('urlInput').value.trim();
+  if(!url){showToast('⚠️ Entre une URL');return;}
+  
+  showToast('⏳ Chargement...');
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){
+    openCrop(img);
+  };
+  img.onerror=function(){
+    showToast('⚠️ Impossible de charger l\'image');
+  };
+  img.src=url;
+}
+
+async function pasteFromClipboard(){
+  try{
+    var items=await navigator.clipboard.read();
+    for(var i=0;i<items.length;i++){
+      var type=items[i].types.find(function(t){return t.startsWith('image/');});
+      if(type){
+        var blob=await items[i].getType(type);
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var img=new Image();
+          img.onload=function(){openCrop(img);};
+          img.src=e.target.result;
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }
+    showToast('⚠️ Aucune image dans le presse-papiers');
+  }catch(e){
+    showToast('⚠️ Accès au presse-papiers refusé');
+  }
+}
+
+// Drag & drop
+var uploadZone=document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('dragover');});
+uploadZone.addEventListener('dragleave',function(){this.classList.remove('dragover');});
+uploadZone.addEventListener('drop',function(e){
+  e.preventDefault();
+  this.classList.remove('dragover');
+  var file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('image/')){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){openCrop(img);};
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// ===== DESSIN PIXEL ART =====
+function draw(){
+  mode='create';
+  var name=document.getElementById('nameInput').value.trim()||'Moi';
+  X.clearRect(0,0,W,H);
   X.fillStyle=bgCol;
   X.fillRect(0,0,W,H);
-  
-  // Gradient subtil
   var g=X.createRadialGradient(125,130,20,125,130,150);
   g.addColorStop(0,'rgba(255,255,255,0.12)');
   g.addColorStop(1,'rgba(0,0,0,0.08)');
   X.fillStyle=g;
   X.fillRect(0,0,W,H);
-  
   var cx=125,cy=130;
-  
-  // 1. CHEVEUX (derrière le visage)
   drawHair(cx,cy);
-  
-  // 2. VISAGE
   drawFace(cx,cy);
-  
-  // 3. YEUX
   drawEyes(cx,cy);
-  
-  // 4. BOUCHE
   drawMouth(cx,cy);
-  
-  // 5. EXTRAS (barbe, lunettes...)
   drawExtra(cx,cy);
-  
-  // 6. CHAPEAU (par-dessus tout)
   drawHat(cx,cy);
-  
-  // 7. NOM
+  drawName(name);
+  document.getElementById('prevLabel').textContent=name;
+}
+
+function drawUploaded(){
+  if(!uploadedImage)return;
+  mode='upload';
+  X.clearRect(0,0,W,H);
+  X.fillStyle=bgCol;
+  X.fillRect(0,0,W,H);
+  // Centrer l'image
+  var scale=Math.min(250/uploadedImage.width,250/uploadedImage.height);
+  var iw=uploadedImage.width*scale;
+  var ih=uploadedImage.height*scale;
+  var ix=(250-iw)/2;
+  var iy=(250-ih)/2;
+  X.drawImage(uploadedImage,ix,iy,iw,ih);
+  // Overlay pixel art par-dessus (optionnel)
+  var name=document.getElementById('nameInput').value.trim()||'Moi';
+  drawName(name);
+  document.getElementById('prevLabel').textContent=name;
+}
+
+function drawName(name){
   X.fillStyle='rgba(0,0,0,0.45)';
   X.fillRect(0,H-32,W,32);
   X.fillStyle='#fff';
@@ -197,48 +484,30 @@ function draw(){
   X.textAlign='center';
   X.textBaseline='middle';
   X.fillText(name,125,H-16);
-  
-  document.getElementById('prevLabel').textContent=name;
 }
 
 function drawFace(cx,cy){
   var p=PARTS.face.find(function(x){return x.id===sel.face;});
   if(!p)return;
   var r=50;
-  // Ombre
   X.fillStyle='rgba(0,0,0,0.1)';
-  X.beginPath();
-  X.ellipse(cx+3,cy+5,r,r*1.05,0,0,Math.PI*2);
-  X.fill();
-  // Visage
+  X.beginPath();X.ellipse(cx+3,cy+5,r,r*1.05,0,0,Math.PI*2);X.fill();
   X.fillStyle=p.skin;
-  X.beginPath();
-  X.arc(cx,cy,r,0,Math.PI*2);
-  X.fill();
-  // Contour
-  X.strokeStyle=p.dark;
-  X.lineWidth=2;
-  X.stroke();
+  X.beginPath();X.arc(cx,cy,r,0,Math.PI*2);X.fill();
+  X.strokeStyle=p.dark;X.lineWidth=2;X.stroke();
 }
 
 function drawEyes(cx,cy){
   var id=sel.eyes;
   X.fillStyle='#fff';
-  // Blanc des yeux
   if(id!=='sleepy'&&id!=='happy'&&id!=='closed'){
-    X.beginPath();
-    X.ellipse(cx-18,cy-12,10,8,0,0,Math.PI*2);
-    X.fill();
-    X.beginPath();
-    X.ellipse(cx+18,cy-12,10,8,0,0,Math.PI*2);
-    X.fill();
+    X.beginPath();X.ellipse(cx-18,cy-12,10,8,0,0,Math.PI*2);X.fill();
+    X.beginPath();X.ellipse(cx+18,cy-12,10,8,0,0,Math.PI*2);X.fill();
   }
-  // Pupilles
   X.fillStyle='#333';
   if(id==='normal'){
     X.beginPath();X.arc(cx-18,cy-12,5,0,Math.PI*2);X.fill();
     X.beginPath();X.arc(cx+18,cy-12,5,0,Math.PI*2);X.fill();
-    // Reflets
     X.fillStyle='#fff';
     X.beginPath();X.arc(cx-16,cy-14,2,0,Math.PI*2);X.fill();
     X.beginPath();X.arc(cx+20,cy-14,2,0,Math.PI*2);X.fill();
@@ -252,8 +521,7 @@ function drawEyes(cx,cy){
     X.beginPath();X.moveTo(cx+10,cy-12);X.lineTo(cx+26,cy-12);X.stroke();
   }else if(id==='wink'){
     X.beginPath();X.arc(cx-18,cy-12,5,0,Math.PI*2);X.fill();
-    X.fillStyle='#fff';
-    X.beginPath();X.arc(cx-16,cy-14,2,0,Math.PI*2);X.fill();
+    X.fillStyle='#fff';X.beginPath();X.arc(cx-16,cy-14,2,0,Math.PI*2);X.fill();
     X.strokeStyle='#333';X.lineWidth=3;X.lineCap='round';
     X.beginPath();X.arc(cx+18,cy-12,6,0.15*Math.PI,0.85*Math.PI);X.stroke();
   }else if(id==='big'){
@@ -276,22 +544,15 @@ function drawEyes(cx,cy){
 function drawMouth(cx,cy){
   var id=sel.mouth;
   X.strokeStyle='#333';X.lineWidth=3;X.lineCap='round';
-  if(id==='smile'){
-    X.beginPath();X.arc(cx,cy+18,14,0.1*Math.PI,0.9*Math.PI);X.stroke();
-  }else if(id==='open'){
-    X.fillStyle='#333';
-    X.beginPath();X.ellipse(cx,cy+20,12,10,0,0,Math.PI*2);X.fill();
-    X.fillStyle='#c0392b';
-    X.beginPath();X.ellipse(cx,cy+24,7,5,0,0,Math.PI*2);X.fill();
-  }else if(id==='flat'){
-    X.beginPath();X.moveTo(cx-14,cy+18);X.lineTo(cx+14,cy+18);X.stroke();
-  }else if(id==='tongue'){
+  if(id==='smile'){X.beginPath();X.arc(cx,cy+18,14,0.1*Math.PI,0.9*Math.PI);X.stroke();}
+  else if(id==='open'){
+    X.fillStyle='#333';X.beginPath();X.ellipse(cx,cy+20,12,10,0,0,Math.PI*2);X.fill();
+    X.fillStyle='#c0392b';X.beginPath();X.ellipse(cx,cy+24,7,5,0,0,Math.PI*2);X.fill();
+  }else if(id==='flat'){X.beginPath();X.moveTo(cx-14,cy+18);X.lineTo(cx+14,cy+18);X.stroke();}
+  else if(id==='tongue'){
     X.beginPath();X.arc(cx,cy+15,14,0.1*Math.PI,0.9*Math.PI);X.stroke();
-    X.fillStyle='#e74c3c';
-    X.beginPath();X.ellipse(cx,cy+28,7,8,0,0,Math.PI*2);X.fill();
-  }else if(id==='sad'){
-    X.beginPath();X.arc(cx,cy+28,14,1.1*Math.PI,1.9*Math.PI);X.stroke();
-  }
+    X.fillStyle='#e74c3c';X.beginPath();X.ellipse(cx,cy+28,7,8,0,0,Math.PI*2);X.fill();
+  }else if(id==='sad'){X.beginPath();X.arc(cx,cy+28,14,1.1*Math.PI,1.9*Math.PI);X.stroke();}
 }
 
 function drawHair(cx,cy){
@@ -299,125 +560,53 @@ function drawHair(cx,cy){
   if(id==='none')return;
   X.fillStyle='#4a3728';
   if(id==='short'){
-    X.beginPath();
-    X.arc(cx,cy-15,52,Math.PI,0);
-    X.lineTo(cx+52,cy+10);
-    X.lineTo(cx-52,cy+10);
-    X.closePath();
-    X.fill();
+    X.beginPath();X.arc(cx,cy-15,52,Math.PI,0);X.lineTo(cx+52,cy+10);X.lineTo(cx-52,cy+10);X.closePath();X.fill();
   }else if(id==='long'){
-    X.beginPath();
-    X.arc(cx,cy-15,55,Math.PI,0);
-    X.lineTo(cx+55,cy+60);
-    X.quadraticCurveTo(cx+55,cy+80,cx+40,cy+80);
-    X.lineTo(cx+40,cy+10);
-    X.lineTo(cx-40,cy+10);
-    X.lineTo(cx-40,cy+80);
-    X.quadraticCurveTo(cx-55,cy+80,cx-55,cy+60);
-    X.closePath();
-    X.fill();
+    X.beginPath();X.arc(cx,cy-15,55,Math.PI,0);X.lineTo(cx+55,cy+60);
+    X.quadraticCurveTo(cx+55,cy+80,cx+40,cy+80);X.lineTo(cx+40,cy+10);
+    X.lineTo(cx-40,cy+10);X.lineTo(cx-40,cy+80);
+    X.quadraticCurveTo(cx-55,cy+80,cx-55,cy+60);X.closePath();X.fill();
   }else if(id==='spiky'){
-    X.beginPath();
-    X.moveTo(cx-40,cy-20);
-    for(var i=-4;i<=4;i++){
-      X.lineTo(i*10-5,cy-20);
-      X.lineTo(i*10,cy-55);
-      X.lineTo(i*10+5,cy-20);
-    }
-    X.lineTo(cx+40,cy-20);
-    X.arc(cx,cy-15,42,Math.PI,0);
-    X.fill();
+    X.beginPath();X.moveTo(cx-40,cy-20);
+    for(var i=-4;i<=4;i++){X.lineTo(i*10-5,cy-20);X.lineTo(i*10,cy-55);X.lineTo(i*10+5,cy-20);}
+    X.lineTo(cx+40,cy-20);X.arc(cx,cy-15,42,Math.PI,0);X.fill();
   }else if(id==='curly'){
-    // Boucles
-    for(var i=-3;i<=3;i++){
-      X.beginPath();
-      X.arc(cx+i*14,cy-20+Math.abs(i)*3,18,0,Math.PI*2);
-      X.fill();
-    }
-    X.beginPath();
-    X.arc(cx,cy-10,45,Math.PI,0);
-    X.fill();
+    for(var i=-3;i<=3;i++){X.beginPath();X.arc(cx+i*14,cy-20+Math.abs(i)*3,18,0,Math.PI*2);X.fill();}
+    X.beginPath();X.arc(cx,cy-10,45,Math.PI,0);X.fill();
   }
 }
 
 function drawHat(cx,cy){
   var id=sel.hat;
   if(id==='none')return;
-  
   if(id==='cap'){
-    X.fillStyle='#e74c3c';
-    X.beginPath();
-    X.arc(cx,cy-25,55,Math.PI,0);
-    X.fill();
-    X.fillStyle='#c0392b';
-    X.fillRect(cx-20,cy-30,55,10);
-    X.fillStyle='#e74c3c';
-    X.beginPath();
-    X.arc(cx-20,cy-25,10,0,Math.PI*2);
-    X.fill();
+    X.fillStyle='#e74c3c';X.beginPath();X.arc(cx,cy-25,55,Math.PI,0);X.fill();
+    X.fillStyle='#c0392b';X.fillRect(cx-20,cy-30,55,10);
+    X.fillStyle='#e74c3c';X.beginPath();X.arc(cx-20,cy-25,10,0,Math.PI*2);X.fill();
   }else if(id==='crown'){
     X.fillStyle='#ffd700';
-    X.beginPath();
-    X.moveTo(cx-30,cy-55);
-    X.lineTo(cx-30,cy-80);
-    X.lineTo(cx-15,cy-65);
-    X.lineTo(cx,cy-85);
-    X.lineTo(cx+15,cy-65);
-    X.lineTo(cx+30,cy-80);
-    X.lineTo(cx+30,cy-55);
-    X.closePath();
-    X.fill();
-    X.strokeStyle='#daa520';
-    X.lineWidth=2;
-    X.stroke();
-    // Bijoux
-    X.fillStyle='#e74c3c';
-    X.beginPath();X.arc(cx-15,cy-60,4,0,Math.PI*2);X.fill();
-    X.fillStyle='#3498db';
-    X.beginPath();X.arc(cx,cy-65,4,0,Math.PI*2);X.fill();
-    X.fillStyle='#2ecc71';
-    X.beginPath();X.arc(cx+15,cy-60,4,0,Math.PI*2);X.fill();
+    X.beginPath();X.moveTo(cx-30,cy-55);X.lineTo(cx-30,cy-80);X.lineTo(cx-15,cy-65);
+    X.lineTo(cx,cy-85);X.lineTo(cx+15,cy-65);X.lineTo(cx+30,cy-80);X.lineTo(cx+30,cy-55);X.closePath();X.fill();
+    X.strokeStyle='#daa520';X.lineWidth=2;X.stroke();
+    X.fillStyle='#e74c3c';X.beginPath();X.arc(cx-15,cy-60,4,0,Math.PI*2);X.fill();
+    X.fillStyle='#3498db';X.beginPath();X.arc(cx,cy-65,4,0,Math.PI*2);X.fill();
+    X.fillStyle='#2ecc71';X.beginPath();X.arc(cx+15,cy-60,4,0,Math.PI*2);X.fill();
   }else if(id==='tophat'){
-    X.fillStyle='#333';
-    X.fillRect(cx-35,cy-50,70,10); // bord
-    X.fillRect(cx-25,cy-110,50,60); // haut
-    X.fillStyle='#555';
-    X.fillRect(cx-25,cy-60,50,5); // bande
+    X.fillStyle='#333';X.fillRect(cx-35,cy-50,70,10);
+    X.fillRect(cx-25,cy-110,50,60);
+    X.fillStyle='#555';X.fillRect(cx-25,cy-60,50,5);
   }else if(id==='wizard'){
     X.fillStyle='#9b59b6';
-    X.beginPath();
-    X.moveTo(cx,cy-100);
-    X.lineTo(cx-45,cy-30);
-    X.lineTo(cx+45,cy-30);
-    X.closePath();
-    X.fill();
-    X.strokeStyle='#7d3c98';
-    X.lineWidth=2;
-    X.stroke();
-    // Étoile
-    X.fillStyle='#ffd700';
-    drawStar(cx,cy-70,8);
-    // Bord
-    X.fillStyle='#7d3c98';
-    X.beginPath();
-    X.ellipse(cx,cy-30,48,10,0,0,Math.PI*2);
-    X.fill();
+    X.beginPath();X.moveTo(cx,cy-100);X.lineTo(cx-45,cy-30);X.lineTo(cx+45,cy-30);X.closePath();X.fill();
+    X.strokeStyle='#7d3c98';X.lineWidth=2;X.stroke();
+    X.fillStyle='#ffd700';drawStar(cx,cy-70,8);
+    X.fillStyle='#7d3c98';X.beginPath();X.ellipse(cx,cy-30,48,10,0,0,Math.PI*2);X.fill();
   }else if(id==='party'){
     X.fillStyle='#e91e63';
-    X.beginPath();
-    X.moveTo(cx,cy-90);
-    X.lineTo(cx-35,cy-40);
-    X.lineTo(cx+35,cy-40);
-    X.closePath();
-    X.fill();
-    // Rayures
-    X.fillStyle='#ffd700';
-    X.fillRect(cx-35,cy-55,70,6);
-    X.fillStyle='#3498db';
-    X.fillRect(cx-35,cy-45,70,6);
-    // Pompon
-    X.fillStyle='#ffd700';
-    X.beginPath();X.arc(cx,cy-90,8,0,Math.PI*2);X.fill();
+    X.beginPath();X.moveTo(cx,cy-90);X.lineTo(cx-35,cy-40);X.lineTo(cx+35,cy-40);X.closePath();X.fill();
+    X.fillStyle='#ffd700';X.fillRect(cx-35,cy-55,70,6);
+    X.fillStyle='#3498db';X.fillRect(cx-35,cy-45,70,6);
+    X.fillStyle='#ffd700';X.beginPath();X.arc(cx,cy-90,8,0,Math.PI*2);X.fill();
   }
 }
 
@@ -430,29 +619,21 @@ function drawStar(cx,cy,r){
     else X.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
     X.lineTo(cx+r*0.4*Math.cos(a2),cy+r*0.4*Math.sin(a2));
   }
-  X.closePath();
-  X.fill();
+  X.closePath();X.fill();
 }
 
 function drawExtra(cx,cy){
   var id=sel.extra;
   if(id==='none')return;
-  
   if(id==='glasses'){
     X.strokeStyle='#333';X.lineWidth=3;
     X.beginPath();X.arc(cx-18,cy-12,14,0,Math.PI*2);X.stroke();
     X.beginPath();X.arc(cx+18,cy-12,14,0,Math.PI*2);X.stroke();
     X.beginPath();X.moveTo(cx-4,cy-12);X.lineTo(cx+4,cy-12);X.stroke();
-    X.beginPath();X.moveTo(cx-32,cy-12);X.lineTo(cx-40,cy-16);X.stroke();
-    X.beginPath();X.moveTo(cx+32,cy-12);X.lineTo(cx+40,cy-16);X.stroke();
   }else if(id==='sunglasses'){
     X.fillStyle='#222';
-    X.beginPath();
-    X.ellipse(cx-18,cy-12,16,11,0,0,Math.PI*2);
-    X.fill();
-    X.beginPath();
-    X.ellipse(cx+18,cy-12,16,11,0,0,Math.PI*2);
-    X.fill();
+    X.beginPath();X.ellipse(cx-18,cy-12,16,11,0,0,Math.PI*2);X.fill();
+    X.beginPath();X.ellipse(cx+18,cy-12,16,11,0,0,Math.PI*2);X.fill();
     X.strokeStyle='#222';X.lineWidth=4;
     X.beginPath();X.moveTo(cx-2,cy-12);X.lineTo(cx+2,cy-12);X.stroke();
   }else if(id==='blush'){
@@ -461,30 +642,26 @@ function drawExtra(cx,cy){
     X.beginPath();X.ellipse(cx+32,cy+5,12,7,0,0,Math.PI*2);X.fill();
   }else if(id==='beard'){
     X.fillStyle='#4a3728';
-    X.beginPath();
-    X.moveTo(cx-35,cy+10);
-    X.quadraticCurveTo(cx-40,cy+50,cx,cy+65);
-    X.quadraticCurveTo(cx+40,cy+50,cx+35,cy+10);
-    X.closePath();
-    X.fill();
+    X.beginPath();X.moveTo(cx-35,cy+10);X.quadraticCurveTo(cx-40,cy+50,cx,cy+65);
+    X.quadraticCurveTo(cx+40,cy+50,cx+35,cy+10);X.closePath();X.fill();
   }else if(id==='freckles'){
     X.fillStyle='rgba(160,120,80,0.6)';
     var pts=[[-28,-2],[-22,3],[-33,4],[28,-2],[22,3],[33,4]];
-    for(var i=0;i<pts.length;i++){
-      X.beginPath();X.arc(cx+pts[i][0],cy+pts[i][1],2,0,Math.PI*2);X.fill();
-    }
+    for(var i=0;i<pts.length;i++){X.beginPath();X.arc(cx+pts[i][0],cy+pts[i][1],2,0,Math.PI*2);X.fill();}
   }
 }
 
 // ===== UI =====
 function init(){
+  initCropSystem();
+  
   // Couleurs fond
   var row=document.getElementById('bgColors');
   BGCOLS.forEach(function(hex){
     var b=document.createElement('div');
     b.className='color-btn'+(hex===bgCol?' sel':'');
     b.style.background=hex;
-    b.onclick=function(){bgCol=hex;updateColorUI();draw();};
+    b.onclick=function(){bgCol=hex;updateColorUI();if(mode==='create')draw();else drawUploaded();};
     row.appendChild(b);
   });
   
@@ -524,30 +701,35 @@ function renderParts(cat){
   });
 }
 
+function switchMainTab(tab){
+  document.querySelectorAll('.main-tab').forEach(function(t){t.classList.remove('sel');});
+  document.querySelector('[data-mtab="'+tab+'"]').classList.add('sel');
+  document.getElementById('secCreate').classList.toggle('show',tab==='create');
+  document.getElementById('secUpload').classList.toggle('show',tab==='upload');
+}
+
 // ===== ACTIONS =====
 function randomAll(){
-  var names=['Léana','Mathias','Élodie','Sébastien','Luna','Max','Zoé','Leo','Mia','Noah','Charlie','Jade','Lou','Emma','Hugo'];
+  var names=['Léana','Mathias','Élodie','Sébastien','Luna','Max','Zoé','Leo','Mia','Noah'];
   document.getElementById('nameInput').value=names[Math.floor(Math.random()*names.length)];
   Object.keys(PARTS).forEach(function(k){var p=PARTS[k];sel[k]=p[Math.floor(Math.random()*p.length)].id;});
   bgCol=BGCOLS[Math.floor(Math.random()*BGCOLS.length)];
   updateColorUI();
   renderParts(curCat);
   draw();
-  showToast('🎲 Avatar aléatoire !');
-  speak('Voici un avatar aléatoire !');
+  showToast('🎲 Aléatoire !');
+  speak('Avatar aléatoire !');
 }
 
 function speakAvatar(){
   var name=document.getElementById('nameInput').value.trim()||'Moi';
+  if(mode==='upload'){speak('Voici la photo de '+name);return;}
   var parts=[];
-  var labels={face:'visage',eyes:'yeux',mouth:'bouche',hair:'cheveux',hat:'chapeau',extra:'accessoire'};
   ['face','eyes','mouth','hair','hat','extra'].forEach(function(cat){
     var p=PARTS[cat].find(function(x){return x.id===sel[cat];});
-    if(p&&p.label!=='Aucun'&&p.label!=='Chauve')parts.push(labels[cat]+' '+p.label.toLowerCase());
+    if(p&&p.label!=='Aucun'&&p.label!=='Chauve')parts.push(p.label.toLowerCase());
   });
-  var desc='Voici l\'avatar de '+name+'.';
-  if(parts.length>0)desc+=' '+parts.join(', ')+'.';
-  speak(desc);
+  speak('Avatar de '+name+'. '+parts.join(', ')+'.');
 }
 
 function downloadPNG(){
@@ -556,12 +738,12 @@ function downloadPNG(){
   a.href=C.toDataURL('image/png');
   a.click();
   showToast('✅ Téléchargé !');
-  speak('Avatar téléchargé !');
+  speak('Téléchargé !');
 }
 
 function saveAvatar(){
   try{
-    localStorage.setItem('savedAvatar',JSON.stringify({name:document.getElementById('nameInput').value,sel:sel,bg:bgCol}));
+    localStorage.setItem('savedAvatar',JSON.stringify({name:document.getElementById('nameInput').value,sel:sel,bg:bgCol,mode:mode}));
     showToast('✅ Sauvegardé !');
     speak('Sauvegardé !');
   }catch(e){showToast('⚠️ Erreur');}
