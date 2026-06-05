@@ -14,9 +14,8 @@ header h1{font-size:22px;color:var(--accent)}
 .container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:120px}
 
 /* Preview */
-.preview-box{background:var(--card);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.preview-box img{max-width:180px;max-height:180px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
-.preview-placeholder{font-size:64px;margin-bottom:8px}
+.preview-box{background:var(--card);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#avatarCanvas{border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3);image-rendering:pixelated;max-width:100%}
 .preview-label{font-size:18px;font-weight:bold;color:var(--accent);margin-top:12px}
 .preview-sub{font-size:13px;opacity:0.6;margin-top:4px}
 
@@ -27,22 +26,31 @@ header h1{font-size:22px;color:var(--accent)}
 .input-row button{padding:14px 20px;border:none;border-radius:12px;background:var(--accent);color:#000;font-size:14px;font-weight:bold;cursor:pointer}
 .input-row button:active{transform:scale(0.95)}
 
+/* Sections */
+.sec-title{font-size:16px;font:bold;color:var(--accent);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+
 /* Colors */
-.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;justify-content:center}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .color-btn{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s}
 .color-btn:active{transform:scale(0.9)}
 .color-btn.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,0.4)}
 
-/* Styles */
-.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
-.style-card{padding:8px;border:2px solid rgba(255,255,255,0.1);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;transition:all 0.2s}
-.style-card:active{transform:scale(0.95)}
-.style-card.sel{border-color:var(--accent);background:rgba(255,215,0,0.1)}
-.style-card img{width:48px;height:48px;border-radius:8px;background:#fff}
-.style-card .sn{font-size:10px;margin-top:4px;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Parts */
+.parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;margin-bottom:12px}
+.part-btn{padding:10px 6px;border:2px solid rgba(255,255,255,0.1);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;transition:all 0.2s}
+.part-btn:active{transform:scale(0.95)}
+.part-btn.sel{border-color:var(--blue);background:rgba(52,152,219,0.15)}
+.part-btn .pe{font-size:28px}
+.part-btn .pl{font-size:10px;opacity:0.6;margin-top:2px}
+
+/* Cat tabs */
+.cat-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.cat-tab{padding:8px 14px;border:2px solid rgba(255,255,255,0.1);border-radius:16px;background:var(--card);color:#fff;font-size:13px;font-weight:bold;cursor:pointer;transition:all 0.2s}
+.cat-tab:active{transform:scale(0.95)}
+.cat-tab.sel{border-color:var(--blue);background:rgba(52,152,219,0.15);color:var(--blue)}
 
 /* Actions */
-.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
 .act-btn{padding:14px 22px;border:none;border-radius:25px;font-size:15px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s}
 .act-btn:active{transform:scale(0.95)}
 .btn-rand{background:linear-gradient(135deg,var(--purple),#8e44ad)}
@@ -51,8 +59,13 @@ header h1{font-size:22px;color:var(--accent)}
 .btn-save{background:linear-gradient(135deg,var(--green),#27ae60)}
 
 /* Toast */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:2px solid var(--accent);color:#fff;padding:12px 24px;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
-.toast.show{opacity:1}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a2e;border:2px solid var(--accent);color:#fff;padding:12px 24px;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Mic indicator */
+.mic-indicator{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--red);margin-right:6px;animation:pulse 1s infinite}
+.mic-indicator.active{background:var(--green)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 </style>
 </head>
 <body>
@@ -63,188 +76,310 @@ header h1{font-size:22px;color:var(--accent)}
 <div class="container">
 
   <!-- PRÉVISUALISATION -->
-  <div class="preview-box" id="previewBox">
-    <div class="preview-placeholder" id="prevPh">👤</div>
-    <img id="prevImg" style="display:none" alt="Avatar">
-    <div class="preview-label" id="prevLabel">Entre ton nom !</div>
-    <div class="preview-sub" id="prevSub">Choisis un style et une couleur</div>
+  <div class="preview-box">
+    <canvas id="avatarCanvas" width="200" height="200"></canvas>
+    <div class="preview-label" id="prevLabel">Ton avatar</div>
+    <div class="preview-sub" id="prevSub">Personnalise-le !</div>
   </div>
 
   <!-- NOM -->
+  <div class="sec-title">📝 Ton nom</div>
   <div class="input-row">
-    <input type="text" id="nameInput" placeholder="Ton nom (ex: Léana, Mathias...)" oninput="debouncedUpdate()">
-    <button onclick="generate()">✨ Générer</button>
+    <input type="text" id="nameInput" placeholder="Entre ton nom..." maxlength="20">
+    <button onclick="draw()">🎨 Dessiner</button>
   </div>
 
-  <!-- COULEURS -->
-  <div class="color-row" id="colorRow"></div>
+  <!-- COULEUR DE FOND -->
+  <div class="sec-title">🎨 Couleur de fond</div>
+  <div class="color-row" id="bgColors"></div>
 
-  <!-- STYLES -->
-  <div class="style-grid" id="styleGrid"></div>
+  <!-- PARTIES -->
+  <div class="sec-title">👤 Personnaliser</div>
+  <div class="cat-tabs" id="catTabs"></div>
+  <div class="parts-grid" id="partsGrid"></div>
 
   <!-- ACTIONS -->
   <div class="actions">
     <button class="act-btn btn-rand" onclick="randomAll()">🎲 Aléatoire</button>
-    <button class="act-btn btn-voice" onclick="describe()">🔊 Décrire</button>
+    <button class="act-btn btn-voice" onclick="speakAvatar()"><span class="mic-indicator" id="micInd"></span>🔊 Parler</button>
     <button class="act-btn btn-dl" onclick="downloadPNG()">💾 Télécharger</button>
-    <button class="act-btn btn-save" onclick="saveIt()">✅ Sauvegarder</button>
+    <button class="act-btn btn-save" onclick="saveAvatar()">✅ Sauver</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== DATA =====
-var STYLES=[
-  'pixel-art','adventurer','bottts','fun-emoji','open-peeps','notionists',
-  'avataaars','big-ears','big-smile','croodles','lorelei','micah','miniavs',
-  'personas','thumbs','identicon','initials','rings','shapes','triangles',
-  'glass','glyphs','icons','initial-face','stripes','disco','dylan',
-  'adventurer-neutral','avataaars-neutral','big-ears-neutral','bottts-neutral',
-  'croodles-neutral','lorelei-neutral','notionists-neutral','pixel-art-neutral','toon-head'
-];
-var COLORS=[
-  {hex:'ffd700',label:'Or'},{hex:'ff69b4',label:'Rose'},{hex:'4488ff',label:'Bleu'},
-  {hex:'2ecc71',label:'Vert'},{hex:'e74c3c',label:'Rouge'},{hex:'9b59b6',label:'Violet'},
-  {hex:'1abc9c',label:'Turquoise'},{hex:'e67e22',label:'Orange'},{hex:'ffffff',label:'Blanc'},
-  {'hex':'333333',label:'Noir'},{hex:'f39c12',label:'Ambre'},{hex:'1a1a2e',label:'Nuit'}
-];
-var curStyle='pixel-art';
-var curColor='ffd700';
-var curName='';
-var debounceTimer=null;
+// ===== CONFIG =====
+var W=200,H=200;
+var canvas,ctx;
+
+// Palette de couleurs
+var BGCOLORS=['#ffd700','#ff69b4','#4488ff','#2ecc71','#e74c3c','#9b59b6','#1abc9c','#e67e22','#ffffff','#333333','#f39c12','#0f0f23','#ff9a9e','#a8edea','#fed6e3','#d299c2'];
+
+// Parties de l'avatar (dessinées au pixel art)
+var PARTS={
+  face:[
+    {id:'round',emoji:'⭕',label:'Rond',color:'#ffcc99',
+     draw:function(c,x,y,s){c.fillStyle=this.color;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.strokeStyle='#cc9966';c.lineWidth=2;c.stroke();}},
+    {id:'square',emoji:'⬜',label:'Carré',color:'#ffcc99',
+     draw:function(c,x,y,s){c.fillStyle=this.color;c.fillRect(x-s,y-s,s*2,s*2);c.strokeStyle='#cc9966';c.lineWidth=2;c.strokeRect(x-s,y-s,s*2,s*2);}},
+    {id:'tan',emoji:'🟡',label:'Bronzé',color:'#d4a574',
+     draw:function(c,x,y,s){c.fillStyle=this.color;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.strokeStyle='#a07850';c.lineWidth=2;c.stroke();}},
+    {id:'dark',emoji:'🟤',label:'Foncé',color:'#8d6e4c',
+     draw:function(c,x,y,s){c.fillStyle=this.color;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.strokeStyle='#5a4030';c.lineWidth=2;c.stroke();}},
+  ],
+  eyes:[
+    {id:'normal',emoji:'👀',label:'Normaux',
+     draw:function(c,x,y){c.fillStyle='#333';c.beginPath();c.arc(x-18,y-10,6,0,Math.PI*2);c.arc(x+18,y-10,6,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(x-16,y-12,2,0,Math.PI*2);c.arc(x+20,y-12,2,0,Math.PI*2);c.fill();}},
+    {id:'happy',emoji:'😊',label:'Heureux',
+     draw:function(c,x,y){c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.arc(x-18,y-10,6,0.2*Math.PI,0.8*M.PI);c.stroke();c.beginPath();c.arc(x+18,y-10,6,0.2*Math.PI,0.8*M.PI);c.stroke();}},
+    {id:'sleepy',emoji:'😴',label:'Dormeur',
+     draw:function(c,x,y){c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.moveTo(x-24,y-10);c.lineTo(x-12,y-10);c.stroke();c.beginPath();c.moveTo(x+12,y-10);c.lineTo(x+24,y-10);c.stroke();}},
+    {id:'wink',emoji:'😉',label:'Clin',
+     draw:function(c,x,y){c.fillStyle='#333';c.beginPath();c.arc(x-18,y-10,6,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(x-16,y-12,2,0,Math.PI*2);c.fill();c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.arc(x+18,y-10,6,0.2*Math.PI,0.8*M.PI);c.stroke();}},
+    {id:'big',emoji:'🤩',label:'Grands',
+     draw:function(c,x,y){c.fillStyle='#333';c.beginPath();c.arc(x-18,y-10,9,0,Math.PI*2);c.arc(x+18,y-10,9,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.beginPath();c.arc(x-15,y-13,3,0,Math.PI*2);c.arc(x+21,y-13,3,0,Math.PI*2);c.fill();}},
+  ],
+  mouth:[
+    {id:'smile',emoji:'😊',label:'Sourire',
+     draw:function(c,x,y){c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.arc(x,y+15,12,0.1*Math.PI,0.9*Math.PI);c.stroke();}},
+    {id:'open',emoji:'😮',label:'Ouvert',
+     draw:function(c,x,y){c.fillStyle='#333';c.beginPath();c.ellipse(x,y+15,10,8,0,0,Math.PI*2);c.fill();c.fillStyle='#e74c3c';c.beginPath();c.ellipse(x,y+18,6,4,0,0,Math.PI*2);c.fill();}},
+    {id:'flat',emoji:'😐',label:'Neutre',
+     draw:function(c,x,y){c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.moveTo(x-12,y+15);c.lineTo(x+12,y+15);c.stroke();}},
+    {id:'tongue',emoji:'😛',label:'Langue',
+     draw:function(c,x,y){c.strokeStyle='#333';c.lineWidth=3;c.beginPath();c.arc(x,y+12,12,0.1*Math.PI,0.9*Math.PI);c.stroke();c.fillStyle='#e74c3c';c.beginPath();c.ellipse(x,y+22,5,6,0,0,Math.PI*2);c.fill();}},
+  ],
+  hair:[
+    {id:'none',emoji:'🥚',label:'Chauve',
+     draw:function(c,x,y){}},
+    {id:'short',emoji:'💇',label:'Court',color:'#4a3728',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-35,42,Math.PI,0);c.fill();}},
+    {id:'long',emoji:'💇‍♀️',label:'Long',color:'#4a3728',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-35,45,Math.PI,0);c.fill();c.fillRect(x-45,y-35,90,50);}},
+    {id:'spiky',emoji:'🦔',label:'Hérissé',color:'#4a3728',
+     draw:function(c,x,y){c.fillStyle=this.color;for(var i=-3;i<=3;i++){c.beginPath();c.moveTo(i*12-6,y-50);c.lineTo(i*12,y-80);c.lineTo(i*12+6,y-50);c.fill();}}},
+    {id:'blond',emoji:'👱',label:'Blond',color:'#f0c040',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-35,42,Math.PI,0);c.fill();}},
+    {id:'red',emoji:'👨‍🦰',label:'Roux',color:'#c0392b',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-35,42,Math.PI,0);c.fill();}},
+    {id:'blue',emoji:'💙',label:'Bleu',color:'#3498db',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-35,42,Math.PI,0);c.fill();}},
+  ],
+  hat:[
+    {id:'none',emoji:'❌',label:'Aucun',
+     draw:function(c,x,y){}},
+    {id:'cap',emoji:'🧢',label:'Casquette',color:'#e74c3c',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y-45,48,Math.PI,0);c.fill();c.fillRect(x-20,y-50,50,8);}},
+    {id:'crown',emoji:'👑',label:'Couronne',color:'#ffd700',
+     draw:function(c,x,y){c.fillStyle=this.color;c.fillRect(x-25,y-70,50,25);c.fillRect(x-25,y-70,8,35);c.fillRect(x-8,y-75,8,40);c.fillRect(x+2,y-70,8,35);c.fillRect(x+18,y-65,8,30);c.fillStyle='#e74c3c';c.beginPath();c.arc(x-13,y-55,4,0,Math.PI*2);c.fill();}},
+    {id:'tophat',emoji:'🎩',label:'Haut-de-forme',color:'#333',
+     draw:function(c,x,y){c.fillStyle=this.color;c.fillRect(x-30,y-90,60,50);c.fillRect(x-40,y-45,80,10);}},
+    {id:'wizard',emoji:'🧙',label:'Magicien',color:'#9b59b6',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.moveTo(x,y-90);c.lineTo(x-40,y-30);c.lineTo(x+40,y-30);c.closePath();c.fill();c.fillStyle='#ffd700';c.beginPath();c.arc(x,y-50,4,0,Math.PI*2);c.fill();}},
+  ],
+  extra:[
+    {id:'none',emoji:'❌',label:'Aucun',
+     draw:function(c,x,y){}},
+    {id:'glasses',emoji:'👓',label:'Lunettes',color:'#333',
+     draw:function(c,x,y){c.strokeStyle=this.color;c.lineWidth=3;c.beginPath();c.arc(x-18,y-10,12,0,Math.PI*2);c.stroke();c.beginPath();c.arc(x+18,y-10,12,0,Math.PI*2);c.stroke();c.beginPath();c.moveTo(x-6,y-10);c.lineTo(x+6,y-10);c.stroke();}},
+    {id:'sunglasses',emoji:'😎',label:'Soleil',color:'#333',
+     draw:function(c,x,y){c.fillStyle=this.color;c.fillRect(x-30,y-18,22,14);c.fillRect(x+8,y-18,22,14);c.fillRect(x-8,y-14,16,4);}},
+    {id:'blush',emoji:'😊',label:'Joues roses',
+     draw:function(c,x,y){c.fillStyle='rgba(255,150,150,0.5)';c.beginPath();c.ellipse(x-30,y+5,10,6,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(x+30,y+5,10,6,0,0,Math.PI*2);c.fill();}},
+    {id:'beard',emoji:'🧔',label:'Barbe',color:'#4a3728',
+     draw:function(c,x,y){c.fillStyle=this.color;c.beginPath();c.arc(x,y+20,25,0.2*Math.PI,0.8*Math.PI);c.fill();}},
+    {id:'freckles',emoji:'✨',label:'Taches',
+     draw:function(c,x,y){c.fillStyle='#a07850';c.beginPath();c.arc(x-25,y-2,2,0,Math.PI*2);c.arc(x-20,y+3,2,0,Math.PI*2);c.arc(x+25,y-2,2,0,Math.PI*2);c.arc(x+20,y+3,2,0,Math.PI*2);c.fill();}},
+  ]
+};
+
+var curCat='face';
+var selections={face:'round',eyes:'normal',mouth:'smile',hair:'short',hat:'none',extra:'none'};
+var bgColor='#4488ff';
 
 // ===== INIT =====
 function init(){
-  // Couleurs
-  var row=document.getElementById('colorRow');
-  for(var i=0;i<COLORS.length;i++){
-    var c=COLORS[i];
+  canvas=document.getElementById('avatarCanvas');
+  ctx=canvas.getContext('2d');
+  
+  // Couleurs fond
+  var row=document.getElementById('bgColors');
+  for(var i=0;i<BGCOLORS.length;i++){
+    var hex=BGCOLORS[i];
     var b=document.createElement('div');
-    b.className='color-btn'+(c.hex===curColor?' sel':'');
-    b.style.background='#'+c.hex;
-    b.title=c.label;
-    (function(hex){b.onclick=function(){setColor(hex);};})(c.hex);
+    b.className='color-btn'+(hex===bgColor?' sel':'');
+    b.style.background=hex;
+    (function(h){b.onclick=function(){setBgColor(h);};})(hex);
     row.appendChild(b);
   }
-  // Styles
-  renderStyles();
-  // Charger sauvegarde
-  loadSaved();
-  // Générer premier avatar
-  document.getElementById('nameInput').value='Famille';
-  generate();
+  
+  // Catégories
+  var cats=document.getElementById('catTabs');
+  var catList=[
+    {id:'face',label:'😊 Visage'},
+    {id:'eyes',label:'👀 Yeux'},
+    {id:'mouth',label:'👄 Bouche'},
+    {id:'hair',label:'💇 Cheveux'},
+    {id:'hat',label:'🎩 Chapeau'},
+    {id:'extra',label:'✨ Extra'}
+  ];
+  for(var i=0;i<catList.length;i++){
+    var ct=catList[i];
+    var btn=document.createElement('div');
+    btn.className='cat-tab'+(ct.id===curCat?' sel':'');
+    btn.textContent=ct.label;
+    (function(id){btn.onclick=function(){switchCat(id);};})(ct.id);
+    cats.appendChild(btn);
+  }
+  
+  renderParts('face');
+  draw();
 }
 
-function renderStyles(){
-  var grid=document.getElementById('styleGrid');
+function switchCat(id){
+  curCat=id;
+  document.querySelectorAll('.cat-tab').forEach(function(t){t.classList.remove('sel');});
+  event.target.classList.add('sel');
+  renderParts(id);
+}
+
+function renderParts(cat){
+  var grid=document.getElementById('partsGrid');
   grid.innerHTML='';
-  for(var i=0;i<STYLES.length;i++){
-    var s=STYLES[i];
-    var card=document.createElement('div');
-    card.className='style-card'+(s===curStyle?' sel':'');
-    card.innerHTML='<img src="https://api.dicebear.com/9.x/'+s+'/svg?seed=ok&size=48&backgroundColor='+curColor+'" loading="lazy"><div class="sn">'+s+'</div>';
-    (function(style){card.onclick=function(){setStyle(style);};})(s);
-    grid.appendChild(card);
+  var parts=PARTS[cat]||[];
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i];
+    var btn=document.createElement('div');
+    btn.className='part-btn'+(p.id===selections[cat]?' sel':'');
+    btn.innerHTML='<div class="pe">'+p.emoji+'</div><div class="pl">'+p.label+'</div>';
+    (function(part){btn.onclick=function(){selectPart(cat,part);};})(p);
+    grid.appendChild(btn);
   }
+}
+
+function selectPart(cat,part){
+  selections[cat]=part.id;
+  document.querySelectorAll('#partsGrid .part-btn').forEach(function(b){b.classList.remove('sel');});
+  event.currentTarget.classList.add('sel');
+  draw();
+}
+
+function setBgColor(hex){
+  bgColor=hex;
+  document.querySelectorAll('#bgColors .color-btn').forEach(function(b){b.classList.remove('sel');});
+  event.target.classList.add('sel');
+  draw();
+}
+
+// ===== DESSIN =====
+function draw(){
+  var name=document.getElementById('nameInput').value.trim()||'Moi';
+  
+  // Clear
+  ctx.fillStyle=bgColor;
+  ctx.fillRect(0,0,W,H);
+  
+  // Fond décoratif (gradient subtil)
+  var grad=ctx.createRadialGradient(W/2,H/2,10,W/2,H/2,120);
+  grad.addColorStop(0,'rgba(255,255,255,0.15)');
+  grad.addColorStop(1,'rgba(0,0,0,0.1)');
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,W,H);
+  
+  var cx=W/2,cy=H/2+10,size=55;
+  
+  // Dessiner chaque partie dans l'ordre
+  var order=['face','hair','eyes','mouth','extra','hat'];
+  for(var i=0;i<order.length;i++){
+    var cat=order[i];
+    var partId=selections[cat];
+    var parts=PARTS[cat];
+    for(var j=0;j<parts.length;j++){
+      if(parts[j].id===partId){
+        parts[j].draw(ctx,cx,cy,size);
+        break;
+      }
+    }
+  }
+  
+  // Nom en bas
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.fillRect(0,H-28,W,28);
+  ctx.fillStyle='#fff';
+  ctx.font='bold 14px Atkinson Hyperlegible, system-ui, sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(name,W/2,H-14);
+  
+  document.getElementById('prevLabel').textContent=name;
+  document.getElementById('prevSub').textContent='Fond: '+bgColor;
 }
 
 // ===== ACTIONS =====
-function setColor(hex){
-  curColor=hex;
-  document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('sel');});
-  event.target.classList.add('sel');
-  renderStyles();
-  generate();
-}
-
-function setStyle(style){
-  curStyle=style;
-  document.querySelectorAll('.style-card').forEach(function(c){c.classList.remove('sel');});
-  event.currentTarget.classList.add('sel');
-  generate();
-}
-
-function generate(){
-  var name=document.getElementById('nameInput').value.trim()||'Avatar';
-  curName=name;
-  var url='https://api.dicebear.com/9.x/'+curStyle+'/svg?seed='+encodeURIComponent(name)+'&backgroundColor='+curColor+'&size=256';
-  
-  var ph=document.getElementById('prevPh');
-  var img=document.getElementById('prevImg');
-  img.src=url;
-  img.style.display='block';
-  ph.style.display='none';
-  img.onload=function(){
-    document.getElementById('prevLabel').textContent=name;
-    document.getElementById('prevSub').textContent='Style: '+curStyle+' | Couleur: #'+curColor;
-  };
-  img.onerror=function(){
-    showToast('⚠️ Erreur de chargement — réessaie');
-  };
-}
-
-function debouncedUpdate(){
-  clearTimeout(debounceTimer);
-  debounceTimer=setTimeout(function(){generate();},500);
-}
-
 function randomAll(){
   var names=['Léana','Mathias','Élodie','Sébastien','Luna','Max','Zoé','Leo','Mia','Noah','Charlie','Jade','Lou','Emma','Hugo'];
-  var name=names[Math.floor(Math.random()*names.length)];
-  document.getElementById('nameInput').value=name;
-  curStyle=STYLES[Math.floor(Math.random()*STYLES.length)];
-  curColor=COLORS[Math.floor(Math.random()*COLORS.length)].hex;
-  document.querySelectorAll('.color-btn').forEach(function(b){b.classList.toggle('sel',b.style.background==='#'+curColor);});
-  renderStyles();
-  generate();
-  speak('Voici un avatar aléatoire pour '+name+' !');
+  document.getElementById('nameInput').value=names[Math.floor(Math.random()*names.length)];
+  
+  var cats=Object.keys(PARTS);
+  for(var i=0;i<cats.length;i++){
+    var parts=PARTS[cats[i]];
+    selections[cats[i]]=parts[Math.floor(Math.random()*parts.length)].id;
+  }
+  bgColor=BGCOLORS[Math.floor(Math.random()*BGCOLORS.length)];
+  
+  // Update UI
+  document.querySelectorAll('#bgColors .color-btn').forEach(function(b){b.classList.toggle('sel',b.style.background===bgColor);});
+  renderParts(curCat);
+  draw();
+  
+  showToast('🎲 Avatar aléatoire !');
+  speak('Voici un avatar aléatoire !');
 }
 
-function describe(){
-  if(!curName){showToast('⚠️ Entre d\'abord un nom');return;}
-  var styleFr={
-    'pixel-art':'pixel art','adventurer':'aventurier','bottts':'robot',
-    'fun-emoji':'emoji','open-peeps':'personnage','notionists':'notion',
-    'avataaars':'avatar','big-ears':'grandes oreilles','big-smile':'grand sourire',
-    'croodles':'croodles','lorelei':'lorelei','micah':'micah','miniavs':'mini-avatars',
-    'personas':'personas','thumbs':'pouces','identicon':'identicon','initials':'initiales'
-  };
-  var s=styleFr[curStyle]||curStyle;
-  speak('Voici l\'avatar de '+name+' dans le style '+s+'. Appuie sur télécharger pour sauvegarder.');
+function speakAvatar(){
+  var name=document.getElementById('nameInput').value.trim()||'Moi';
+  var catLabels={face:'visage',eyes:'yeux',mouth:'bouche',hair:'cheveux',hat:'chapeau',extra:'accessoire'};
+  var parts=[];
+  var order=['face','eyes','mouth','hair','hat','extra'];
+  for(var i=0;i<order.length;i++){
+    var cat=order[i];
+    var partId=selections[cat];
+    var pList=PARTS[cat];
+    for(var j=0;j<pList.length;j++){
+      if(pList[j].id===partId&&pList[j].label!=='Aucun'&&pList[j].label!=='Chauve'){
+        parts.push(pList[j].label);
+        break;
+      }
+    }
+  }
+  var desc='Voici l\'avatar de '+name+'. ';
+  if(parts.length>0)desc+=catLabels[curCat]+' : '+parts.join(', ')+'.';
+  speak(desc);
 }
 
 function downloadPNG(){
-  var img=document.getElementById('prevImg');
-  if(!img.src||img.style.display==='none'){showToast('⚠️ Génère d\'abord un avatar');return;}
-  
-  // Convertir SVG en PNG via canvas
-  var canvas=document.createElement('canvas');
-  canvas.width=512;canvas.height=512;
-  var ctx=canvas.getContext('2d');
-  var tmp=new Image();
-  tmp.crossOrigin='anonymous';
-  tmp.onload=function(){
-    ctx.drawImage(tmp,0,0,512,512);
-    var a=document.createElement('a');
-    a.download='avatar-'+curName.replace(/\s+/g,'-')+'.png';
-    a.href=canvas.toDataURL('image/png');
-    a.click();
-    showToast('✅ Avatar téléchargé !');
-    speak('Avatar téléchargé !');
-  };
-  tmp.src=img.src;
+  var link=document.createElement('a');
+  link.download='avatar-'+document.getElementById('nameInput').value.trim().replace(/\s+/g,'-')+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+  showToast('✅ Avatar téléchargé !');
+  speak('Avatar téléchargé !');
 }
 
-function saveIt(){
-  if(!curName){showToast('⚠️ Entre d\'abord un nom');return;}
-  var data={name:curName,style:curStyle,color:curColor};
+function saveAvatar(){
+  var data={
+    name:document.getElementById('nameInput').value,
+    selections:JSON.parse(JSON.stringify(selections)),
+    bgColor:bgColor
+  };
   try{
     localStorage.setItem('savedAvatar',JSON.stringify(data));
     showToast('✅ Sauvegardé !');
     speak('Avatar sauvegardé !');
   }catch(e){
-    showToast('⚠️ Impossible de sauvegarder');
+    showToast('⚠️ Erreur de sauvegarde');
   }
 }
 
@@ -253,8 +388,8 @@ function loadSaved(){
     var d=JSON.parse(localStorage.getItem('savedAvatar'));
     if(d){
       document.getElementById('nameInput').value=d.name||'';
-      curStyle=d.style||'pixel-art';
-      curColor=d.color||'ffd700';
+      if(d.selections)selections=Object.assign(selections,d.selections);
+      if(d.bgColor)bgColor=d.bgColor;
     }
   }catch(e){}
 }
@@ -277,6 +412,7 @@ function showToast(msg){
 }
 
 // ===== START =====
+loadSaved();
 init();
 </script>
 </body>
