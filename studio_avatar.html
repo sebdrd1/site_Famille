@@ -6,167 +6,96 @@
 <title>Studio Avatar — Famille</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#0f0f23;--card:rgba(255,255,255,0.06);--text:#e8e8f0;
-  --accent:#ffd700;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;
-  --red:#e74c3c;--orange:#e67e22;--teal:#1abc9c;--pink:#ff69b4;
-}
-body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;touch-action:manipulation;overflow-x:hidden}
+:root{--bg:#0f0f23;--card:rgba(255,255,255,0.06);--text:#e8e8f0;--accent:#ffd700;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;--red:#e74c3c;--orange:#e67e22;--pink:#ff69b4}
+body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;touch-action:manipulation}
 header{background:linear-gradient(135deg,#1a1a3e,#2d1b69);padding:16px;text-align:center;position:sticky;top:0;z-index:100}
-header h1{font-size:22px;color:var(--accent);text-shadow:0 2px 4px rgba(0,0,0,0.5)}
-header p{font-size:12px;opacity:0.7;margin-top:4px}
+header h1{font-size:22px;color:var(--accent)}
 .back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
-.container{padding:16px;max-width:900px;margin:0 auto;padding-bottom:120px}
+.container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:120px}
 
-/* ===== ONGLETS ===== */
-.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
-.tab{padding:10px 18px;border:2px solid rgba(255,255,255,0.15);border-radius:20px;background:var(--card);color:#fff;font-size:14px;font-weight:bold;cursor:pointer;transition:all 0.2s}
-.tab:active{transform:scale(0.95)}
-.tab.active{border-color:var(--accent);background:rgba(255,215,0,0.15);color:var(--accent)}
+/* Preview */
+.preview-box{background:var(--card);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.preview-box img{max-width:180px;max-height:180px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.preview-placeholder{font-size:64px;margin-bottom:8px}
+.preview-label{font-size:18px;font-weight:bold;color:var(--accent);margin-top:12px}
+.preview-sub{font-size:13px;opacity:0.6;margin-top:4px}
 
-/* ===== PRÉVISUALISATION ===== */
-.preview-area{background:var(--card);border-radius:20px;padding:24px;margin-bottom:16px;text-align:center;position:relative;min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.preview-canvas{border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);background:#1a1a2e;max-width:100%}
-.preview-emoji{font-size:80px;margin-bottom:12px}
-.preview-name{font-size:18px;font:bold;color:var(--accent);margin-top:12px}
-.preview-style{font-size:14px;opacity:0.6}
+/* Input */
+.input-row{display:flex;gap:8px;margin-bottom:12px}
+.input-row input{flex:1;padding:14px;border:2px solid rgba(255,255,255,0.15);border-radius:12px;background:var(--card);color:#fff;font-size:16px;outline:none}
+.input-row input:focus{border-color:var(--accent)}
+.input-row button{padding:14px 20px;border:none;border-radius:12px;background:var(--accent);color:#000;font-size:14px;font-weight:bold;cursor:pointer}
+.input-row button:active{transform:scale(0.95)}
 
-/* ===== DICEBEAR SECTION ===== */
-.dicebear-section{display:none}
-.dicebear-section.show{display:block}
-.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:16px}
-.style-item{padding:12px 8px;border:2px solid rgba(255,255,255,0.1);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;transition:all 0.2s}
-.style-item:active{transform:scale(0.95)}
-.style-item.selected{border-color:var(--accent);background:rgba(255,215,0,0.1)}
-.style-item img{width:48px;height:48px;border-radius:8px}
-.style-item .style-name{font-size:11px;margin-top:6px;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seed-input{width:100%;padding:14px;border:2px solid rgba(255,255,255,0.15);border-radius:12px;background:var(--card);color:#fff;font-size:16px;margin-bottom:12px;outline:none}
-.seed-input:focus{border-color:var(--accent)}
-.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;justify-content:center}
-.color-btn{width:36px;height:36px;border-radius:50%;border:3px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s}
+/* Colors */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;justify-content:center}
+.color-btn{width:40px;height:40px;border-radius:50%;border:3px solid rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s}
 .color-btn:active{transform:scale(0.9)}
-.color-btn.selected{border-color:#fff;box-shadow:0 0 10px rgba(255,255,255,0.3)}
+.color-btn.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,0.4)}
 
-/* ===== FABRIC EDITOR SECTION ===== */
-.fabric-section{display:none}
-.fabric-section.show{display:block}
-.editor-wrap{background:var(--card);border-radius:16px;padding:16px;margin-bottom:16px}
-.editor-canvas-wrap{background:#111;border-radius:12px;overflow:hidden;text-align:center;padding:8px}
-#fabricCanvas{display:block;margin:0 auto;border-radius:8px}
-.parts-categories{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
-.part-cat{padding:8px 14px;border:2px solid rgba(255,255,255,0.1);border-radius:16px;background:var(--card);color:#fff;font-size:13px;cursor:pointer;transition:all 0.2s}
-.part-cat:active{transform:scale(0.95)}
-.part-cat.active{border-color:var(--blue);background:rgba(52,152,219,0.15)}
-.parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;max-height:200px;overflow-y:auto;padding:8px;background:rgba(0,0,0,0.2);border-radius:12px}
-.part-item{padding:8px;border:2px solid rgba(255,255,255,0.08);border-radius:10px;background:var(--card);text-align:center;cursor:pointer;transition:all 0.2s}
-.part-item:active{transform:scale(0.9)}
-.part-item:hover{border-color:var(--blue)}
-.part-item .part-emoji{font-size:28px}
-.part-item .part-label{font-size:10px;opacity:0.6;margin-top:2px}
+/* Styles */
+.style-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-bottom:16px}
+.style-card{padding:8px;border:2px solid rgba(255,255,255,0.1);border-radius:12px;background:var(--card);text-align:center;cursor:pointer;transition:all 0.2s}
+.style-card:active{transform:scale(0.95)}
+.style-card.sel{border-color:var(--accent);background:rgba(255,215,0,0.1)}
+.style-card img{width:48px;height:48px;border-radius:8px;background:#fff}
+.style-card .sn{font-size:10px;margin-top:4px;opacity:0.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ===== BOUTONS ACTION ===== */
-.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:16px}
-.action-btn{padding:14px 24px;border:none;border-radius:25px;font-size:16px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s;display:flex;align-items:center;gap:8px}
-.action-btn:active{transform:scale(0.95)}
-.btn-save{background:linear-gradient(135deg,var(--green),#27ae60)}
-.btn-random{background:linear-gradient(135deg,var(--purple),#8e44ad)}
-.btn-download{background:linear-gradient(135deg,var(--blue),#2980b9)}
-.btn-upload{background:linear-gradient(135deg,var(--orange),#d35400)}
+/* Actions */
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.act-btn{padding:14px 22px;border:none;border-radius:25px;font-size:15px;font-weight:bold;cursor:pointer;color:#fff;transition:all 0.2s}
+.act-btn:active{transform:scale(0.95)}
+.btn-rand{background:linear-gradient(135deg,var(--purple),#8e44ad)}
 .btn-voice{background:linear-gradient(135deg,var(--pink),#e91e63)}
+.btn-dl{background:linear-gradient(135deg,var(--blue),#2980b9)}
+.btn-save{background:linear-gradient(135deg,var(--green),#27ae60)}
 
-/* ===== MODAL ===== */
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center}
-.modal.show{display:flex}
-.modal-content{background:var(--bg);border-radius:20px;padding:24px;max-width:90%;max-height:90%;overflow:auto;text-align:center}
-.modal-content h3{color:var(--accent);margin-bottom:16px;font-size:20px}
-.modal-content img{max-width:100%;border-radius:12px;margin-bottom:16px}
-.modal-close{padding:10px 24px;border:none;border-radius:20px;background:var(--red);color:#fff;font-size:14px;cursor:pointer;margin-top:8px}
-
-/* ===== TOOLTIP ===== */
-.tooltip{position:relative}
-.tooltip::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding:4px 8px;background:#333;color:#fff;font-size:11px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.2s}
-.tooltip:hover::after{opacity:1}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:600px){
-  .style-grid{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}
-  .parts-grid{grid-template-columns:repeat(auto-fill,minmax(52px,1fr))}
-  .action-btn{padding:12px 18px;font-size:14px}
-}
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);border:2px solid var(--accent);color:#fff;padding:12px 24px;border-radius:20px;font-size:14px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 <header>
   <button class="back-btn" onclick="window.location.href='index.html'">← Retour</button>
   <h1>🎨 Studio Avatar</h1>
-  <p>Crée ton avatar unique !</p>
 </header>
 <div class="container">
 
-  <!-- ONGLETS -->
-  <div class="tabs">
-    <div class="tab active" data-tab="dicebear" onclick="switchTab('dicebear')">✨ Auto (DiceBear)</div>
-    <div class="tab" data-tab="fabric" onclick="switchTab('fabric')">🎨 Éditeur</div>
-  </div>
-
   <!-- PRÉVISUALISATION -->
-  <div class="preview-area" id="previewArea">
-    <div id="previewContent">
-      <div class="preview-emoji" id="previewEmoji">👤</div>
-      <canvas id="previewCanvas" class="preview-canvas" width="256" height="256" style="display:none"></canvas>
-      <div class="preview-name" id="previewName">Ton avatar apparaîtra ici</div>
-      <div class="preview-style" id="previewStyle">Choisis un style et entre ton nom</div>
-    </div>
+  <div class="preview-box" id="previewBox">
+    <div class="preview-placeholder" id="prevPh">👤</div>
+    <img id="prevImg" style="display:none" alt="Avatar">
+    <div class="preview-label" id="prevLabel">Entre ton nom !</div>
+    <div class="preview-sub" id="prevSub">Choisis un style et une couleur</div>
   </div>
 
-  <!-- SECTION DICEBEAR -->
-  <div class="dicebear-section show" id="dicebearSection">
-    <input type="text" class="seed-input" id="seedInput" placeholder="Entre ton nom (ex: Léana, Mathias...)" oninput="updateDiceBear()">
-    <div class="color-row" id="colorRow">
-      <div class="color-btn selected" style="background:#ffd700" data-color="ffd700" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#ff69b4" data-color="ff69b4" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#4488ff" data-color="4488ff" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#2ecc71" data-color="2ecc71" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#e74c3c" data-color="e74c3c" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#9b59b6" data-color="9b59b6" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#1abc9c" data-color="1abc9c" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#e67e22" data-color="e67e22" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#ffffff" data-color="ffffff" onclick="selectColor(this)"></div>
-      <div class="color-btn" style="background:#333333" data-color="333333" onclick="selectColor(this)"></div>
-    </div>
-    <div class="style-grid" id="styleGrid"></div>
+  <!-- NOM -->
+  <div class="input-row">
+    <input type="text" id="nameInput" placeholder="Ton nom (ex: Léana, Mathias...)" oninput="debouncedUpdate()">
+    <button onclick="generate()">✨ Générer</button>
   </div>
 
-  <!-- SECTION FABRIC EDITOR -->
-  <div class="fabric-section" id="fabricSection">
-    <div class="editor-wrap">
-      <div class="parts-categories" id="partsCategories"></div>
-      <div class="parts-grid" id="partsGrid"></div>
-    </div>
-    <div class="editor-canvas-wrap">
-      <canvas id="fabricCanvas" width="300" height="300"></canvas>
-    </div>
-  </div>
+  <!-- COULEURS -->
+  <div class="color-row" id="colorRow"></div>
+
+  <!-- STYLES -->
+  <div class="style-grid" id="styleGrid"></div>
 
   <!-- ACTIONS -->
   <div class="actions">
-    <button class="action-btn btn-random" onclick="randomAvatar()">🎲 Aléatoire</button>
-    <button class="action-btn btn-voice" onclick="speakAvatar()">🔊 Décrire</button>
-    <button class="action-btn btn-download" onclick="downloadPNG()">💾 Télécharger PNG</button>
-    <button class="action-btn btn-save" onclick="saveAvatar()">✅ Sauvegarder</button>
+    <button class="act-btn btn-rand" onclick="randomAll()">🎲 Aléatoire</button>
+    <button class="act-btn btn-voice" onclick="describe()">🔊 Décrire</button>
+    <button class="act-btn btn-dl" onclick="downloadPNG()">💾 Télécharger</button>
+    <button class="act-btn btn-save" onclick="saveIt()">✅ Sauvegarder</button>
   </div>
 </div>
 
-<!-- MODAL -->
-<div class="modal" id="modal">
-  <div class="modal-content" id="modalContent"></div>
-</div>
+<div class="toast" id="toast"></div>
 
-<!-- Fabric.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script>
-// ===== CONFIG =====
-var DICEBEAR_STYLES=[
+// ===== DATA =====
+var STYLES=[
   'pixel-art','adventurer','bottts','fun-emoji','open-peeps','notionists',
   'avataaars','big-ears','big-smile','croodles','lorelei','micah','miniavs',
   'personas','thumbs','identicon','initials','rings','shapes','triangles',
@@ -174,365 +103,181 @@ var DICEBEAR_STYLES=[
   'adventurer-neutral','avataaars-neutral','big-ears-neutral','bottts-neutral',
   'croodles-neutral','lorelei-neutral','notionists-neutral','pixel-art-neutral','toon-head'
 ];
-var currentStyle='pixel-art';
-var currentColor='ffd700';
-var currentSeed='';
-var fabricCanvas=null;
-var currentPartCategory='face';
-
-// ===== PARTS DATA =====
-var PARTS={
-  face:[
-    {emoji:'😊',label:'Heureux',draw:function(ctx,x,y,s){drawFace(ctx,x,y,s,'#ffcc99','😊')}},
-    {emoji:'😎',label:'Cool',draw:function(ctx,x,y,s){drawFace(ctx,x,y,s,'#ffcc99','😎')}},
-    {emoji:'🤩',label:'Étoilé',draw:function(ctx,x,y,s,'#ffcc99','🤩')}},
-    {emoji:'😁',label:'Sourire',draw:function(ctx,x,y,s,'#ffcc99','😁')}},
-    {emoji:'🥳',label:'Fête',draw:function(ctx,x,y,s,'#ffcc99','🥳')}},
-    {emoji:'😴',label:'Dodo',draw:function(ctx,x,y,s,'#ffcc99','😴')}},
-    {emoji:'🤗',label:'Câlin',draw:function(ctx,x,y,s,'#ffcc99','🤗')}},
-    {emoji:'😋',label:'Miam',draw:function(ctx,x,y,s,'#ffcc99','😋')}},
-  ],
-  eyes:[
-    {emoji:'👀',label:'Normaux',draw:null},
-    {emoji:'😎',label:'Lunettes',draw:null},
-    {emoji:'🤓',label:'Intello',draw:null},
-    {emoji:'😉',label:'Clin',draw:null},
-    {emoji:'🥽',label:'Masque',draw:null},
-  ],
-  hair:[
-    {emoji:'💇‍♂️',label:'Court',draw:null},
-    {emoji:'💇‍♀️',label:'Long',draw:null},
-    {emoji:'👨‍🦲',label:'Chauve',draw:null},
-    {emoji:'👨‍🦰',label:'Roux',draw:null},
-    {emoji:'👱',label:'Blond',draw:null},
-    {emoji:'🧔',label:'Barbu',draw:null},
-  ],
-  hat:[
-    {emoji:'🎩',label:'Haut-de-forme',draw:null},
-    {emoji:'👑',label:'Couronne',draw:null},
-    {emoji:'🧢',label:'Casquette',draw:null},
-    {emoji:'⛑️',label:'Casque',draw:null},
-    {emoji:'🎓',label:'Diplôme',draw:null},
-    {emoji:'🪖',label:'Militaire',draw:null},
-    {emoji:'👒',label:'Chapeau',draw:null},
-    {emoji:'🧙',label:'Magicien',draw:null},
-  ],
-  accessory:[
-    {emoji:'⭐',label:'Étoile',draw:null},
-    {emoji:'❤️',label:'Cœur',draw:null},
-    {emoji:'🌈',label:'Arc-en-ciel',draw:null},
-    {emoji:'🔥',label:'Feu',draw:null},
-    {emoji:'💎',label:'Diamant',draw:null},
-    {emoji:'🌸',label:'Fleur',draw:null},
-    {emoji:'🦋',label:'Papillon',draw:null},
-    {emoji:'🎵',label:'Musique',draw:null},
-  ],
-  bg:[
-    {emoji:'🔵',label:'Bleu',color:'#4488ff'},
-    {emoji:'🟢',label:'Vert',color:'#2ecc71'},
-    {emoji:'🔴',label:'Rouge',color:'#e74c3c'},
-    {emoji:'🟡',label:'Jaune',color:'#ffd700'},
-    {emoji:'🟣',label:'Violet',color:'#9b59b6'},
-    {emoji:'🟠',label:'Orange',color:'#e67e22'},
-    {emoji:'⬛',label:'Noir',color:'#333333'},
-    {emoji:'⬜',label:'Blanc',color:'#ffffff'},
-    {emoji:'🌈',label:'Arc-en-ciel',color:'linear-gradient(135deg,#e74c3c,#ffd700,#2ecc71,#4488ff,#9b59b6)'},
-    {emoji:'🌌',label:'Espace',color:'#0f0f23'},
-  ]
-};
+var COLORS=[
+  {hex:'ffd700',label:'Or'},{hex:'ff69b4',label:'Rose'},{hex:'4488ff',label:'Bleu'},
+  {hex:'2ecc71',label:'Vert'},{hex:'e74c3c',label:'Rouge'},{hex:'9b59b6',label:'Violet'},
+  {hex:'1abc9c',label:'Turquoise'},{hex:'e67e22',label:'Orange'},{hex:'ffffff',label:'Blanc'},
+  {'hex':'333333',label:'Noir'},{hex:'f39c12',label:'Ambre'},{hex:'1a1a2e',label:'Nuit'}
+];
+var curStyle='pixel-art';
+var curColor='ffd700';
+var curName='';
+var debounceTimer=null;
 
 // ===== INIT =====
 function init(){
-  renderStyleGrid();
-  renderPartsCategories();
-  renderParts('face');
-  initFabricCanvas();
-  updateDiceBear();
+  // Couleurs
+  var row=document.getElementById('colorRow');
+  for(var i=0;i<COLORS.length;i++){
+    var c=COLORS[i];
+    var b=document.createElement('div');
+    b.className='color-btn'+(c.hex===curColor?' sel':'');
+    b.style.background='#'+c.hex;
+    b.title=c.label;
+    (function(hex){b.onclick=function(){setColor(hex);};})(c.hex);
+    row.appendChild(b);
+  }
+  // Styles
+  renderStyles();
+  // Charger sauvegarde
+  loadSaved();
+  // Générer premier avatar
+  document.getElementById('nameInput').value='Famille';
+  generate();
 }
 
-// ===== ONGLETS =====
-function switchTab(tab){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
-  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
-  document.getElementById('dicebearSection').classList.toggle('show',tab==='dicebear');
-  document.getElementById('fabricSection').classList.toggle('show',tab==='fabric');
-  if(tab==='fabric'&&fabricCanvas){fabricCanvas.renderAll();}
-}
-
-// ===== DICEBEAR =====
-function renderStyleGrid(){
+function renderStyles(){
   var grid=document.getElementById('styleGrid');
   grid.innerHTML='';
-  for(var i=0;i<DICEBEAR_STYLES.length;i++){
-    var s=DICEBEAR_STYLES[i];
-    var item=document.createElement('div');
-    item.className='style-item'+(s===currentStyle?' selected':'');
-    item.innerHTML='<img src="https://api.dicebear.com/9.x/'+s+'/svg?seed=preview&size=48&backgroundColor='+currentColor+'" alt="'+s+'" loading="lazy"><div class="style-name">'+s+'</div>';
-    (function(style){
-      item.onclick=function(){selectStyle(style);};
-    })(s);
-    grid.appendChild(item);
+  for(var i=0;i<STYLES.length;i++){
+    var s=STYLES[i];
+    var card=document.createElement('div');
+    card.className='style-card'+(s===curStyle?' sel':'');
+    card.innerHTML='<img src="https://api.dicebear.com/9.x/'+s+'/svg?seed=ok&size=48&backgroundColor='+curColor+'" loading="lazy"><div class="sn">'+s+'</div>';
+    (function(style){card.onclick=function(){setStyle(style);};})(s);
+    grid.appendChild(card);
   }
-}
-
-function selectStyle(style){
-  currentStyle=style;
-  document.querySelectorAll('.style-item').forEach(function(el){el.classList.remove('selected')});
-  event.currentTarget.classList.add('selected');
-  updateDiceBear();
-}
-
-function selectColor(btn){
-  document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('selected')});
-  btn.classList.add('selected');
-  currentColor=btn.getAttribute('data-color');
-  updateDiceBear();
-  renderStyleGrid(); // Re-render avec nouvelle couleur
-}
-
-function updateDiceBear(){
-  var seed=document.getElementById('seedInput').value||'Avatar';
-  currentSeed=seed;
-  var url='https://api.dicebear.com/9.x/'+currentStyle+'/svg?seed='+encodeURIComponent(seed)+'&backgroundColor='+currentColor+'&size=256';
-  
-  var preview=document.getElementById('previewContent');
-  var existingImg=preview.querySelector('.dicebear-img');
-  if(existingImg){
-    existingImg.src=url;
-  }else{
-    preview.innerHTML='';
-    var img=document.createElement('img');
-    img.className='dicebear-img preview-canvas';
-    img.src=url;
-    img.style.cssText='width:200px;height:200px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);';
-    img.alt='Avatar de '+seed;
-    preview.appendChild(img);
-    
-    var nameDiv=document.createElement('div');
-    nameDiv.className='preview-name';
-    nameDiv.textContent=seed;
-    preview.appendChild(nameDiv);
-    
-    var styleDiv=document.createElement('div');
-    styleDiv.className='preview-style';
-    styleDiv.textContent='Style: '+currentStyle+' | Couleur: #'+currentColor;
-    preview.appendChild(styleDiv);
-  }
-}
-
-// ===== FABRIC EDITOR =====
-function initFabricCanvas(){
-  if(typeof fabric==='undefined'){
-    console.warn('Fabric.js non chargé');
-    return;
-  }
-  fabricCanvas=new fabric.Canvas('fabricCanvas',{
-    backgroundColor:'#1a1a2e',
-    selection:false,
-    preserveObjectStacking:true
-  });
-  // Cercle de base (tête)
-  var head=new fabric.Circle({
-    radius:60, fill:'#ffcc99', left:90, top:40, stroke:'#cc9966', strokeWidth:2
-  });
-  fabricCanvas.add(head);
-  // Corps
-  var body=new fabric.Rect({
-    width:80, height:100, fill:'#4488ff', left:110, top:150, rx:10, ry:10
-  });
-  fabricCanvas.add(body);
-}
-
-function renderPartsCategories(){
-  var cats=document.getElementById('partsCategories');
-  cats.innerHTML='';
-  var keys=Object.keys(PARTS);
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i];
-    var btn=document.createElement('div');
-    btn.className='part-cat'+(k===currentPartCategory?' active':'');
-    btn.textContent=getCategoryEmoji(k)+' '+getCategoryName(k);
-    (function(key){
-      btn.onclick=function(){currentPartCategory=key;renderParts(key);};
-    })(k);
-    cats.appendChild(btn);
-  }
-}
-
-function getCategoryEmoji(k){
-  var e={face:'😊',eyes:'👀',hair:'💇',hat:'🎩',accessory:'⭐',bg:'🎨'};
-  return e[k]||'📦';
-}
-
-function getCategoryName(k){
-  var n={face:'Visage',eyes:'Yeux',hair:'Cheveux',hat:'Chapeau',accessoire:'Accessoire',bg:'Fond'};
-  return n[k]||k;
-}
-
-function renderParts(category){
-  var grid=document.getElementById('partsGrid');
-  grid.innerHTML='';
-  var parts=PARTS[category]||[];
-  for(var i=0;i<parts.length;i++){
-    var p=parts[i];
-    var item=document.createElement('div');
-    item.className='part-item';
-    item.innerHTML='<div class="part-emoji">'+p.emoji+'</div><div class="part-label">'+p.label+'</div>';
-    (function(part){
-      item.onclick=function(){addPartToCanvas(part,category);};
-    })(p);
-    grid.appendChild(item);
-  }
-}
-
-function addPartToCanvas(part,category){
-  if(!fabricCanvas)return;
-  
-  if(category==='bg'){
-    fabricCanvas.setBackgroundColor(part.color||'#1a1a2e',function(){fabricCanvas.renderAll();});
-    return;
-  }
-  
-  if(part.draw){
-    // Dessiner sur le canvas de prévisualisation
-    var canvas=document.getElementById('previewCanvas');
-    var ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,256,256);
-    part.draw(ctx,128,128,100);
-    document.getElementById('previewEmoji').style.display='none';
-    canvas.style.display='block';
-  }else{
-    // Ajouter comme objet Fabric
-    var text=new fabric.Text(part.emoji,{fontSize:40,left:130,top:category==='hat'?10:category==='face'?60:100});
-    fabricCanvas.add(text);
-    fabricCanvas.renderAll();
-  }
-}
-
-function drawFace(ctx,x,y,s,color,emoji){
-  // Tête
-  ctx.beginPath();
-  ctx.arc(x,y,s,0,Math.PI*2);
-  ctx.fillStyle=color;
-  ctx.fill();
-  ctx.strokeStyle='#cc9966';
-  ctx.lineWidth=3;
-  ctx.stroke();
-  // Yeux
-  ctx.fillStyle='#333';
-  ctx.beginPath();
-  ctx.arc(x-s*0.3,y-s*0.1,s*0.08,0,Math.PI*2);
-  ctx.arc(x+s*0.3,y-s*0.1,s*0.08,0,Math.PI*2);
-  ctx.fill();
-  // Bouche
-  ctx.beginPath();
-  ctx.arc(x,y+s*0.15,s*0.25,0.1*Math.PI,0.9*Math.PI);
-  ctx.strokeStyle='#333';
-  ctx.lineWidth=2;
-  ctx.stroke();
 }
 
 // ===== ACTIONS =====
-function randomAvatar(){
-  var names=['Léana','Mathias','Élodie','Sébastien','Luna','Max','Zoé','Leo','Mia','Noah'];
-  var randomName=names[Math.floor(Math.random()*names.length)]+Math.floor(Math.random()*100);
-  document.getElementById('seedInput').value=randomName;
-  currentStyle=DICEBEAR_STYLES[Math.floor(Math.random()*DICEBEAR_STYLES.length)];
-  var colors=['ffd700','ff69b4','4488ff','2ecc71','e74c3c','9b59b6','1abc9c','e67e22'];
-  currentColor=colors[Math.floor(Math.random()*colors.length)];
-  document.querySelectorAll('.color-btn').forEach(function(b){
-    b.classList.toggle('selected',b.getAttribute('data-color')===currentColor);
-  });
-  renderStyleGrid();
-  updateDiceBear();
-  speak('Voici un avatar aléatoire pour '+randomName+' !');
+function setColor(hex){
+  curColor=hex;
+  document.querySelectorAll('.color-btn').forEach(function(b){b.classList.remove('sel');});
+  event.target.classList.add('sel');
+  renderStyles();
+  generate();
+}
+
+function setStyle(style){
+  curStyle=style;
+  document.querySelectorAll('.style-card').forEach(function(c){c.classList.remove('sel');});
+  event.currentTarget.classList.add('sel');
+  generate();
+}
+
+function generate(){
+  var name=document.getElementById('nameInput').value.trim()||'Avatar';
+  curName=name;
+  var url='https://api.dicebear.com/9.x/'+curStyle+'/svg?seed='+encodeURIComponent(name)+'&backgroundColor='+curColor+'&size=256';
+  
+  var ph=document.getElementById('prevPh');
+  var img=document.getElementById('prevImg');
+  img.src=url;
+  img.style.display='block';
+  ph.style.display='none';
+  img.onload=function(){
+    document.getElementById('prevLabel').textContent=name;
+    document.getElementById('prevSub').textContent='Style: '+curStyle+' | Couleur: #'+curColor;
+  };
+  img.onerror=function(){
+    showToast('⚠️ Erreur de chargement — réessaie');
+  };
+}
+
+function debouncedUpdate(){
+  clearTimeout(debounceTimer);
+  debounceTimer=setTimeout(function(){generate();},500);
+}
+
+function randomAll(){
+  var names=['Léana','Mathias','Élodie','Sébastien','Luna','Max','Zoé','Leo','Mia','Noah','Charlie','Jade','Lou','Emma','Hugo'];
+  var name=names[Math.floor(Math.random()*names.length)];
+  document.getElementById('nameInput').value=name;
+  curStyle=STYLES[Math.floor(Math.random()*STYLES.length)];
+  curColor=COLORS[Math.floor(Math.random()*COLORS.length)].hex;
+  document.querySelectorAll('.color-btn').forEach(function(b){b.classList.toggle('sel',b.style.background==='#'+curColor);});
+  renderStyles();
+  generate();
+  speak('Voici un avatar aléatoire pour '+name+' !');
+}
+
+function describe(){
+  if(!curName){showToast('⚠️ Entre d\'abord un nom');return;}
+  var styleFr={
+    'pixel-art':'pixel art','adventurer':'aventurier','bottts':'robot',
+    'fun-emoji':'emoji','open-peeps':'personnage','notionists':'notion',
+    'avataaars':'avatar','big-ears':'grandes oreilles','big-smile':'grand sourire',
+    'croodles':'croodles','lorelei':'lorelei','micah':'micah','miniavs':'mini-avatars',
+    'personas':'personas','thumbs':'pouces','identicon':'identicon','initials':'initiales'
+  };
+  var s=styleFr[curStyle]||curStyle;
+  speak('Voici l\'avatar de '+name+' dans le style '+s+'. Appuie sur télécharger pour sauvegarder.');
 }
 
 function downloadPNG(){
-  var preview=document.getElementById('previewContent');
-  var img=preview.querySelector('.dicebear-img');
-  if(img){
-    // Télécharger le SVG DiceBear converti en PNG
-    var canvas=document.createElement('canvas');
-    canvas.width=512;
-    canvas.height=512;
-    var ctx=canvas.getContext('2d');
-    var svgImg=new Image();
-    svgImg.crossOrigin='anonymous';
-    svgImg.onload=function(){
-      ctx.drawImage(svgImg,0,0,512,512);
-      var link=document.createElement('a');
-      link.download='avatar-'+currentSeed+'.png';
-      link.href=canvas.toDataURL('image/png');
-      link.click();
-      speak('Avatar téléchargé !');
-    };
-    svgImg.src=img.src;
-  }else if(fabricCanvas){
-    var link=document.createElement('a');
-    link.download='avatar-custom.png';
-    link.href=fabricCanvas.toDataURL({format:'png',quality:1});
-    link.click();
+  var img=document.getElementById('prevImg');
+  if(!img.src||img.style.display==='none'){showToast('⚠️ Génère d\'abord un avatar');return;}
+  
+  // Convertir SVG en PNG via canvas
+  var canvas=document.createElement('canvas');
+  canvas.width=512;canvas.height=512;
+  var ctx=canvas.getContext('2d');
+  var tmp=new Image();
+  tmp.crossOrigin='anonymous';
+  tmp.onload=function(){
+    ctx.drawImage(tmp,0,0,512,512);
+    var a=document.createElement('a');
+    a.download='avatar-'+curName.replace(/\s+/g,'-')+'.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    showToast('✅ Avatar téléchargé !');
     speak('Avatar téléchargé !');
-  }else{
-    showModal('⚠️ Génère d\'abord un avatar !');
+  };
+  tmp.src=img.src;
+}
+
+function saveIt(){
+  if(!curName){showToast('⚠️ Entre d\'abord un nom');return;}
+  var data={name:curName,style:curStyle,color:curColor};
+  try{
+    localStorage.setItem('savedAvatar',JSON.stringify(data));
+    showToast('✅ Sauvegardé !');
+    speak('Avatar sauvegardé !');
+  }catch(e){
+    showToast('⚠️ Impossible de sauvegarder');
   }
 }
 
-function saveAvatar(){
-  var preview=document.getElementById('previewContent');
-  var img=preview.querySelector('.dicebear-img');
-  var data={
-    seed:currentSeed,
-    style:currentStyle,
-    color:currentColor,
-    timestamp:Date.now()
-  };
-  localStorage.setItem('savedAvatar',JSON.stringify(data));
-  showModal('✅ Avatar sauvegardé !<br><small>Style: '+currentStyle+' | Couleur: #'+currentColor+'</small>');
-  speak('Avatar sauvegardé !');
+function loadSaved(){
+  try{
+    var d=JSON.parse(localStorage.getItem('savedAvatar'));
+    if(d){
+      document.getElementById('nameInput').value=d.name||'';
+      curStyle=d.style||'pixel-art';
+      curColor=d.color||'ffd700';
+    }
+  }catch(e){}
 }
 
-function speakAvatar(){
-  var seed=currentSeed||'Avatar';
-  var styleNames={
-    'pixel-art':'pixel art','adventurer':'aventurier','bottts':'robot',
-    'fun-emoji':'emoji amusant','open-peeps':'personnage','notionists':'notion',
-    'avataaars':'avatar','big-ears':'grandes oreilles','big-smile':'grand sourire'
-  };
-  var styleName=styleNames[currentStyle]||currentStyle;
-  speak('Voici l\'avatar de '+seed+' dans le style '+styleName);
-}
-
-// ===== AUDIO =====
-var speechQueue=[],isSpeaking=false;
-function speak(text,cb){
-  if(!('speechSynthesis'in window)){if(cb)cb();return}
-  speechQueue.push({text:text,cb:cb});
-  if(!isSpeaking) processQueue();
-}
-function processQueue(){
-  if(!speechQueue.length){isSpeaking=false;return}
-  isSpeaking=true;
-  var item=speechQueue.shift();
-  var u=new SpeechSynthesisUtterance(item.text);
+// ===== SPEECH =====
+function speak(text){
+  if(!('speechSynthesis'in window))return;
+  speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(text);
   u.lang='fr-FR';u.rate=0.9;u.pitch=1.1;
-  u.onend=function(){if(item.cb)item.cb();processQueue()};
-  u.onerror=function(){processQueue()};
   speechSynthesis.speak(u);
 }
 
-// ===== MODAL =====
-function showModal(html){
-  document.getElementById('modalContent').innerHTML=html+'<br><button class="modal-close" onclick="closeModal()">Fermer</button>';
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('show');
+// ===== TOAST =====
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2500);
 }
 
-// ===== INIT =====
-document.addEventListener('DOMContentLoaded',init);
+// ===== START =====
+init();
 </script>
 </body>
 </html>
