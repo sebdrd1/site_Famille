@@ -6,34 +6,39 @@
 <title>Karaoké — Léana</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --pink:#ff69b4;--violet:#9b59b6;--bg:#1a0a2e;--card:rgba(255,255,255,0.08);
-  --text:#f0e6ff;--accent:#ffd700;
-}
-body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;touch-action:manipulation}
+:root{--pink:#ff69b4;--violet:#9b59b6;--bg:#1a0a2e;--card:rgba(255,255,255,0.08);--text:#f0e6ff;--accent:#ffd700}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;touch-action:manipulation}
 header{background:linear-gradient(135deg,var(--pink),var(--violet));padding:16px;text-align:center;position:sticky;top:0;z-index:100}
-header h1{font-size:22px;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3)}
+header h1{font-size:22px;color:#fff}
 header p{font-size:12px;opacity:0.8;margin-top:4px}
 .back-btn{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);border:none;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;cursor:pointer}
 .container{padding:16px;max-width:800px;margin:0 auto;padding-bottom:100px}
 .comptine-card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:2px solid rgba(255,105,180,0.3);cursor:pointer;transition:all 0.2s}
-.comptine-card:hover,.comptine-card:active{border-color:var(--pink);transform:scale(1.02)}
+.comptine-card:active{transform:scale(0.98)}
 .comptine-card.active{border-color:var(--accent);background:rgba(255,215,0,0.1)}
 .comptine-title{font-size:20px;font-weight:bold;color:var(--accent);margin-bottom:4px}
 .comptine-emoji{font-size:32px;margin-bottom:8px}
 .comptine-preview{font-size:14px;opacity:0.7;font-style:italic}
-.lyrics{display:none;padding:20px;background:rgba(0,0,0,0.3);border-radius:12px;margin-top:12px;font-size:22px;line-height:2;text-align:center}
+.lyrics{display:none;padding:20px;background:rgba(0,0,0,0.3);border-radius:12px;margin-top:12px;font-size:22px;line-height:2.2;text-align:center}
 .lyrics.show{display:block}
-.lyrics .line{padding:4px 0;transition:all 0.3s}
-.lyrics .line.active{color:var(--accent);font-size:28px;font-weight:bold;text-shadow:0 0 10px var(--accent)}
+.lyrics .line{padding:6px 0;transition:all 0.3s;opacity:0.5}
+.lyrics .line.active{color:var(--accent);font-size:28px;font-weight:bold;text-shadow:0 0 10px var(--accent);opacity:1}
+.lyrics .line.done{opacity:0.8}
 .controls{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
-.ctrl-btn{padding:14px 28px;border:none;border-radius:25px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.2s;min-width:60px}
+.ctrl-btn{padding:14px 28px;border:none;border-radius:25px;font-size:18px;font-weight:bold;cursor:pointer;transition:all 0.2s;color:#fff}
 .ctrl-btn:active{transform:scale(0.95)}
-.btn-play{background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff}
-.btn-stop{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff}
-.btn-sing{background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff}
-.btn-back{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff}
+.btn-play{background:linear-gradient(135deg,#2ecc71,#27ae60)}
+.btn-stop{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+.btn-sing{background:linear-gradient(135deg,var(--pink),var(--violet))}
+.btn-back{background:linear-gradient(135deg,#3498db,#2980b9)}
 .status-bar{text-align:center;padding:10px;font-size:16px;color:var(--accent);min-height:40px}
+
+/* Voice selector */
+.voice-selector{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.voice-btn{padding:8px 16px;border:2px solid rgba(255,255,255,0.15);border-radius:16px;background:var(--card);color:#fff;font-size:13px;cursor:pointer;transition:all 0.2s}
+.voice-btn:active{transform:scale(0.95)}
+.voice-btn.sel{border-color:var(--accent);background:rgba(255,215,0,0.15)}
+.voice-btn .voice-icon{font-size:20px}
 </style>
 </head>
 <body>
@@ -42,45 +47,261 @@ header p{font-size:12px;opacity:0.8;margin-top:4px}
   <h1>🎤 Karaoké</h1>
   <p>Chante avec Léana !</p>
 </header>
+
+<!-- SÉLECTEUR DE VOIX -->
+<div class="voice-selector" id="voiceSelector"></div>
+
 <div class="container" id="comptine-list"></div>
 <div class="status-bar" id="status">Choisis une comptine !</div>
 <div class="controls" id="controls" style="display:none">
-  <button class="ctrl-btn btn-play" onclick="startKaraoke()">▶ Jouer</button>
+  <button class="ctrl-btn btn-play" onclick="startKaraoke()">▶ Écouter</button>
   <button class="ctrl-btn btn-sing" onclick="singAlong()">🎤 Chanter</button>
   <button class="ctrl-btn btn-stop" onclick="stopKaraoke()">⏹ Stop</button>
   <button class="ctrl-btn btn-back" onclick="backToMenu()">← Comptines</button>
 </div>
 
 <script>
+// ===== COMPTINES COMPLÈTES =====
 var comptines=[
-  {title:"Ah les crocodiles",emoji:"🐊",
-   lyrics:["Ah les cro cro cro, les cro cro cro, les crocodiles","Sur les bords du Nil, ils sont partis, n'en parlant plus","Ah les cro cro cro, les cro cro cro, les crocodiles"]},
-  {title:"Alouette",emoji:"🐦",
-   lyrics:["Alouette, gentille alouette","Alouette, je te plumerai","Je te plumerai la tête","Je te plumerai la tête","Et la tête, et la tête","Alouette, alouette"]},
-  {title:"Frère Jacques",emoji:"🔔",
-   lyrics:["Frère Jacques, frère Jacques","Dormez-vous, dormez-vous","Sonnez les matines, sonnez les matines","Ding ding dong, ding ding dong"]},
-  {title:"Petit escargot",emoji:"🐌",
-   lyrics:["Petit escargot, porte sur son dos sa maisonnette","Aussitôt qu'il pleut, il est tout heureux, il sort sa petite tête"]},
-  {title:"Une souris verte",emoji:"🐭",
-   lyrics:["Une souris verte, qui courait dans l'herbe","Je l'attrape par la queue, je la montre à ces messieurs","Ces messieurs me disent, trempez-la dans l'huile"]},
-  {title:"Au clair de la lune",emoji:"🌙",
-   lyrics:["Au clair de la lune, mon ami Pierrot","Prête-moi ta plume, pour écrire un mot","Ma chandelle est morte, je n'ai plus de feu","Ouvre-moi ta porte, pour l'amour de Dieu"]},
-  {title:"Il pleut bergère",emoji:"🌧️",
-   lyrics:["Il pleut, il pleut bergère, rentre tes blancs moutons","Allons sous ma chaurette, il y fait chaud","Il pleut, il pleut bergère, rentre tes blancs moutons"]},
-  {title:"Meunier tu dors",emoji:"🌾",
-   lyrics:["Meunier, tu dors, ton moulin, ton moulin va trop fort","Meunier, tu dors, ton moulin, ton moulin va trop vite"]},
-  {title:"Sur le pont d'Avignon",emoji:"🌉",
-   lyrics:["Sur le pont d'Avignon, on y danse, on y danse","Sur le pont d'Avignon, on y danse tous en rond","Les beaux messieurs font comme ça, et puis encore comme ça"]},
-  {title:"Promenons-nous dans les bois",emoji:"🐺",
-   lyrics:["Promenons-nous dans les bois, pendant que le loup n'y est pas","Si le loup y était, il nous mangerait","Mais comme il n'y est pas, il nous mangera pas","Loup, y es-tu, que fais-tu, m'entends-tu"]}
+  {title:"Ah les crocodiles",emoji:"🐊",lyrics:[
+    "Ah les cro cro cro, les cro cro cro, les crocodiles",
+    "Sur les bords du Nil, ils sont partis, n'en parlant plus",
+    "Ah les cro cro cro, les cro cro cro, les crocodiles",
+    "Ils ont fini par s'en aller, les crocodiles",
+    "Ah les cro cro cro, les cro cro cro, les crocodiles"
+  ]},
+  {title:"Alouette",emoji:"🐦",lyrics:[
+    "Alouette, gentille alouette",
+    "Alouette, je te plumerai",
+    "Je te plumerai la tête",
+    "Et la tête, et la tête",
+    "Alouette, alouette",
+    "Alouette, gentille alouette",
+    "Je te plumerai le bec",
+    "Et le bec, et le bec",
+    "Et la tête, et la tête",
+    "Alouette, alouette"
+  ]},
+  {title:"Frère Jacques",emoji:"🔔",lyrics:[
+    "Frère Jacques, frère Jacques",
+    "Dormez-vous, dormez-vous",
+    "Sonnez les matines, sonnez les matines",
+    "Ding ding dong, ding ding dong",
+    "Frère Jacques, frère Jacques",
+    "Dormez-vous, dormez-vous",
+    "Sonnez les matines, sonnez les matines",
+    "Ding ding dong, ding ding dong"
+  ]},
+  {title:"Petit escargot",emoji:"🐌",lyrics:[
+    "Petit escargot, porte sur son dos sa maisonnette",
+    "Aussitôt qu'il pleut, il est tout heureux, il sort sa petite tête",
+    "Petit escargot, porte sur son dos sa maisonnette",
+    "Aussitôt qu'il pleut, il est tout heureux, il sort sa petite tête"
+  ]},
+  {title:"Une souris verte",emoji:"🐭",lyrics:[
+    "Une souris verte, qui courait dans l'herbe",
+    "Je l'attrape par la queue, je la montre à ces messieurs",
+    "Ces messieurs me disent, trempez-la dans l'huile",
+    "Trempez-la dans l'eau, ça fera un escargot tout chaud",
+    "Je la montre à ces messieurs, ces messieurs me disent",
+    "Mettez-la dans un tiroir, elle vous direz qu'est froid"
+  ]},
+  {title:"Au clair de la lune",emoji:"🌙",lyrics:[
+    "Au clair de la lune, mon ami Pierrot",
+    "Prête-moi ta plume, pour écrire un mot",
+    "Ma chandelle est morte, je n'ai plus de feu",
+    "Ouvre-moi ta porte, pour l'amour de Dieu",
+    "Au clair de la lune, Pierrot répondit",
+    "Je n'ai pas de plume, je suis dans mon lit",
+    "Va chez la voisine, je crois qu'elle y est"
+  ]},
+  {title:"Il pleut bergère",emoji:"🌧️",lyrics:[
+    "Il pleut, il pleut bergère, rentre tes blancs moutons",
+    "Allons sous ma chaurette, il y fait chaud",
+    "Il pleut, il pleut bergère, rentre tes blancs moutons",
+    "La pluie tombe bergère, vite rentrons",
+    "Voilà l'éclair qui luit, entends-tu le tonnerre",
+    "Il roule en approchant, allons, bergère, allons"
+  ]},
+  {title:"Meunier tu dors",emoji:"🌾",lyrics:[
+    "Meunier, tu dors, ton moulin, ton moulin va trop fort",
+    "Meunier, tu dors, ton moulin, ton moulin va trop vite",
+    "Meunier, tu dors, ton moulin, ton moulin va trop fort",
+    "Meunier, tu dors, ton moulin, ton moulin va trop vite"
+  ]},
+  {title:"Sur le pont d'Avignon",emoji:"🌉",lyrics:[
+    "Sur le pont d'Avignon, on y danse, on y danse",
+    "Sur le pont d'Avignon, on y danse tous en rond",
+    "Les beaux messieurs font comme ça, et puis encore comme ça",
+    "Les belles dames font comme ça, et puis encore comme ça",
+    "Sur le pont d'Avignon, on y danse, on y danse",
+    "Sur le pont d'Avignon, on y danse tous en rond"
+  ]},
+  {title:"Promenons-nous dans les bois",emoji:"🐺",lyrics:[
+    "Promenons-nous dans les bois, pendant que le loup n'y est pas",
+    "Si le loup y était, il nous mangerait",
+    "Mais comme il n'y est pas, il nous mangera pas",
+    "Loup, y es-tu, que fais-tu, m'entends-tu",
+    "Je mets ma chemise, le loup ne vient pas",
+    "Je mets mes chaussures, le loup ne vient pas",
+    "Je mets mon chapeau, le loup ne vient pas"
+  ]},
+  {title:"À la claire fontaine",emoji:"💧",lyrics:[
+    "À la claire fontaine, m'en allant promener",
+    "J'ai trouvé l'eau si belle, que je m'y suis baigné",
+    "Il y a longtemps que je t'aime, jamais je ne t'oublierai",
+    "À la claire fontaine, m'en allant promener",
+    "J'ai trouvé l'eau si belle, que je m'y suis baigné",
+    "Sous les feuilles d'un chêne, je me suis fait sécher",
+    "Sur la plus haute branche, le rossignol chantait"
+  ]},
+  {title:"Il court, il court le furet",emoji:"🦡",lyrics:[
+    "Il court, il court le furet, le furet du bois joli",
+    "Il est passé par ici, il est passé par là",
+    "Trouvez-le s'il vous plaît, le furet du bois joli",
+    "Il court, il court le furet, le furet du bois joli"
+  ]}
 ];
 
-var currentComptine=null;
-var currentLine=0;
-var karaokeTimer=null;
-var isPlaying=false;
+// ===== SYSTÈME VOCAL AMÉLIORÉ =====
+var voiceElsa=null;  // Voix féminine (Léana)
+var voiceTony=null;   // Voix masculine (Mathias)
+var voiceQueue=[];
+var isSpeaking=false;
 
-// Audio context partagé
+// Trouver les meilleures voix
+function findVoices(){
+  if(!('speechSynthesis'in window))return;
+  var voices=speechSynthesis.getVoices();
+  if(voices.length===0){
+    speechSynthesis.onvoiceschanged=function(){findVoices();};
+    return;
+  }
+  
+  var selector=document.getElementById('voiceSelector');
+  selector.innerHTML='';
+  
+  // Chercher voix féminine FR (pour Léana/Elsa)
+  var frFem=voices.filter(function(v){return v.lang.indexOf('fr')===0&&v.name.toLowerCase().match(/femme|female|féminin|google|hortense|julie|pauline|denise|sophie|yolaine|amelie|marion|celine|camille);});
+  if(!frFem.length) frFem=voices.filter(function(v){return v.lang.indexOf('fr')===0&&v.voiceURI&&v.voiceURI.toLowerCase().match(/female|femme|fem);});
+  
+  // Chercher voix masculine FR (pour Mathias/Tony)
+  var frMasc=voices.filter(function(v){return v.lang.indexOf('fr')===0&&v.name.toLowerCase().match(/homme|male|masculin|thomas|pierro|pierre|jacques|antoine|nicolas|daniel|bertrand|maxime|hugo|xavier|rene);});
+  
+  var frAll=voices.filter(function(v){return v.lang.indexOf('fr')===0;});
+  
+  // Créer les boutons de voix
+  var voiceProfiles=[
+    {id:'elsa',name:'Elsa',icon:'👸',type:'fem',desc:'Voix douce et claire'},
+    {id:'tony',name:'Tony',icon:'🤵',type:'masc',desc:'Voix grave et posée'},
+    {id:'robot',name:'Robot',icon:'🤖',type:'default',desc:'Voix par défaut'}
+  ];
+  
+  var selectedVoice='elsa'; // Par défaut pour Léana
+  
+  voiceProfiles.forEach(function(vp){
+    var btn=document.createElement('div');
+    btn.className='voice-btn'+(vp.id===selectedVoice?' sel':'');
+    btn.innerHTML='<span class="voice-icon">'+vp.icon+'</span> '+vp.name;
+    btn.title=vp.desc;
+    btn.onclick=function(){
+      document.querySelectorAll('.voice-btn').forEach(function(b){b.classList.remove('sel');});
+      btn.classList.add('sel');
+      selectedVoice=vp.id;
+    };
+    selector.appendChild(btn);
+  });
+  
+  // Stocker les références
+  if(frFem.length) voiceElsa=frFem[0];
+  if(frMasc.length) voiceTony=frMasc[0];
+  if(frAll.length&&!voiceElsa) voiceElsa=frAll[0];
+  if(frAll.length>1&&!voiceTony) voiceTony=frAll[1];
+}
+
+// Parler avec la bonne voix et prononciation correcte
+function speak(text,callback){
+  if(!('speechSynthesis'in window)){
+    if(callback)callback();
+    return;
+  }
+  
+  // Fix prononcitation pour éviter l'épellation
+  text=fixPronunciation(text);
+  
+  var u=new SpeechSynthesisUtterance(text);
+  u.lang='fr-FR';
+  u.rate=0.82;
+  
+  // Sélectionner la voix
+  var voices=speechSynthesis.getVoices();
+  if(voices.length===0){
+    speechSynthesis.onvoiceschanged=function(){speak(text,callback);};
+    return;
+  }
+  
+  var selectedVoice=document.querySelector('.voice-btn.sel');
+  var voiceId=selectedVoice?selectedVoice.textContent.trim().toLowerCase():'elsa';
+  
+  // Utiliser la voix Elsa ou la meilleure voix FR féminine
+  var targetVoice=null;
+  if(voiceElsa&&voiceId==='elsa') targetVoice=voiceElsa;
+  
+  if(targetVoice) u.voice=targetVoice;
+  else {
+    // Fallback: trouver la meilleure voix FR
+    var frVoices=voices.filter(function(v){return v.lang==='fr-FR'||v.lang==='fr-FR';});
+    var googleFR=frVoices.find(function(v){return v.name.toLowerCase().match(/google|microsoft\s+(fr|fran|hortense|julie|thomas|pauline|denise|sophie);});
+    if(googleFR) u.voice=googleFR;
+    else if(frVoices.length) u.voice=frVoices[0];
+  }
+  
+  u.pitch=voiceElsa?1.15:1.0; // Léger aigu pour Elsa
+  u.rate=0.88; // Un peu plus lent pour les comptines
+  
+  u.onend=function(){
+    if(callback)callback();
+    processQueue();
+  };
+  u.onerror=function(){
+    if(callback)callback();
+    processQueue();
+  };
+  
+  isSpeaking=true;
+  speechSynthesis.speak(u);
+}
+
+function processQueue(){
+  if(voiceQueue.length===0){isSpeaking=false;return}
+  var item=voiceQueue.shift();
+  speak(item.text,item.cb);
+}
+
+function stopSpeech(){
+  voiceQueue=[];
+  isSpeaking=false;
+  speechSynthesis.cancel();
+}
+
+// Fixer la prononciation pour éviter les épellation
+function fixPronunciation(text){
+  // Remplacer les abréviations qui font épeler
+  var fixes=[
+    [/cro cro cro/gi,'kro kro kro'],
+    [/ding ding dong/gi,'ding ding dong'],
+    [/sur le pont/gi,'syr lõ põ'],
+    [/les beaux messieurs/gi,'lé bō masyø'],
+    [/il pleut bergère/gi,'il plø bɛʁʒɛʁ'],
+    [/promenons-nous/gi,'pʁɔmənõ nu'],
+    [/c'est la comptine/gi,'sɛ lə kɔ̃tin'],
+    [/jamais je ne t'oublierai/gi,'ʒamɛ ʒə nə tubliʁe']
+  ];
+  fixes.forEach(function(f){text=text.replace(f[0],f[1]);});
+  return text;
+}
+
+// ===== AUDIO NOTES (musique de fond simplifiée) =====
 var _audioCtx=null;
 function getAudioCtx(){
   if(!_audioCtx) _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -88,56 +309,29 @@ function getAudioCtx(){
   return _audioCtx;
 }
 
-// Synthèse vocale avec file d'attente
-var speechQueue=[];
-var isSpeaking=false;
-function speak(text,callback){
-  if(!('speechSynthesis'in window)){if(callback)callback();return}
-  speechQueue.push({text:text,callback:callback});
-  if(!isSpeaking) processSpeechQueue();
-}
-function processSpeechQueue(){
-  if(speechQueue.length===0){isSpeaking=false;return}
-  isSpeaking=true;
-  var item=speechQueue.shift();
-  var u=new SpeechSynthesisUtterance(item.text);
-  u.lang='fr-FR';
-  u.rate=0.85;
-  u.pitch=1.2;
-  u.onend=function(){
-    if(item.callback)item.callback();
-    processSpeechQueue();
-  };
-  u.onerror=function(){processSpeechQueue()};
-  speechSynthesis.speak(u);
-}
-function stopSpeech(){
-  speechQueue=[];
-  isSpeaking=false;
-  speechSynthesis.cancel();
-}
+// ===== KARAOKÉ =====
+var currentComptine=null;
+var currentLine=0;
+var karaokeTimer=null;
+var isPlaying=false;
 
-// Afficher la liste
 function renderList(){
   var list=document.getElementById('comptine-list');
   list.innerHTML='';
-  for(var i=0;i<comptines.length;i++){
-    var c=comptines[i];
+  comptines.forEach(function(c,idx){
     var card=document.createElement('div');
     card.className='comptine-card';
     card.innerHTML='<div class="comptine-emoji">'+c.emoji+'</div><div class="comptine-title">'+c.title+'</div><div class="comptine-preview">'+c.lyrics[0]+'...</div>';
-    (function(idx){
-      card.onclick=function(){selectComptine(idx);};
-    })(i);
+    card.onclick=function(){selectComptine(idx);};
     list.appendChild(card);
-  }
+  });
 }
 
 function selectComptine(idx){
   currentComptine=comptines[idx];
   currentLine=0;
   isPlaying=false;
-  if(karaokeTimer){clearInterval(karaokeTimer);karaokeTimer=null;}
+  if(karaokeTimer){clearTimeout(karaokeTimer);karaokeTimer=null;}
   
   var list=document.getElementById('comptine-list');
   list.innerHTML='';
@@ -160,8 +354,20 @@ function selectComptine(idx){
   document.getElementById('controls').style.display='flex';
   document.getElementById('status').textContent='Appuie sur ▶ pour écouter !';
   
-  // Dire le titre
-  speak("C'est la comptine "+currentComptine.title+". Appuie sur jouer pour écouter !");
+  // Annonce avec la bonne voix
+  setTimeout(function(){
+    speak("C'est la comptine "+currentComptine.title+" !");
+  },300);
+}
+
+function highlightLine(idx){
+  for(var i=0;i<currentComptine.lyrics.length;i++){
+    var el=document.getElementById('line'+i);
+    if(!el)continue;
+    el.className='line';
+    if(i===idx) el.className='line active';
+    else if(i<idx) el.className='line done';
+  }
 }
 
 function startKaraoke(){
@@ -169,30 +375,25 @@ function startKaraoke(){
   stopKaraoke();
   isPlaying=true;
   currentLine=0;
-  document.getElementById('status').textContent='🎵 Écoute...';
+  document.getElementById('status').textContent='🎵 Écoute et regarde les paroles...';
   
-  // Dire chaque ligne avec pause
-  function sayLine(){
+  function sayNext(){
     if(!isPlaying||currentLine>=currentComptine.lyrics.length){
       isPlaying=false;
-      document.getElementById('status').textContent='✅ Terminé ! Tu veux recommencer ?';
+      document.getElementById('status').textContent='✅ Terminé !';
       speak("C'est fini ! Tu veux recommencer ?");
+      highlightLine(-1);
       return;
     }
-    // Highlight
-    for(var i=0;i<currentComptine.lyrics.length;i++){
-      var el=document.getElementById('line'+i);
-      if(el)el.className='line';
-    }
-    var cur=document.getElementById('line'+currentLine);
-    if(cur){cur.className='line active';cur.scrollIntoView({behavior:'smooth',block:'center'});}
+    highlightLine(currentLine);
+    document.getElementById('line'+currentLine).scrollIntoView({behavior:'smooth',block:'center'});
     
     speak(currentComptine.lyrics[currentLine],function(){
       currentLine++;
-      if(isPlaying)setTimeout(sayLine,500);
+      if(isPlaying) karaokeTimer=setTimeout(sayNext,600);
     });
   }
-  sayLine();
+  sayNext();
 }
 
 function singAlong(){
@@ -202,31 +403,26 @@ function singAlong(){
   currentLine=0;
   document.getElementById('status').textContent='🎤 À toi de chanter !';
   
-  function showLine(){
+  function showNext(){
     if(!isPlaying||currentLine>=currentComptine.lyrics.length){
       isPlaying=false;
-      document.getElementById('status').textContent='🎉 Bravo ! Tu veux recommencer ?';
+      document.getElementById('status').textContent='🎉 Bravo !';
       speak("Bravo ! Tu veux recommencer ?");
+      highlightLine(-1);
       return;
     }
-    for(var i=0;i<currentComptine.lyrics.length;i++){
-      var el=document.getElementById('line'+i);
-      if(el)el.className='line';
-    }
-    var cur=document.getElementById('line'+currentLine);
-    if(cur){cur.className='line active';cur.scrollIntoView({behavior:'smooth',block:'center'});}
-    
-    // Attendre que l'utilisateur "chante" — juste montrer la ligne pendant 4 sec
+    highlightLine(currentLine);
+    document.getElementById('line'+currentLine).scrollIntoView({behavior:'smooth',block:'center'});
     currentLine++;
-    karaokeTimer=setTimeout(showLine,4000);
+    karaokeTimer=setTimeout(showNext,3500);
   }
-  showLine();
+  showNext();
 }
 
 function stopKaraoke(){
   isPlaying=false;
   stopSpeech();
-  if(karaokeTimer){clearInterval(karaokeTimer);karaokeTimer=null;}
+  if(karaokeTimer){clearTimeout(karaokeTimer);karaokeTimer=null;}
   document.getElementById('status').textContent='⏹ Arrêté';
 }
 
@@ -237,7 +433,8 @@ function backToMenu(){
   document.getElementById('status').textContent='Choisis une comptine !';
 }
 
-// Init
+// ===== INIT =====
+findVoices();
 renderList();
 </script>
 </body>
