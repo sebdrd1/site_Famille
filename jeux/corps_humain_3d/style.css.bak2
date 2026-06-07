@@ -1,0 +1,61 @@
+/* Style for the educational 3D body game */
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #87CEEB; /* Sky blue */
+    font-family: Arial, sans-serif;
+}
+#info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    max-width: 320px;
+    line-height: 1.5;
+    font-size: 14px;
+}
+#voice-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 12px 24px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+#voice-btn.listening {
+    background: #f44336;
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+#quest {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    min-width: 200px;
+    text-align: center;
+}
+.hidden { display: none; }
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    #info { font-size: 12px; padding: 10px; }
+    #voice-btn { padding: 10px 20px; font-size: 14px; }
+    #quest { padding: 10px 20px; font-size: 14px; }
+}

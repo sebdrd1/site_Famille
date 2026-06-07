@@ -198,24 +198,9 @@ function createWorld() {
   ground.receiveShadow = true;
   scene.add(ground);
   
-  // Create educational voxel structures for body systems
-  // Circulatory system
+  // Create some educational voxel structures
   createBloodVessel(-10, 2, 0);
-  createHeart(0, 2, -5);
-  
-  // Nervous system
-  createBrain(-15, 8, 0);
-  createSpinalCord(0, 4, 0);
-  
-  // Digestive system
-  createStomach(10, 2, 0);
-  createIntestines(15, 1, 0);
-  
-  // Skeletal system
-  createFemur(0, 1, 10);
-  createSkull(-15, 8, 0);
-  
-  // Muscular system (already had)
+  createNeuron(10, 2, 0);
   createMuscleFiber(0, 2, -10);
   
   // Create a floating platform for jumping practice
@@ -226,7 +211,6 @@ function createWorld() {
   scene.add(platform);
 }
 
-// --- Circulatory System ---
 function createBloodVessel(x, y, z) {
   // Simple cylindrical vessel (voxelized)
   const radius = 2;
@@ -279,148 +263,50 @@ function createBloodVessel(x, y, z) {
   scene.add(vessel);
 }
 
-function createHeart(x, y, z) {
-  // Simplified heart voxel approximation: a tilted cube
-  const size = 3;
-  const geometry = new THREE.BoxGeometry(size, size, size);
-  // Apply a rotation to make it look more heart-like? We'll just color it.
-  const material = new THREE.MeshStandardMaterial({ color: 0xff0000 });
-  const heart = new THREE.Mesh(geometry, material);
-  heart.position.set(x, y, z);
-  heart.rotation.z = Math.PI / 4; // tilt
-  heart.userData = { type: 'cœur' };
-  scene.add(heart);
-}
-
-// --- Nervous System ---
-function createBrain(x, y, z) {
-  // Brain as a ellipsoid approximated by scaling a sphere
-  const radius = 4;
-  const geometry = new THREE.SphereGeometry(radius, 16, 16);
-  // Scale to make ellipsoid
-  geometry.scale(1, 0.8, 0.9);
-  const material = new THREE.MeshStandardMaterial({ color: 0xff8c00 });
-  const brain = new THREE.Mesh(geometry, material);
-  brain.position.set(x, y, z);
-  brain.userData = { type: 'cerveau' };
-  scene.add(brain);
-}
-
-function createSpinalCord(x, y, z) {
-  // Spinal cord as a cylinder
-  const radius = 0.8;
-  const length = 12;
-  const geometry = new THREE.CylinderGeometry(radius, radius, length, 8);
-  const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  const cord = new THREE.Mesh(geometry, material);
-  cord.position.set(x, y + length/2, z);
-  cord.userData = { type: 'moelle épinière' };
-  scene.add(cord);
+function createNeuron(x, y, z) {
+  // Simple neuron: sphere (cell body) + cylinder (axon)
+  const bodyRadius = 1.5;
+  const axonLength = 6;
+  const axonRadius = 0.4;
   
-  // Add some nerve fibers (lines)
-  for (let i = 0; i < length; i += 2) {
-    const nerveGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 4);
-    const nerveMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
-    const nerve = new THREE.Mesh(nerveGeometry, nerveMaterial);
-    nerve.position.set(x, y + i, z);
-    nerve.rotation.x = Math.PI / 2;
-    nerve.userData = { type: 'fibre nerveuse' };
-    scene.add(nerve);
+  // Cell body (sphere approximated by icosahedron)
+  const bodyGeometry = new THREE.IcosahedronGeometry(bodyRadius, 1);
+  const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
+  const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+  body.position.set(x, y + bodyRadius, z);
+  body.userData = { type: 'neurone (corps cellulaire)' };
+  scene.add(body);
+  
+  // Axon (cylinder)
+  const axonGeometry = new THREE.CylinderGeometry(axonRadius, axonRadius, axonLength, 8);
+  const axonMaterial = new THREE.MeshStandardMaterial({ color: 0x00bfff });
+  const axon = new THREE.Mesh(axonGeometry, axonMaterial);
+  axon.position.set(x, y + bodyRadius + axonLength/2, z);
+  axon.userData = { type: 'axone du neurone' };
+  scene.add(axon);
+  
+  // Some dendrites (simple lines)
+  for (let i = 0; i < 3; i++) {
+    const angle = (i * Math.PI * 2) / 3;
+    const len = 2;
+    const dendriteGeometry = new THREE.CylinderGeometry(0.1, 0.1, len, 4);
+    const dendriteMaterial = new THREE.MeshStandardMaterial({ color: 0xff8800 });
+    const dendrite = new THREE.Mesh(dendriteGeometry, dendriteMaterial);
+    dendrite.position.set(
+      x + Math.cos(angle) * (bodyRadius + 0.5),
+      y + bodyRadius + 0.5,
+      z + Math.sin(angle) * (bodyRadius + 0.5)
+    );
+    // Rotate to point outward
+    dendrite.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle))
+    );
+    dendrite.userData = { type: 'dendrite' };
+    scene.add(dendrite);
   }
 }
 
-// --- Digestive System ---
-function createStomach(x, y, z) {
-  // Stomach as a scaled sphere
-  const radiusX = 3, radiusY = 2, radiusZ = 2.5;
-  const geometry = new THREE.SphereGeometry(1, 12, 12);
-  geometry.scale(radiusX, radiusY, radiusZ);
-  const material = new THREE.MeshStandardMaterial({ color: 0xffe4b5 });
-  const stomach = new THREE.Mesh(geometry, material);
-  stomach.position.set(x, y, z);
-  stomach.userData = { type: 'estomac' };
-  scene.add(stomach);
-}
-
-function createIntestines(x, y, z) {
-  // Intestines as a coiled tube (simplified as a spiral)
-  const tubeRadius = 0.4;
-  const length = 20;
-  const turns = 3;
-  const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const colors = [];
-  
-  for (let i = 0; i < length; i += voxelSize) {
-    const t = i / length;
-    const angle = t * turns * Math.PI * 2;
-    const px = Math.cos(angle) * 2;
-    const pz = Math.sin(angle) * 2;
-    const py = y + i;
-    
-    // Create a small voxel segment
-    const x0 = px + x;
-    const y0 = py;
-    const z0 = pz + z;
-    
-    // 8 corners of a cube
-    const corners = [
-      [x0, y0, z0],
-      [x0 + voxelSize, y0, z0],
-      [x0, y0 + voxelSize, z0],
-      [x0 + voxelSize, y0 + voxelSize, z0],
-      [x0, y0, z0 + voxelSize],
-      [x0 + voxelSize, y0, z0 + voxelSize],
-      [x0, y0 + voxelSize, z0 + voxelSize],
-      [x0 + voxelSize, y0 + voxelSize, z0 + voxelSize]
-    ];
-    
-    for (const corner of corners) {
-      positions.push(...corner);
-      // Brownish color for intestines
-      colors.push(0.6, 0.4, 0.2);
-    }
-  }
-  
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-  
-  const material = new THREE.MeshPhongMaterial({ 
-    vertexColors: true,
-    shininess: 30
-  });
-  
-  const intestines = new THREE.Mesh(geometry, material);
-  intestines.userData = { type: 'intestins' };
-  scene.add(intestines);
-}
-
-// --- Skeletal System ---
-function createFemur(x, y, z) {
-  // Femur as a cylinder
-  const radius = 1;
-  const length = 6;
-  const geometry = new THREE.CylinderGeometry(radius, radius, length, 8);
-  const material = new THREE.MeshStandardMaterial({ color: 0xffdead });
-  const femur = new THREE.Mesh(geometry, material);
-  femur.position.set(x, y + length/2, z);
-  femur.rotation.z = Math.PI / 2; // horizontal
-  femur.userData = { type: 'fémur' };
-  scene.add(femur);
-}
-
-function createSkull(x, y, z) {
-  // Skull as a sphere
-  const radius = 2.5;
-  const geometry = new THREE.SphereGeometry(radius, 16, 16);
-  const material = new THREE.MeshStandardMaterial({ color: 0xfffff0 });
-  const skull = new THREE.Mesh(geometry, material);
-  skull.position.set(x, y, z);
-  skull.userData = { type: 'crâne' };
-  scene.add(skull);
-}
-
-// --- Muscular System (existing) ---
 function createMuscleFiber(x, y, z) {
   // Bundle of muscle fibers (cylinders)
   const fiberLength = 6;
