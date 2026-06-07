@@ -1,4 +1,4 @@
-// Main script for the educational 3D body game
+// Main script for the educational 3D body game with quests
 let scene, camera, renderer, controls;
 let clock = new THREE.Clock();
 let voxelSize = 0.5;
@@ -34,6 +34,149 @@ function processQueue() {
 }
 function stopSpeech() { speechQueue = []; isSpeaking = false; speechSynthesis.cancel(); }
 
+// Quest system
+let currentQuest = null;
+let currentStepIndex = 0;
+const QUEST_THRESHOLD = 3.0; // distance to consider objective reached
+
+const QUESTS = {
+  circulatory: {
+    title: 'Système circulatoire',
+    steps: [
+      {
+        objective: 'Rejoins le cœur pour voir comment il pompe le sang',
+        position: new THREE.Vector3(0, 2, -5), // heart position
+        onEnter: () => speak('Excellent ! Tu es arrivé au cœur. Il pompe le sang vers tout le corps.'),
+        onComplete: () => speak('Le cœur est une puissante muscle qui contracte pour envoyer le sang dans les artères.')
+      },
+      {
+        objective: 'Suis l\'artère principale pour voir le sang oxygéné',
+        position: new THREE.Vector3(-10, 2, 0), // blood vessel
+        onEnter: () => speak('Tu suis maintenant une artère remplie de sang rouge riche en oxygène.'),
+        onComplete: () => speak('Les artères transportent le sang oxygéné depuis le cœur vers les organes.')
+      }
+    ]
+  },
+  nervous: {
+    title: 'Système nerveux',
+    steps: [
+      {
+        objective: 'Approche du cerveau pour voir le centre de commande',
+        position: new THREE.Vector3(-15, 8, 0), // brain
+        onEnter: () => speak('Wow ! Tu es au cerveau, le centre de commande du corps humain.'),
+        onComplete: () => speak('Le cerveau traite les informations, contrôle les mouvements et pense.')
+      },
+      {
+        objective: 'Suis la moelle épinière vers le bas',
+        position: new THREE.Vector3(0, 4, 0), // spinal cord
+        onEnter: () => speak('Tu suis la moelle épinière, qui transmet les signaux entre le cerveau et le corps.'),
+        onComplete: () => speak('La moelle épinière est un long câble de nerfs protégé par la colonne vertébrale.')
+      }
+    ]
+  },
+  digestive: {
+    title: 'Système digestif',
+    steps: [
+      {
+        objective: 'Visite l\'estomac où la nourriture est mélangée',
+        position: new THREE.Vector3(10, 2, 0), // stomach
+        onEnter: () => speak('Tu es dans l\'estomac ! Ici, la nourriture est brassée et mélangée avec des sucs gastriques.'),
+        onComplete: () => speak('L\'estomac transforme le bol alimentaire en chyme liquide prêt pour les intestins.')
+      },
+      {
+        objective: 'Explore les intestins où les nutriments sont absorbés',
+        position: new THREE.Vector3(15, 1, 0), // intestines
+        onEnter: () => speak('Tu dans les intestins longs et sinueux où les nutriments passent dans le sang.'),
+        onComplete: () => speak('Les intestins grêles absorbent les vitamines, minéraux, sucres et protéines.')
+      }
+    ]
+  },
+  skeletal: {
+    title: 'Système squelettique',
+    steps: [
+      {
+        objective: 'Examine le crâne qui protège le cerveau',
+        position: new THREE.Vector3(-15, 8, 0), // skull
+        onEnter: () => speak('Tu vois le crâne, une boîte osseuse qui protège le cerveau précieux.'),
+        onComplete: () => speak('Le crâne est composé de plusieurs os soudés ensemble pour former une protection rigide.')
+      },
+      {
+        objective: 'Regarde le fémur, le plus long os du corps',
+        position: new THREE.Vector3(0, 1, 10), // femur
+        onEnter: () => speak('Impressionnant ! C\'est le fémur, l\'os de la cuisse, le plus long et le plus fort du corps.'),
+        onComplete: () => speak('Le fémur supporte le poids du corps et permet la marche, la course et le saut.')
+      }
+    ]
+  },
+  muscular: {
+    title: 'Système musculaire',
+    steps: [
+      {
+        objective: 'Observe les fibres musculaires qui permettent le mouvement',
+        position: new THREE.Vector3(0, 2, -10), // muscle fiber
+        onEnter: () => speak('Tu vois des fibres musculaires qui se contractent pour produire le mouvement.'),
+        onComplete: () => speak('Les muscles travaillent par paires : tandis qu\'un se contracte, l\'auteur se relâche pour permettre le mouvement.')
+      }
+    ]
+  }
+};
+
+function initQuests() {
+  // Start with first quest
+  const questKeys = Object.keys(QUESTS);
+  currentQuest = QUESTS[questKeys[0]];
+  currentStepIndex = 0;
+  updateQuestDisplay();
+}
+
+function updateQuestDisplay() {
+  if (!currentQuest) {
+    questDiv.textContent = 'Aucune quête active';
+    return;
+  }
+  const step = currentQuest.steps[currentStepIndex];
+  questDiv.textContent = `Objectif : ${step.objective}`;
+}
+
+function checkQuestProgress() {
+  if (!currentQuest || currentStepIndex >= currentQuest.steps.length) return;
+  
+  const step = currentQuest.steps[currentStepIndex];
+  const distance = camera.position.distanceTo(step.position);
+  
+  if (distance < QUEST_THRESHOLD) {
+    // Entered zone
+    if (step.onEnter) step.onEnter();
+    // Mark step as completed after a short delay to avoid spam
+    setTimeout(() => {
+      completeStep();
+    }, 1500); // 1.5 sec delay to allow speech
+  }
+}
+
+function completeStep() {
+  if (!currentQuest) return;
+  const step = currentQuest.steps[currentStepIndex];
+  if (step.onComplete) step.onComplete();
+  
+  currentStepIndex++;
+  if (currentStepIndex >= currentQuest.steps.length) {
+    // Quest completed
+    speak(`Félicitations ! Tu as terminé la quête sur le ${currentQuest.title}.`);
+    // Move to next quest
+    const questKeys = Object.keys(QUESTS);
+    const currentIndex = questKeys.findIndex(k => QUESTS[k] === currentQuest);
+    let nextIndex = (currentIndex + 1) % questKeys.length;
+    currentQuest = QUESTS[questKeys[nextIndex]];
+    currentStepIndex = 0;
+    speak(`Passons maintenant à la quête sur le ${currentQuest.title}.`);
+  } else {
+    // Next step
+    speak(`Objectif suivant : ${currentQuest.steps[currentStepIndex].objective}`);
+  }
+  updateQuestDisplay();
+}
+
 // Initialize Three.js
 function init() {
   scene = new THREE.Scene();
@@ -54,6 +197,9 @@ function init() {
   
   // Create voxel world
   createWorld();
+  
+  // Initialize quest system
+  initQuests();
   
   // Controls (simple keyboard)
   const keys = {};
@@ -254,7 +400,7 @@ function createBloodVessel(x, y, z) {
         [x0, y0, z0 + voxelSize],
         [x0 + voxelSize, y0, z0 + voxelSize],
         [x0, y0 + voxelSize, z0 + voxelSize],
-        [x0 + voxelSize, y0 + voxelSize, z0 + voxelSize]
+        [x0 + voxelSize, y0, z0 + voxelSize]
       ];
       
       for (const corner of corners) {
@@ -372,7 +518,7 @@ function createIntestines(x, y, z) {
       [x0, y0, z0 + voxelSize],
       [x0 + voxelSize, y0, z0 + voxelSize],
       [x0, y0 + voxelSize, z0 + voxelSize],
-      [x0 + voxelSize, y0 + voxelSize, z0 + voxelSize]
+      [x0 + voxelSize, y0, z0 + voxelSize]
     ];
     
     for (const corner of corners) {
@@ -466,6 +612,9 @@ function animate() {
   if (camera.position.x > limit) camera.position.x = limit;
   if (camera.position.z < -limit) camera.position.z = -limit;
   if (camera.position.z > limit) camera.position.z = limit;
+  
+  // Check quest progress
+  checkQuestProgress();
   
   // Update voice button state if needed
   if (isListening && !recognizing) {
