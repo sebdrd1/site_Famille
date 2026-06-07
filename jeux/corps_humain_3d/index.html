@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voyage dans le Corps Humain</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { margin:0; overflow:hidden; font-family:Arial, sans-serif; }
+        #info { position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.5); color:white; padding:10px; border-radius:5px; max-width:300px; line-height:1.4; }
+        #voice-btn { position:absolute; top:10px; right:10px; padding:10px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
+        #voice-btn.listening { background:#f44336; }
+        #quest { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); color:white; padding:10px 20px; border-radius:5px; }
+        .hidden { display:none; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <strong>Instructions vocales :</strong><br>
+        - "va à gauche / à droite"<br>
+        - "en avant / en arrière"<br>
+        - "saute"<br>
+        - "qu'est-ce que c'est"<br>
+        - "aide"
+    </div>
+    <button id="voice-btn">Écouter</button>
+    <div id="quest">Objectif : Explore les différentes zones du corps</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
