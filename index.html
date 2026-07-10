@@ -124,6 +124,8 @@ footer {
   text-align: center;
 }
 </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e94560">
 </head>
 <body>
 
@@ -181,5 +183,6 @@ footer {
   <small>Compatible PC, tablette et téléphone • 2026</small>
 </footer>
 
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 </body>
 </html>
